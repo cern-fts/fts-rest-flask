@@ -8,6 +8,7 @@ black:
   stage: format
   script:
   - yum install git -y
+  - yum install python3-pip -y
   - export PYTHON_VERSION="py36"
   - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
   - "[ -z '$FILES'] && exit 0"
