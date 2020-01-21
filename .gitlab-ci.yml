@@ -11,6 +11,6 @@ black:
   - yum install python3-pip -y
   - export PYTHON_VERSION="py36"
   - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
-  - "[ -z '$FILES' ] && exit 0"
+  - if [ -z "$FILES" ]; then exit 0; fi
   - pip3 install black
   - for file in $FILES; do black --check --fast --target-version $PYTHON_VERSION $file; done
