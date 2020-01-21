@@ -11,6 +11,6 @@ black:
     - PYTHON_VERSION="py36"
     - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
     # If the length of FILES is zero, exit
-    - [ -z "$FILES" ] && exit 0
+    - "[ -z "$FILES" ] && exit 0"
     - pip install black
     - for file in $FILES; do black --check --fast --target-version $PYTHON_VERSION $file; done
