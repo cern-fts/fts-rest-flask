@@ -3,14 +3,12 @@ image: docker.io/library/centos:7
 
 stages:
   - format
-  - static_code_analysis
 
 black:
   stage: format
   script:
-    - PYTHON_VERSION="py36"
-    - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
-    # If the length of FILES is zero, exit
-    - "[ -z "$FILES" ] && exit 0"
-    - pip install black
-    - for file in $FILES; do black --check --fast --target-version $PYTHON_VERSION $file; done
+  - export PYTHON_VERSION="py36"
+  - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
+  - "[ -z '$FILES'] && exit 0"
+  - pip install black
+  - for file in $FILES; do black --check --fast --target-version $PYTHON_VERSION $file; done
