@@ -4,6 +4,7 @@ image: docker.io/library/centos:7
 stages:
   - format
   - static_code_analysis
+  - schedule
 
 black:
   # Check that every changed file has been formatted with black
@@ -50,3 +51,16 @@ bandit:
   - yum install python3-pip -y
   - pip3 install bandit
   - for file in $FILES; do bandit $file; done
+
+bandit_schedule:
+  # Find potential security issues in every python file. 
+  # It's allowed to fail as it may detect false positives.
+  allow_failure: true
+  stage: schedule
+  only:
+    - schedules
+  script:
+  - yum install git -y
+  - yum install python3-pip -y
+  - pip3 install bandit
+  - bandit . -r
