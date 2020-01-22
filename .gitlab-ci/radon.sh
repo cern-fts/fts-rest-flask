@@ -21,37 +21,28 @@ WARN () {
     echo -e "${YELLOW}$1${NC}";
 }
 
+radon_output="$(radon cc --min E --show-complexity /src)"
+if [ $exit_code -ne 0 ]
+then 
+    FAIL "radon exited with an error"
+    exit 1
+fi
+if [[ "${radon_output// }" ]] # ignore whitespace (the last //)
+then
+    echo -e "$radon_output"
+    FAIL "radon detected files with a very high Cyclomatic Complexity"
+    exit 1
+fi
 
-for file in $FILES
-do
-    radon_output="$(radon cc --min E --show-complexity $file)"
-    if [ $exit_code -ne 0 ]
-    then 
-        FAIL "radon exited with an error"
-        exit 1
-    fi
-    if [[ "${radon_output// }" ]] # ignore whitespace (the last //)
-    then
-        echo -e "$radon_output"
-        FAIL "radon detected files with a very high Cyclomatic Complexity"
-        exit 1
-    fi
-done
-
-INFO "Running radon     (checking Maintainability Index)"
-for file in $FILES
-do
-    radon_output="$(radon mi --min B $file)"
-    if [ $exit_code -ne 0 ]
-    then 
-        FAIL "radon exited with an error"
-        exit 1
-    fi
-    if [[ "${radon_output// }" ]]
-    then
-        echo -e "$radon_output"
-        FAIL "radon detected files with a very low Maintainability Index"
-        exit 1
-    fi
-done
-}
+radon_output="$(radon mi --min B /src)"
+if [ $exit_code -ne 0 ]
+then 
+    FAIL "radon exited with an error"
+    exit 1
+fi
+if [[ "${radon_output// }" ]]
+then
+    echo -e "$radon_output"
+    FAIL "radon detected files with a very low Maintainability Index"
+    exit 1
+fi
