@@ -27,7 +27,11 @@ pylint:
   script:
   - yum install git -y
   - yum install python3-pip -y
-  - pip3 install pylint
+  - pip3 install pylint pip-tools
+  - python3 -m venv venv
+  - source venv/bin/activate
+  - source pipcompile.sh
+  - source pipsyncdev.sh
   - pylint --output-format colorized --disable C,R,W src/
 
 radon:
