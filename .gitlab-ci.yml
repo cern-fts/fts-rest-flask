@@ -11,7 +11,7 @@ black:
   stage: format
   script:
   - yum install git -y
-  - export FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
+  - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA~1 -- "*.py")
   - if [ -z "$FILES" ]; then exit 0; fi
   - yum install python3-pip -y
   - pip3 install black
