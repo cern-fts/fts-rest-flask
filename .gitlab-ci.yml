@@ -8,13 +8,12 @@
 image: docker.io/library/centos:7
 
 stages:
-  - format
   - static_code_analysis
   - schedule
 
 black:
   # Check that every file has been formatted with black
-  stage: format
+  stage: static_code_analysis
   script:
   - yum install git -y
   - yum install python3-pip -y
@@ -27,9 +26,9 @@ pylint:
   script:
   - yum install git -y
   - yum install python3-pip -y
-  - pip3 install pylint pip-tools
   - python3 -m venv venv
   - source venv/bin/activate
+  - pip3 install pylint pip-tools
   - source pipcompile.sh
   - source pipsyncdev.sh
   - pylint --output-format colorized --disable C,R,W src/
