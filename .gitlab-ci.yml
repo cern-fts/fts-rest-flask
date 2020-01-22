@@ -1,66 +1,70 @@
-
+# The jobs run for every file in src/, even if they haven't been changed.
+# Unfortunately Gitlab CI doesn't have any way to know the commit before the push.
+# I used to do this to select only the files that had been changed:
+# FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA~1 -- "*.py")
+# if [ -z "$FILES" ]; then exit 0; fi
+# The problem was that a push with multiple commits might pass the last commit even 
+# if the previous failed.
 image: docker.io/library/centos:7
 
 stages:
-  - format
   - static_code_analysis
   - schedule
 
 black:
-  # Check that every changed file has been formatted with black
-  stage: format
+  # Check that every file has been formatted with black
+  stage: static_code_analysis
   script:
   - yum install git -y
-  - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
-  - if [ -z "$FILES" ]; then exit 0; fi
   - yum install python3-pip -y
   - pip3 install black
-  - for file in $FILES; do black --check --fast --target-version py36 $file; done
+  - black --check --fast --target-version py36 src/
 
 pylint:
-  # Check that every changed file doesn't have syntax errors
+  # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
+  - export LC_ALL=en_US.utf-8
+  - export LANG=en_US.utf-8
   - yum install git -y
-  - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
-  - if [ -z "$FILES" ]; then exit 0; fi
   - yum install python3-pip -y
-  - pip3 install pylint
-  - for file in $FILES; do pylint --output-format colorized --disable C,R,W $file; done
+  - python3 -m venv venv
+  - source venv/bin/activate
+  - pip3 install pylint pip-tools
+  - source pipcompile.sh
+  - source pipsyncdev.sh
+  - pylint --output-format colorized --disable C,R,W src/
 
 radon:
-  # Check that every changed file doesn't have syntax errors
+  # Check metrics for every file
   stage: static_code_analysis
   script:
   - yum install git -y
-  - export FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
-  - if [ -z "$FILES" ]; then exit 0; fi
   - yum install python3-pip -y
   - pip3 install radon
   - source .gitlab-ci/radon.sh
 
 bandit:
-  # Find potential security issues in every changed file. 
+  # Find potential security issues in file. 
   # It's allowed to fail as it may detect false positives.
   allow_failure: true
   stage: static_code_analysis
   script:
   - yum install git -y
-  - export FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
-  - if [ -z "$FILES" ]; then exit 0; fi
   - yum install python3-pip -y
   - pip3 install bandit
-  - for file in $FILES; do bandit $file; done
+  - bandit -r src/
 
 bandit_schedule:
-  # Find potential security issues in every python file. 
+  # Find potential security issues in file. 
   # It's allowed to fail as it may detect false positives.
   allow_failure: true
   stage: schedule
   only:
     - schedules
+  stage: static_code_analysis
   script:
   - yum install git -y
   - yum install python3-pip -y
   - pip3 install bandit
-  - bandit . -r
+  - bandit -r src/
