@@ -1,0 +1,66 @@
+
+image: docker.io/library/centos:7
+
+stages:
+  - format
+  - static_code_analysis
+  - schedule
+
+black:
+  # Check that every changed file has been formatted with black
+  stage: format
+  script:
+  - yum install git -y
+  - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
+  - if [ -z "$FILES" ]; then exit 0; fi
+  - yum install python3-pip -y
+  - pip3 install black
+  - for file in $FILES; do black --check --fast --target-version py36 $file; done
+
+pylint:
+  # Check that every changed file doesn't have syntax errors
+  stage: static_code_analysis
+  script:
+  - yum install git -y
+  - FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
+  - if [ -z "$FILES" ]; then exit 0; fi
+  - yum install python3-pip -y
+  - pip3 install pylint
+  - for file in $FILES; do pylint --output-format colorized --disable C,R,W $file; done
+
+radon:
+  # Check that every changed file doesn't have syntax errors
+  stage: static_code_analysis
+  script:
+  - yum install git -y
+  - export FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
+  - if [ -z "$FILES" ]; then exit 0; fi
+  - yum install python3-pip -y
+  - pip3 install radon
+  - source .gitlab-ci/radon.sh
+
+bandit:
+  # Find potential security issues in every changed file. 
+  # It's allowed to fail as it may detect false positives.
+  allow_failure: true
+  stage: static_code_analysis
+  script:
+  - yum install git -y
+  - export FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA -- "*.py")
+  - if [ -z "$FILES" ]; then exit 0; fi
+  - yum install python3-pip -y
+  - pip3 install bandit
+  - for file in $FILES; do bandit $file; done
+
+bandit_schedule:
+  # Find potential security issues in every python file. 
+  # It's allowed to fail as it may detect false positives.
+  allow_failure: true
+  stage: schedule
+  only:
+    - schedules
+  script:
+  - yum install git -y
+  - yum install python3-pip -y
+  - pip3 install bandit
+  - bandit . -r
