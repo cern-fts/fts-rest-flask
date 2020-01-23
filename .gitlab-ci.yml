@@ -24,7 +24,7 @@ pylint:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
-  - export LC_ALL=en_US.utf-8
+  - export LC_ALL=en_US.utf-8 # this is needed for pip-tools
   - export LANG=en_US.utf-8
   - yum install git -y
   - yum install python3-pip -y
