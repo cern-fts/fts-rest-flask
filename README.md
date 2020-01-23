@@ -13,3 +13,10 @@ The current pipeline runs for every push in every branch:
 Merge requests will proceed only if the pipeline succeeds.
 In case of emergency the pipeline can be [skipped](https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs).
 
+# Dependencies
+This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies:
+- `requirements.in`: list of dependencies for the production app
+- `dev-requirements.in`: extra list of packages used for development (e.g. static code analysis)
+- `pipcompile.sh`: run it in the development server in order to generate `requirements.txt`
+- `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
+
