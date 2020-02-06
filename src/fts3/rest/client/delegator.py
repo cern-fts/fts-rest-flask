@@ -22,7 +22,6 @@
 import ctypes
 import json
 import logging
-import platform
 import sys
 import time
 
@@ -87,9 +86,7 @@ def _workaround_new_extension(name, value, critical=False, issuer=None, _pyfree=
 
 
 def _m2crypto_extensions_broken():
-    (dist, version, id) = platform.linux_distribution(full_distribution_name=False)
-    if dist.lower() == "redhat" and int(version.split(".")[0]) < 6:
-        return True
+    # SL5 is out support
     return False
 
 
@@ -207,7 +204,7 @@ class Delegator(object):
             try:
                 cert.get_ext("proxyCertInfo")
                 any_rfc_proxies = True
-            except:
+            except Exception:
                 pass
 
         proxy.set_not_after(not_after)

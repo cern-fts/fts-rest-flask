@@ -1,3 +1,4 @@
 Flask
 SQLAlchemy
 M2Crypto
+requests
