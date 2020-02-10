@@ -5,7 +5,8 @@
 # if [ -z "$FILES" ]; then exit 0; fi
 # The problem was that a push with multiple commits might pass the last commit even 
 # if the previous failed.
-image: docker.io/library/centos:7
+#image: docker.io/library/centos:7
+image: gitlab-registry.cern.ch/fts/fts-rest-flask:latest
 
 stages:
   - static_code_analysis
