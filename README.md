@@ -13,6 +13,8 @@ The current pipeline runs for every push in every branch:
 Merge requests will proceed only if the pipeline succeeds.
 In case of emergency the pipeline can be [skipped](https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs).
 
+The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the .gitlab-ci directory and the image is in the container registry for this project. The image contains the Python tools preinstalled so the CI runs faster.
+
 # Dependencies
 This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies:
 - `requirements.in`: list of dependencies for the production app
