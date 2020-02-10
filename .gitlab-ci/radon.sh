@@ -22,7 +22,7 @@ WARN () {
 }
 
 radon_output="$(radon cc --min E --show-complexity /src)"
-if [ $exit_code -ne 0 ]
+if [ $? -ne 0 ]
 then 
     FAIL "radon exited with an error"
     exit 1
@@ -35,7 +35,7 @@ then
 fi
 
 radon_output="$(radon mi --min B /src)"
-if [ $exit_code -ne 0 ]
+if [ $? -ne 0 ]
 then 
     FAIL "radon exited with an error"
     exit 1
