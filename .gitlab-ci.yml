@@ -10,6 +10,7 @@ image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 
 stages:
   - static_code_analysis
+  - security
   - schedule
 
 black:
@@ -36,7 +37,7 @@ bandit:
   # Find potential security issues in file. 
   # It's allowed to fail as it may detect false positives.
   allow_failure: true
-  stage: static_code_analysis
+  stage: security
   script:
   - bandit -r src/
 
