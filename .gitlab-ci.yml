@@ -5,7 +5,8 @@
 # if [ -z "$FILES" ]; then exit 0; fi
 # The problem was that a push with multiple commits might pass the last commit even 
 # if the previous failed.
-image: docker.io/library/centos:7
+
+image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 
 stages:
   - static_code_analysis
@@ -15,24 +16,12 @@ black:
   # Check that every file has been formatted with black
   stage: static_code_analysis
   script:
-  - yum install git -y
-  - yum install python3-pip -y
-  - pip3 install --upgrade pip3
-  - pip3 install black
   - black --check --fast --target-version py36 src/
 
 pylint:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
-  - export LC_ALL=en_US.utf-8 # this is needed for pip-tools
-  - export LANG=en_US.utf-8
-  - yum install git -y
-  - yum install python3-pip -y
-  - pip3 install --upgrade pip3
-  - python3 -m venv venv
-  - source venv/bin/activate
-  - pip3 install pylint pip-tools
   - source pipcompile.sh
   - source pipsyncdev.sh
   - pylint --output-format colorized --disable C,R,W src/
@@ -41,10 +30,6 @@ radon:
   # Check metrics for every file
   stage: static_code_analysis
   script:
-  - yum install git -y
-  - yum install python3-pip -y
-  - pip3 install --upgrade pip3
-  - pip3 install radon
   - source .gitlab-ci/radon.sh
 
 bandit:
@@ -53,10 +38,6 @@ bandit:
   allow_failure: true
   stage: static_code_analysis
   script:
-  - yum install git -y
-  - yum install python3-pip -y
-  - pip3 install --upgrade pip3
-  - pip3 install bandit
   - bandit -r src/
 
 bandit_schedule:
@@ -68,7 +49,4 @@ bandit_schedule:
     - schedules
   stage: static_code_analysis
   script:
-  - yum install git -y
-  - yum install python3-pip -y
-  - pip3 install bandit
   - bandit -r src/

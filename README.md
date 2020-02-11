@@ -14,6 +14,14 @@ The current pipeline runs for every push in every branch:
 Merge requests will proceed only if the pipeline succeeds.
 In case of emergency the pipeline can be [skipped](https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs).
 
+The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the .gitlab-ci directory and the image is in the container registry for this project. The image contains the Python tools preinstalled so the CI runs faster.
+
+Developers should add the `pre-commit` hook to their local repository. This scripts does this for every commit:
+- Runs black to format the changed files.
+- Runs pylint only on the changed files for speed. As pylint works better when it is run on all the project, some rules have been disabled.
+- Runs radon and bandit only on the changed files.
+The hook can be skipped, in case bandit detects false positives, with the commit option `--no-verify`.
+
 # Dependencies
 This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies:
 - `requirements.in`: list of dependencies for the production app
