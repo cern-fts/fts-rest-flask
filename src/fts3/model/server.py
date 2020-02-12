@@ -1,5 +1,4 @@
-#   Copyright notice:
-#   Copyright CERN, 2014.
+#   Copyright 2014-2020 CERN
 #
 #   See www.eu-emi.eu for details on the copyright holders
 #

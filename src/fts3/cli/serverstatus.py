@@ -1,7 +1,4 @@
-#   Copyright notice:
-#   Copyright CERN, 2015.
-#
-#   See www.eu-emi.eu for details on the copyright holders
+#   Copyright 2015-2020 CERN
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
