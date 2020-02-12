@@ -29,3 +29,6 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 - `pipcompile.sh`: run it in the development server in order to generate `requirements.txt`
 - `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
 
+# Migration status
+Starting with the client, as it requires small changes only. Will not migrate pycurlrequest.py, as it is not used
+ anymore. 

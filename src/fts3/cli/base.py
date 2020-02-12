@@ -58,7 +58,7 @@ def _get_local_endpoint():
     return "https://%s:8446" % socket.getfqdn()
 
 
-class Base(object):
+class Base:
     def __init__(self, extra_args=None, description=None, example=None):
         self.logger = logging.getLogger("fts3")
 
