@@ -48,7 +48,7 @@ class JobCanceller(Base):
         submitter = Submitter(context)
         result = submitter.cancel(job_id, file_ids)
         if file_ids:
-            if isinstance(result, basestring):
+            if isinstance(result, str):
                 self.logger.info(result)
             else:
                 self.logger.info("\n".join(result))
