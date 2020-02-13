@@ -49,8 +49,14 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     package_dir={"": "src"},  # Optional
-    packages=find_namespace_packages(where="src"),  # Required
+    packages=[
+        "fts3",
+        "fts3.rest",
+        "fts3.cli",
+        "fts3.rest.client",
+        "fts3.rest.client.easy",
+    ],  # Required
     python_requires=">=3.6",
-    install_requires=get_install_requires(),  # Optional
+    install_requires=["M2Crypto", "requests"],  # Optional
     scripts=glob(path.join(here, "src", "cli", "fts-*")),
 )
