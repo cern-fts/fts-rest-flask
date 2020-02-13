@@ -10,7 +10,7 @@ from glob import glob
 
 here = path.abspath(path.dirname(__file__))
 
-
+# this is not really needed for this package
 def get_install_requires(pinned=False):
     packages = []
     try:
@@ -31,16 +31,15 @@ def get_install_requires(pinned=False):
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
 setup(
-    name="fts-rest-flask",  # Required
+    name="fts-rest-py3",  # Required
     version="0.1",  # Required
-    description="fts-rest in Flask and Python3",  # Optional
+    description="FTS Python3 CLI and libraries",  # Optional
     url="https://gitlab.cern.ch/fts/fts-rest-flask",  # Optional
     author="CERN -- FTS team",  # Optional
     author_email="fts-devel@cern.ch",  # Optional
     classifiers=[  # Optional
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
-        "Framework :: Flask",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: Implementation :: CPython",
@@ -60,3 +59,6 @@ setup(
     install_requires=["M2Crypto", "requests"],  # Optional
     scripts=glob(path.join(here, "src", "cli", "fts-*")),
 )
+
+# The following OS packages are required for M2Crypto:
+# python3-devel openssl-devel swig gcc gcc-c++ make
