@@ -1,10 +1,8 @@
 # pylint: skip-file
 # Pylint will detect missing M2Crypto members
 
-#   Copyright notice:
 #   Copyright  Members of the EMI Collaboration, 2013.
-#
-#   See www.eu-emi.eu for details on the copyright holders
+#   Copyright 2020 CERN
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
