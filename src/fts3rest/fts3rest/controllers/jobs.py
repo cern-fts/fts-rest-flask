@@ -31,7 +31,7 @@ from fts3.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
 
 from fts3rest.lib.http_exceptions import *
-from fts3rest.lib.middleware.fts3auth.constants import *
+from fts3rest.lib.middleware.fts3auth.constants import TRANSFER, PRIVATE, NONE, VO
 
 log = logging.getLogger(__name__)
 

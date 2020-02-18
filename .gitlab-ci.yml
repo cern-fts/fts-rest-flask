@@ -25,7 +25,7 @@ pylint:
   script:
   - source pipcompile.sh
   - source pipsyncdev.sh
-  - pylint --output-format colorized --disable C,R,W src/
+  - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
 
 radon:
   # Check metrics for every file
