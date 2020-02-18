@@ -13,6 +13,31 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from fts3rest.controllers import (
+    api,
+    delegation,
+    jobs,
+    files,
+    archive,
+    config,
+    optimizer,
+    datamanagement,
+    autocomplete,
+    banning,
+    serverstatus,
+)
+from fts3rest.controllers.config import (
+    drain,
+    audit,
+    global_,
+    links,
+    shares,
+    se,
+    authz,
+    activities,
+    cloud,
+)
+
 
 def do_connect(app):
     """
@@ -83,380 +108,199 @@ def do_connect(app):
     app.add_url_rule("/files/", view_func=files.index, methods=["GET"])
 
     # Archive
-    map.connect(
-        "/archive",
-        controller="archive",
-        action="index",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/archive/",
-        controller="archive",
-        action="index",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/archive/{job_id}",
-        controller="archive",
-        action="get",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/archive/{job_id}/{field}",
-        controller="archive",
-        action="get_field",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule("/archive", view_func=archive.index, methods=["GET"])
+    app.add_url_rule("/archive/", view_func=archive.index, methods=["GET"])
+    app.add_url_rule("/archive/{job_id}", view_func=archive.get, methods=["GET"])
+    app.add_url_rule(
+        "/archive/{job_id}/{field}", view_func=archive.get_field, methods=["GET"]
     )
 
     # Schema definition
-    map.connect(
-        "/api-docs/schema/submit",
-        controller="api",
-        action="submit_schema",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/api-docs/schema/submit", view_func=api.submit_schema, methods=["GET"]
     )
-    map.connect(
-        "/api-docs",
-        controller="api",
-        action="api_docs",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/api-docs/{resource}",
-        controller="api",
-        action="resource_doc",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule("/api-docs", view_func=api.api_docs, methods=["GET"])
+    app.add_url_rule(
+        "/api-docs/{resource}", view_func=api.resource_doc, methods=["GET"]
     )
 
     # Config entry point
-    map.connect(
-        "/config", controller="config", action="index", conditions=dict(method=["GET"])
-    )
+    app.add_url_rule("/config", view_func=config.index, methods=["GET"])
 
     # Set/unset draining mode
-    map.connect(
-        "/config/drain",
-        controller="config/drain",
-        action="set_drain",
-        conditions=dict(method=["POST"]),
+    app.add_url_rule(
+        "/config/drain", view_func=config.drain.set_drain, methods=["POST"]
     )
 
     # Configuration audit
-    map.connect(
-        "/config/audit",
-        controller="config/audit",
-        action="audit",
-        conditions=dict(method=["GET"]),
-    )
+    app.add_url_rule("/config/audit", view_func=config.audit.audit, methods=["GET"])
 
     # Global settings
-    map.connect(
-        "/config/global",
-        controller="config/global",
-        action="set_global_config",
-        conditions=dict(method=["POST"]),
+    app.add_url_rule(
+        "/config/global", view_func=config.global_.set_global_config, methods=["POST"]
     )
-    map.connect(
-        "/config/global",
-        controller="config/global",
-        action="get_global_config",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/config/global", view_func=config.global_.get_global_config, methods=["GET"]
     )
-    map.connect(
+    app.add_url_rule(
         "/config/global",
-        controller="config/global",
-        action="delete_vo_global_config",
-        conditions=dict(method=["DELETE"]),
+        view_func=config.global_.delete_vo_global_config,
+        methods=["DELETE"],
     )
 
     # Link config (SE or Group)
-    map.connect(
-        "/config/links",
-        controller="config/links",
-        action="set_link_config",
-        conditions=dict(method=["POST"]),
+    app.add_url_rule(
+        "/config/links", view_func=config.links.set_link_config, methods=["POST"]
     )
-    map.connect(
-        "/config/links",
-        controller="config/links",
-        action="get_all_link_configs",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/config/links", view_func=config.links.get_all_link_configs, methods=["GET"]
     )
-    map.connect(
+    app.add_url_rule(
         "/config/links/{sym_name}",
-        controller="config/links",
-        action="get_link_config",
-        conditions=dict(method=["GET"]),
+        view_func=config.links.get_link_config,
+        methods=["GET"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/links/{sym_name}",
-        controller="config/links",
-        action="delete_link_config",
-        conditions=dict(method=["DELETE"]),
+        view_func=config.links.delete_link_config,
+        methods=["DELETE"],
     )
 
     # Shares
-    map.connect(
-        "/config/shares",
-        controller="config/shares",
-        action="set_share",
-        conditions=dict(method=["POST"]),
+    app.add_url_rule(
+        "/config/shares", view_func=config.shares.set_share, methods=["POST"]
     )
-    map.connect(
-        "/config/shares",
-        controller="config/shares",
-        action="get_shares",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/config/shares", view_func=config.shares.get_shares, methods=["GET"]
     )
-    map.connect(
-        "/config/shares",
-        controller="config/shares",
-        action="delete_share",
-        conditions=dict(method=["DELETE"]),
+    app.add_url_rule(
+        "/config/shares", view_func=config.shares.delete_share, methods=["DELETE"]
     )
 
     # Per SE
-    map.connect(
-        "/config/se",
-        controller="config/se",
-        action="set_se_config",
-        conditions=dict(method=["POST"]),
-    )
-    map.connect(
-        "/config/se",
-        controller="config/se",
-        action="get_se_config",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/config/se",
-        controller="config/se",
-        action="delete_se_config",
-        conditions=dict(method=["DELETE"]),
+    app.add_url_rule("/config/se", view_func=config.se.set_se_config, methods=["POST"])
+    app.add_url_rule("/config/se", view_func=config.se.get_se_config, methods=["GET"])
+    app.add_url_rule(
+        "/config/se", view_func=config.se.delete_se_config, methods=["DELETE"]
     )
 
     # Grant special permissions to given DNs
-    map.connect(
-        "/config/authorize",
-        controller="config/authz",
-        action="add_authz",
-        conditions=dict(method=["POST"]),
+    app.add_url_rule(
+        "/config/authorize", view_func=config.authz.add_authz, methods=["POST"]
     )
-    map.connect(
-        "/config/authorize",
-        controller="config/authz",
-        action="list_authz",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/config/authorize", view_func=config.authz.list_authz, methods=["GET"]
     )
-    map.connect(
-        "/config/authorize",
-        controller="config/authz",
-        action="remove_authz",
-        conditions=dict(method=["DELETE"]),
+    app.add_url_rule(
+        "/config/authorize", view_func=config.authz.remove_authz, methods=["DELETE"]
     )
 
     # Configure activity shares
-    map.connect(
+    app.add_url_rule(
         "/config/activity_shares",
-        controller="config/activities",
-        action="get_activity_shares",
-        conditions=dict(method=["GET"]),
+        view_func=config.activities.get_activity_shares,
+        methods=["GET"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/activity_shares",
-        controller="config/activities",
-        action="set_activity_shares",
-        conditions=dict(method=["POST"]),
+        view_func=config.activities.set_activity_shares,
+        methods=["POST"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/activity_shares/{vo_name}",
-        controller="config/activities",
-        action="get_activity_shares_vo",
-        conditions=dict(method=["GET"]),
+        view_func=config.activities.get_activity_shares_vo,
+        methods=["GET"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/activity_shares/{vo_name}",
-        controller="config/activities",
-        action="delete_activity_shares",
-        conditions=dict(method=["DELETE"]),
+        view_func=config.activities.delete_activity_shares,
+        methods=["DELETE"],
     )
 
     # Configure cloud storages
-    map.connect(
+    app.add_url_rule(
         "/config/cloud_storage",
-        controller="config/cloud",
-        action="get_cloud_storages",
-        conditions=dict(method=["GET"]),
+        view_func=config.cloud.get_cloud_storages,
+        methods=["GET"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/cloud_storage",
-        controller="config/cloud",
-        action="set_cloud_storage",
-        conditions=dict(method=["POST"]),
+        view_func=config.cloud.set_cloud_storages,
+        methods=["POST"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/cloud_storage/{storage_name}",
-        controller="config/cloud",
-        action="get_cloud_storage",
-        conditions=dict(method=["GET"]),
+        view_func=config.cloud.get_cloud_storage,
+        methods=["GET"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/cloud_storage/{storage_name}",
-        controller="config/cloud",
-        action="remove_cloud_storage",
-        conditions=dict(method=["DELETE"]),
+        view_func=config.cloud.remove_cloud_storage,
+        methods=["DELETE"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/cloud_storage/{storage_name}",
-        controller="config/cloud",
-        action="add_user_to_cloud_storage",
-        conditions=dict(method=["POST"]),
+        view_func=config.cloud.add_user_to_cloud_storage,
+        methods=["POST"],
     )
-    map.connect(
+    app.add_url_rule(
         "/config/cloud_storage/{storage_name}/{id}",
-        controller="config/cloud",
-        action="remove_user_from_cloud_storage",
-        conditions=dict(method=["DELETE"]),
+        view_func=config.cloud.remove_user_from_cloud_storage,
+        methods=["DELETE"],
     )
 
     # Optimizer
-    map.connect(
-        "/optimizer",
-        controller="optimizer",
-        action="is_enabled",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule("/optimizer", view_func=optimizer.is_enabled, methods=["GET"])
+    app.add_url_rule(
+        "/optimizer/evolution", view_func=optimizer.evolution, methods=["GET"]
     )
-    map.connect(
-        "/optimizer/evolution",
-        controller="optimizer",
-        action="evolution",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/optimizer/current", view_func=optimizer.get_optimizer_values, methods=["GET"]
     )
-    map.connect(
-        "/optimizer/current",
-        controller="optimizer",
-        action="get_optimizer_values",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/optimizer/current",
-        controller="optimizer",
-        action="set_optimizer_values",
-        conditions=dict(method=["POST"]),
+    app.add_url_rule(
+        "/optimizer/current", view_func=optimizer.set_optimizer_values, methods=["POST"]
     )
 
     # GFAL2 bindings
-    map.connect(
-        "/dm/list",
-        controller="datamanagement",
-        action="list",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/dm/stat",
-        controller="datamanagement",
-        action="stat",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/dm/mkdir",
-        controller="datamanagement",
-        action="mkdir",
-        conditions=dict(method=["POST"]),
-    )
-    map.connect(
-        "/dm/unlink",
-        controller="datamanagement",
-        action="unlink",
-        conditions=dict(method=["POST"]),
-    )
-    map.connect(
-        "/dm/rmdir",
-        controller="datamanagement",
-        action="rmdir",
-        conditions=dict(method=["POST"]),
-    )
-    map.connect(
-        "/dm/rename",
-        controller="datamanagement",
-        action="rename",
-        conditions=dict(method=["POST"]),
-    )
+    app.add_url_rule("/dm/list", view_func=datamanagement.list, methods=["GET"])
+    app.add_url_rule("/dm/stat", view_func=datamanagement.stat, methods=["GET"])
+    app.add_url_rule("/dm/mkdir", view_func=datamanagement.mkdir, methods=["POST"])
+    app.add_url_rule("/dm/unlink", view_func=datamanagement.unlink, methods=["POST"])
+    app.add_url_rule("/dm/rmdir", view_func=datamanagement.rmdir, methods=["POST"])
+    app.add_url_rule("/dm/rename", view_func=datamanagement.rename, methods=["POST"])
 
     # Banning
-    map.connect(
-        "/ban/se",
-        controller="banning",
-        action="ban_se",
-        conditions=dict(method=["POST"]),
-    )
-    map.connect(
-        "/ban/se",
-        controller="banning",
-        action="unban_se",
-        conditions=dict(method=["DELETE"]),
-    )
-    map.connect(
-        "/ban/se",
-        controller="banning",
-        action="list_banned_se",
-        conditions=dict(method=["GET"]),
-    )
-    map.connect(
-        "/ban/dn",
-        controller="banning",
-        action="ban_dn",
-        conditions=dict(method=["POST"]),
-    )
-    map.connect(
-        "/ban/dn",
-        controller="banning",
-        action="unban_dn",
-        conditions=dict(method=["DELETE"]),
-    )
-    map.connect(
-        "/ban/dn",
-        controller="banning",
-        action="list_banned_dn",
-        conditions=dict(method=["GET"]),
-    )
+    app.add_url_rule("/ban/se", view_func=banning.ban_se, methods=["POST"])
+    app.add_url_rule("/ban/se", view_func=banning.unban_se, methods=["DELETE"])
+    app.add_url_rule("/ban/se", view_func=banning.list_banned_se, methods=["GET"])
+    app.add_url_rule("/ban/dn", view_func=banning.ban_dn, methods=["POST"])
+    app.add_url_rule("/ban/dn", view_func=banning.unban_dn, methods=["DELETE"])
+    app.add_url_rule("/ban/dn", view_func=banning.list_banned_dn, methods=["GET"])
 
     # Autocomplete
-    map.connect(
-        "/autocomplete/dn",
-        controller="autocomplete",
-        action="autocomplete_dn",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/autocomplete/dn", view_func=autocomplete.autocomplete_dn, methods=["GET"]
     )
-    map.connect(
+    app.add_url_rule(
         "/autocomplete/source",
-        controller="autocomplete",
-        action="autocomplete_source",
-        conditions=dict(method=["GET"]),
+        view_func=autocomplete.autocomplete_source,
+        methods=["GET"],
     )
-    map.connect(
+    app.add_url_rule(
         "/autocomplete/destination",
-        controller="autocomplete",
-        action="autocomplete_destination",
-        conditions=dict(method=["GET"]),
+        view_func=autocomplete.autocomplete_destination,
+        methods=["GET"],
     )
-    map.connect(
+    app.add_url_rule(
         "/autocomplete/storage",
-        controller="autocomplete",
-        action="autocomplete_storage",
-        conditions=dict(method=["GET"]),
+        view_func=autocomplete.autocomplete_storage,
+        methods=["GET"],
     )
-    map.connect(
-        "/autocomplete/vo",
-        controller="autocomplete",
-        action="autocomplete_vo",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/autocomplete/vo", view_func=autocomplete.autocomplete_vo, methods=["GET"]
     )
 
     # State check
-    map.connect(
-        "/status/hosts",
-        controller="serverstatus",
-        action="hosts_activity",
-        conditions=dict(method=["GET"]),
+    app.add_url_rule(
+        "/status/hosts", view_func=serverstatus.hosts_activity, methods=["GET"]
     )

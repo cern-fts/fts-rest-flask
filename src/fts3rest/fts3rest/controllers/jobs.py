@@ -128,3 +128,47 @@ def index():
         return Response(_field_subset(), mimetype="application/json")
     else:
         return jsonify(jobs)
+
+
+def get():
+    pass
+
+
+def get_files():
+    pass
+
+
+def cancel_files():
+    pass
+
+
+def cancel_all_by_vo():
+    pass
+
+
+def cancel_all():
+    pass
+
+
+def get_file_retries():
+    pass
+
+
+def get_dm():
+    pass
+
+
+def get_field():
+    pass
+
+
+def cancel():
+    pass
+
+
+def modify():
+    pass
+
+
+def submit():
+    pass
