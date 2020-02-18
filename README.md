@@ -4,6 +4,10 @@ the [evaluation](https://its.cern.ch/jira/browse/FTS-1496).
 
 The development is happening at fts-flask.cern.ch, with the local user ftsflask 
 
+# Git workflow
+- `Master` cannot be pushed to directly.
+- Create a new branch for each ticket and merge it to master.
+
 # Gitlab CI
 The current pipeline runs for every push in every branch:
 - black: fails if the code hasn't been formatted with black

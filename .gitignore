@@ -2,6 +2,7 @@
 .idea/
 requirements.txt
 dev-requirements.txt
+install_requires.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
