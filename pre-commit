@@ -64,6 +64,7 @@ do
     fi
     if [ $exit_code -eq 123 ]
     then 
+        echo "$black_output"
         FAIL "black exited with an error"
         clean_exit 1
     fi
