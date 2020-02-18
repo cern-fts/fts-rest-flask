@@ -48,27 +48,28 @@ def do_connect(app):
     app.add_url_rule("/", view_func=api.api_version)
 
     # OPTIONS handler
-    app.add_url_rule("/{path:.*?}", view_func=api.options_handler, methods=["OPTIONS"])
+    # Commented out because Flask automatically generates an OPTIONS response
+    # app.add_url_rule("/<path:.*?>", view_func=api.options_handler, methods=["OPTIONS"])
 
     # Delegation and self-identification
     app.add_url_rule("/whoami", view_func=delegation.whoami, methods=["GET"])
     app.add_url_rule(
         "/whoami/certificate", view_func=delegation.certificate, methods=["GET"]
     )
-    app.add_url_rule("/delegation/{dlg_id}", view_func=delegation.view, methods=["GET"])
+    app.add_url_rule("/delegation/<dlg_id>", view_func=delegation.view, methods=["GET"])
     app.add_url_rule(
-        "/delegation/{dlg_id}", view_func=delegation.delete, methods=["DELETE"]
+        "/delegation/<dlg_id>", view_func=delegation.delete, methods=["DELETE"]
     )
     app.add_url_rule(
-        "/delegation/{dlg_id}/request", view_func=delegation.request, methods=["GET"]
+        "/delegation/<dlg_id>/request", view_func=delegation.request, methods=["GET"]
     )
     app.add_url_rule(
-        "/delegation/{dlg_id}/credential",
+        "/delegation/<dlg_id>/credential",
         view_func=delegation.credential,
         methods=["PUT", "POST"],
     )
     app.add_url_rule(
-        "/delegation/{dlg_id}/voms", view_func=delegation.voms, methods=["POST"]
+        "/delegation/<dlg_id>/voms", view_func=delegation.voms, methods=["POST"]
     )
 
     # Delegation HTML view
@@ -79,28 +80,28 @@ def do_connect(app):
     # Jobs
     app.add_url_rule("/jobs", view_func=jobs.index, methods=["GET"])
     app.add_url_rule("/jobs/", view_func=jobs.index, methods=["GET"])
-    app.add_url_rule("/jobs/{job_list}", view_func=jobs.get, methods=["GET"])
-    app.add_url_rule("/jobs/{job_id}/files", view_func=jobs.get_files, methods=["GET"])
+    app.add_url_rule("/jobs/<job_list>", view_func=jobs.get, methods=["GET"])
+    app.add_url_rule("/jobs/<job_id>/files", view_func=jobs.get_files, methods=["GET"])
     app.add_url_rule(
-        "/jobs/{job_id}/files/{file_ids}",
+        "/jobs/<job_id>/files/<file_ids>",
         view_func=jobs.cancel_files,
         methods=["DELETE"],
     )
     app.add_url_rule(
-        "/jobs/vo/{vo_name}", view_func=jobs.cancel_all_by_vo, methods=["DELETE"]
+        "/jobs/vo/<vo_name>", view_func=jobs.cancel_all_by_vo, methods=["DELETE"]
     )
     app.add_url_rule("/jobs/all", view_func=jobs.cancel_all, methods=["DELETE"])
     app.add_url_rule(
-        "/jobs/{job_id}/files/{file_id}/retries",
+        "/jobs/<job_id>/files/<file_id>/retries",
         view_func=jobs.get_file_retries,
         methods=["GET"],
     )
-    app.add_url_rule("/jobs/{job_id}/dm", view_func=jobs.get_dm, methods=["GET"])
+    app.add_url_rule("/jobs/<job_id>/dm", view_func=jobs.get_dm, methods=["GET"])
     app.add_url_rule(
-        "/jobs/{job_id}/{field}", view_func=jobs.get_field, methods=["GET"]
+        "/jobs/<job_id>/<field>", view_func=jobs.get_field, methods=["GET"]
     )
-    app.add_url_rule("/jobs/{job_id_list}", view_func=jobs.cancel, methods=["DELETE"])
-    app.add_url_rule("/jobs/{job_id_list}", view_func=jobs.modify, methods=["POST"])
+    app.add_url_rule("/jobs/<job_id_list>", view_func=jobs.cancel, methods=["DELETE"])
+    app.add_url_rule("/jobs/<job_id_list>", view_func=jobs.modify, methods=["POST"])
     app.add_url_rule("/jobs", view_func=jobs.submit, methods=["PUT", "POST"])
 
     # Query directly the transfers
@@ -110,9 +111,9 @@ def do_connect(app):
     # Archive
     app.add_url_rule("/archive", view_func=archive.index, methods=["GET"])
     app.add_url_rule("/archive/", view_func=archive.index, methods=["GET"])
-    app.add_url_rule("/archive/{job_id}", view_func=archive.get, methods=["GET"])
+    app.add_url_rule("/archive/<job_id>", view_func=archive.get, methods=["GET"])
     app.add_url_rule(
-        "/archive/{job_id}/{field}", view_func=archive.get_field, methods=["GET"]
+        "/archive/<job_id>/<field>", view_func=archive.get_field, methods=["GET"]
     )
 
     # Schema definition
@@ -121,7 +122,7 @@ def do_connect(app):
     )
     app.add_url_rule("/api-docs", view_func=api.api_docs, methods=["GET"])
     app.add_url_rule(
-        "/api-docs/{resource}", view_func=api.resource_doc, methods=["GET"]
+        "/api-docs/<resource>", view_func=api.resource_doc, methods=["GET"]
     )
 
     # Config entry point
@@ -156,12 +157,12 @@ def do_connect(app):
         "/config/links", view_func=config.links.get_all_link_configs, methods=["GET"]
     )
     app.add_url_rule(
-        "/config/links/{sym_name}",
+        "/config/links/<sym_name>",
         view_func=config.links.get_link_config,
         methods=["GET"],
     )
     app.add_url_rule(
-        "/config/links/{sym_name}",
+        "/config/links/<sym_name>",
         view_func=config.links.delete_link_config,
         methods=["DELETE"],
     )
@@ -207,12 +208,12 @@ def do_connect(app):
         methods=["POST"],
     )
     app.add_url_rule(
-        "/config/activity_shares/{vo_name}",
+        "/config/activity_shares/<vo_name>",
         view_func=config.activities.get_activity_shares_vo,
         methods=["GET"],
     )
     app.add_url_rule(
-        "/config/activity_shares/{vo_name}",
+        "/config/activity_shares/<vo_name>",
         view_func=config.activities.delete_activity_shares,
         methods=["DELETE"],
     )
@@ -229,22 +230,22 @@ def do_connect(app):
         methods=["POST"],
     )
     app.add_url_rule(
-        "/config/cloud_storage/{storage_name}",
+        "/config/cloud_storage/<storage_name>",
         view_func=config.cloud.get_cloud_storage,
         methods=["GET"],
     )
     app.add_url_rule(
-        "/config/cloud_storage/{storage_name}",
+        "/config/cloud_storage/<storage_name>",
         view_func=config.cloud.remove_cloud_storage,
         methods=["DELETE"],
     )
     app.add_url_rule(
-        "/config/cloud_storage/{storage_name}",
+        "/config/cloud_storage/<storage_name>",
         view_func=config.cloud.add_user_to_cloud_storage,
         methods=["POST"],
     )
     app.add_url_rule(
-        "/config/cloud_storage/{storage_name}/{id}",
+        "/config/cloud_storage/<storage_name>/<id>",
         view_func=config.cloud.remove_user_from_cloud_storage,
         methods=["DELETE"],
     )
