@@ -1,18 +1,21 @@
+from werkzeug.exceptions import NotFound
+
+
 def autocomplete_dn():
-    pass
+    raise NotFound
 
 
 def autocomplete_source():
-    pass
+    raise NotFound
 
 
 def autocomplete_destination():
-    pass
+    raise NotFound
 
 
 def autocomplete_storage():
-    pass
+    raise NotFound
 
 
 def autocomplete_vo():
-    pass
+    raise NotFound

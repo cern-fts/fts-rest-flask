@@ -1,2 +1,5 @@
+from werkzeug.exceptions import NotFound
+
+
 def set_drain():
-    pass
+    raise NotFound

@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from flask import request, Response, jsonify
-from werkzeug.exceptions import Forbidden, BadRequest
+from werkzeug.exceptions import Forbidden, BadRequest, NotFound
 
 from datetime import datetime, timedelta
 from requests.exceptions import HTTPError
@@ -131,44 +131,44 @@ def index():
 
 
 def get():
-    pass
+    raise NotFound
 
 
 def get_files():
-    pass
+    raise NotFound
 
 
 def cancel_files():
-    pass
+    raise NotFound
 
 
 def cancel_all_by_vo():
-    pass
+    raise NotFound
 
 
 def cancel_all():
-    pass
+    raise NotFound
 
 
 def get_file_retries():
-    pass
+    raise NotFound
 
 
 def get_dm():
-    pass
+    raise NotFound
 
 
 def get_field():
-    pass
+    raise NotFound
 
 
 def cancel():
-    pass
+    raise NotFound
 
 
 def modify():
-    pass
+    raise NotFound
 
 
 def submit():
-    pass
+    raise NotFound

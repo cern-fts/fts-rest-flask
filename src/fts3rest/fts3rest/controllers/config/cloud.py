@@ -1,22 +1,25 @@
+from werkzeug.exceptions import NotFound
+
+
 def get_cloud_storages():
-    pass
+    raise NotFound
 
 
 def set_cloud_storages():
-    pass
+    raise NotFound
 
 
 def get_cloud_storage():
-    pass
+    raise NotFound
 
 
 def remove_cloud_storage():
-    pass
+    raise NotFound
 
 
 def add_user_to_cloud_storage():
-    pass
+    raise NotFound
 
 
 def remove_user_from_cloud_storage():
-    pass
+    raise NotFound

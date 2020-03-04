@@ -26,12 +26,24 @@ Developers should add the `pre-commit` hook to their local repository. This scri
 - Runs radon and bandit only on the changed files.
 The hook can be skipped, in case bandit detects false positives, with the commit option `--no-verify`.
 
-# Dependencies
+# Python dependencies
 This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies:
 - `requirements.in`: list of dependencies for the production app
 - `dev-requirements.in`: extra list of packages used for development (e.g. static code analysis)
 - `pipcompile.sh`: run it in the development server in order to generate `requirements.txt`
 - `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
+
+# Installation requirements
+- yum install mod_wsgi python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel
+# Installation requirements for development
+
+
+# How to run development server
+export PYTHONPATH=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest 
+export FLASK_APP=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3rest.wsgi
+export FLASK_ENV=development
+flask run 
+curl  http://127.0.0.1:5000/hello
 
 # Migration status
 Starting with the client, as it requires small changes only. Will not migrate pycurlrequest.py, as it is not used

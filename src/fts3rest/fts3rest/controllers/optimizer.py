@@ -1,14 +1,17 @@
+from werkzeug.exceptions import NotFound
+
+
 def is_enabled():
-    pass
+    raise NotFound
 
 
 def evolution():
-    pass
+    raise NotFound
 
 
 def get_optimizer_values():
-    pass
+    raise NotFound
 
 
 def set_optimizer_values():
-    pass
+    raise NotFound

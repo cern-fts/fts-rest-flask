@@ -1,14 +1,17 @@
+from werkzeug.exceptions import NotFound
+
+
 def set_link_config():
-    pass
+    raise NotFound
 
 
 def get_all_link_configs():
-    pass
+    raise NotFound
 
 
 def get_link_config():
-    pass
+    raise NotFound
 
 
 def delete_link_config():
-    pass
+    raise NotFound
