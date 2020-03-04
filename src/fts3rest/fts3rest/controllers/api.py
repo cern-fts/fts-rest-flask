@@ -1,18 +1,21 @@
+from werkzeug.exceptions import NotFound
+
+
 def api_version():
-    pass
+    raise NotFound
 
 
 def options_handler():
-    pass
+    raise NotFound
 
 
 def submit_schema():
-    pass
+    raise NotFound
 
 
 def api_docs():
-    pass
+    raise NotFound
 
 
 def resource_doc():
-    pass
+    raise NotFound

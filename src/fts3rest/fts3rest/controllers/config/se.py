@@ -1,10 +1,13 @@
+from werkzeug.exceptions import NotFound
+
+
 def set_se_config():
-    pass
+    raise NotFound
 
 
 def get_se_config():
-    pass
+    raise NotFound
 
 
 def delete_se_config():
-    pass
+    raise NotFound

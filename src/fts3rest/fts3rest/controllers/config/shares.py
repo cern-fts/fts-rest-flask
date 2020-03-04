@@ -1,10 +1,13 @@
+from werkzeug.exceptions import NotFound
+
+
 def set_share():
-    pass
+    raise NotFound
 
 
 def get_shares():
-    pass
+    raise NotFound
 
 
 def delete_share():
-    pass
+    raise NotFound

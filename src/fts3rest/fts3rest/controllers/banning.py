@@ -1,22 +1,25 @@
+from werkzeug.exceptions import NotFound
+
+
 def ban_se():
-    pass
+    raise NotFound
 
 
 def unban_se():
-    pass
+    raise NotFound
 
 
 def list_banned_se():
-    pass
+    raise NotFound
 
 
 def ban_dn():
-    pass
+    raise NotFound
 
 
 def unban_dn():
-    pass
+    raise NotFound
 
 
 def list_banned_dn():
-    pass
+    raise NotFound

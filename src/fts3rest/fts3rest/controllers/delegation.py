@@ -1,30 +1,33 @@
+from werkzeug.exceptions import NotFound
+
+
 def whoami():
-    pass
+    raise NotFound
 
 
 def certificate():
-    pass
+    raise NotFound
 
 
 def view():
-    pass
+    raise NotFound
 
 
 def delete():
-    pass
+    raise NotFound
 
 
 def request():
-    pass
+    raise NotFound
 
 
 def credential():
-    pass
+    raise NotFound
 
 
 def voms():
-    pass
+    raise NotFound
 
 
 def delegation_page():
-    pass
+    raise NotFound

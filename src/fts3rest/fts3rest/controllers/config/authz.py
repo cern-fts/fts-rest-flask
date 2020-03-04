@@ -1,10 +1,13 @@
+from werkzeug.exceptions import NotFound
+
+
 def add_authz():
-    pass
+    raise NotFound
 
 
 def list_authz():
-    pass
+    raise NotFound
 
 
 def remove_authz():
-    pass
+    raise NotFound

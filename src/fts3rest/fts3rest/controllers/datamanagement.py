@@ -1,22 +1,25 @@
+from werkzeug.exceptions import NotFound
+
+
 def list():
-    pass
+    raise NotFound
 
 
 def stat():
-    pass
+    raise NotFound
 
 
 def mkdir():
-    pass
+    raise NotFound
 
 
 def unlink():
-    pass
+    raise NotFound
 
 
 def rmdir():
-    pass
+    raise NotFound
 
 
 def rename():
-    pass
+    raise NotFound

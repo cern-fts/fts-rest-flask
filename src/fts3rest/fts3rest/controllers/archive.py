@@ -1,10 +1,13 @@
+from werkzeug.exceptions import NotFound
+
+
 def index():
-    pass
+    raise NotFound
 
 
 def get():
-    pass
+    raise NotFound
 
 
 def get_field():
-    pass
+    raise NotFound

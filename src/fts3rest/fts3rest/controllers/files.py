@@ -1,2 +1,5 @@
+from werkzeug.exceptions import NotFound
+
+
 def index():
-    pass
+    raise NotFound
