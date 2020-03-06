@@ -35,7 +35,7 @@ def fts3_config_load(path="/etc/fts3/fts3config"):
         with open(path) as config_file:
             content = "[fts3]\n" + config_file.read()
     except IOError as ex:
-        log.exception('Failed to load configuration file')
+        log.exception("Failed to load configuration file")
         raise ex
 
     parser = ConfigParser()
