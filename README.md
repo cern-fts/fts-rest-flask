@@ -34,7 +34,7 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 - `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
 
 # Installation requirements
-- yum install mod_wsgi python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel
+- yum install mod_wsgi python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
 # Installation requirements for development
 
 
