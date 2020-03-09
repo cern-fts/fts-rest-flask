@@ -60,7 +60,7 @@ do
     if [ $exit_code -eq 0 ] && [ $formatted -eq 0 ]
     then 
         INFO "    formatted $file"
-        at_least_one_formatted=true
+        git add $file
     fi
     if [ $exit_code -eq 123 ]
     then 
@@ -70,11 +70,6 @@ do
     fi
 done
 
-if [ "$at_least_one_formatted" = true ]
-then
-    git add --update
-    #FILES=$(git diff --cached --name-only --diff-filter=ACMR "*.py") not necessary
-fi
 }
 
 run_pylint () {
