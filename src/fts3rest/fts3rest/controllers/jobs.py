@@ -142,6 +142,10 @@ def _get_job(job_id, env=None):
     return job
 
 
+def get(job_list, start_response):
+    raise NotFound
+
+
 # @jsonify
 # def get(job_list, start_response):
 #     """
