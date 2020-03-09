@@ -31,6 +31,7 @@ from fts3.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
 
 from fts3rest.lib.http_exceptions import *
+from fts3rest.lib.middleware.fts3auth.authorization import authorize, authorized
 from fts3rest.lib.middleware.fts3auth.constants import TRANSFER, PRIVATE, NONE, VO
 
 log = logging.getLogger(__name__)
@@ -130,8 +131,74 @@ def index():
         return jsonify(jobs)
 
 
-def get():
+def _get_job(job_id, env=None):
+    job = Session.query(Job).get(job_id)
+    if job is None:
+        raise NotFound('No job with the id "%s" has been found' % job_id)
+    if not authorized(
+        TRANSFER, resource_owner=job.user_dn, resource_vo=job.vo_name, env=env
+    ):
+        raise Forbidden('Not enough permissions to check the job "%s"' % job_id)
+    return job
+
+
+def get(job_list, start_response):
     raise NotFound
+
+
+# @jsonify
+# def get(job_list, start_response):
+#     """
+#     Get the job with the given ID
+#     """
+#     job_ids = job_list.split(',')
+#     multistatus = False
+#
+#     # request is not available inside the generator
+#     environ = request.environ
+#     if 'files' in request.args:
+#         file_fields = request.args['files'].split(',')
+#     else:
+#         file_fields = []
+#
+#     statuses = []
+#     for job_id in filter(len, job_ids):
+#         try:
+#             job = _get_job(job_id, env=environ)
+#             if len(file_fields):
+#                 class FileIterator(object):
+#                     def __init__(self, job_id):
+#                         self.job_id = job_id
+#
+#                     def __call__(self):
+#                         for f in Session.query(File).filter(File.job_id == self.job_id):
+#                             fd = dict()
+#                             for field in file_fields:
+#                                 try:
+#                                     fd[field] = getattr(f, field)
+#                                 except AttributeError:
+#                                     pass
+#                             yield fd
+#                 job.__dict__['files'] = FileIterator(job.job_id)()
+#             setattr(job, 'http_status', '200 Ok')
+#             statuses.append(job)
+#         except HTTPError, e:
+#             if len(job_ids) == 1:
+#                 raise
+#             statuses.append(dict(
+#                 job_id=job_id,
+#                 http_status="%s %s" % (e.code, e.title),
+#                 http_message=e.detail
+#             ))
+#             multistatus = True
+#
+#     if len(job_ids) == 1:
+#         return statuses[0]
+#
+#     if multistatus:
+#         start_response('207 Multi-Status', [('Content-Type', 'application/json')])
+#     return statuses
+#
 
 
 def get_files():
