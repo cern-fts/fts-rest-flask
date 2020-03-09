@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from flask import request, Response, jsonify
-from werkzeug.exceptions import Forbidden, BadRequest, NotFound
+from werkzeug.exceptions import Forbidden, BadRequest, NotFound, HTTPException
 
 from datetime import datetime, timedelta
 from requests.exceptions import HTTPError
@@ -142,71 +142,148 @@ def _get_job(job_id, env=None):
     return job
 
 
-def get(job_list, start_response):
-    raise NotFound
+def get(job_list):
+    """
+    Get the job with the given ID
+    """
+    job_ids = job_list.split(",")
+    multistatus = False
+
+    # request is not available inside the generator
+    environ = request.environ
+    if "files" in request.args:
+        file_fields = request.args["files"].split(",")
+    else:
+        file_fields = []
+
+    statuses = []
+    for job_id in filter(len, job_ids):
+        try:
+            job = _get_job(job_id, env=environ)
+            if len(file_fields):
+
+                class FileIterator(object):
+                    def __init__(self, job_id):
+                        self.job_id = job_id
+
+                    def __call__(self):
+                        for f in Session.query(File).filter(File.job_id == self.job_id):
+                            fd = dict()
+                            for field in file_fields:
+                                try:
+                                    fd[field] = getattr(f, field)
+                                except AttributeError:
+                                    pass
+                            yield fd
+
+                job.__dict__["files"] = FileIterator(job.job_id)()
+            setattr(job, "http_status", "200 Ok")
+            statuses.append(job)
+        except HTTPException as ex:
+            if len(job_ids) == 1:
+                raise
+            statuses.append(
+                dict(
+                    job_id=job_id,
+                    http_status="%s %s" % (ex.code, ex.name),
+                    http_message=ex.description,
+                )
+            )
+            multistatus = True
+
+    if len(job_ids) == 1:
+        return statuses[0]
+
+    if multistatus:
+        return Response(statuses, status=207, mimetype="application/json")
+    else:
+        return jsonify(statuses)
 
 
-# @jsonify
-# def get(job_list, start_response):
-#     """
-#     Get the job with the given ID
-#     """
-#     job_ids = job_list.split(',')
-#     multistatus = False
-#
-#     # request is not available inside the generator
-#     environ = request.environ
-#     if 'files' in request.args:
-#         file_fields = request.args['files'].split(',')
-#     else:
-#         file_fields = []
-#
-#     statuses = []
-#     for job_id in filter(len, job_ids):
-#         try:
-#             job = _get_job(job_id, env=environ)
-#             if len(file_fields):
-#                 class FileIterator(object):
-#                     def __init__(self, job_id):
-#                         self.job_id = job_id
-#
-#                     def __call__(self):
-#                         for f in Session.query(File).filter(File.job_id == self.job_id):
-#                             fd = dict()
-#                             for field in file_fields:
-#                                 try:
-#                                     fd[field] = getattr(f, field)
-#                                 except AttributeError:
-#                                     pass
-#                             yield fd
-#                 job.__dict__['files'] = FileIterator(job.job_id)()
-#             setattr(job, 'http_status', '200 Ok')
-#             statuses.append(job)
-#         except HTTPError, e:
-#             if len(job_ids) == 1:
-#                 raise
-#             statuses.append(dict(
-#                 job_id=job_id,
-#                 http_status="%s %s" % (e.code, e.title),
-#                 http_message=e.detail
-#             ))
-#             multistatus = True
-#
-#     if len(job_ids) == 1:
-#         return statuses[0]
-#
-#     if multistatus:
-#         start_response('207 Multi-Status', [('Content-Type', 'application/json')])
-#     return statuses
-#
+def get_files(job_id):
+    """
+    Get the files within a job
+    """
+    owner = Session.query(Job.user_dn, Job.vo_name).filter(Job.job_id == job_id).first()
+    if owner is None:
+        raise NotFound('No job with the id "%s" has been found' % job_id)
+    if not authorized(TRANSFER, resource_owner=owner[0], resource_vo=owner[1]):
+        raise Forbidden('Not enough permissions to check the job "%s"' % job_id)
+    files = (
+        Session.query(File).filter(File.job_id == job_id).options(noload(File.retries))
+    )
+    return Response(
+        files.yield_per(100).enable_eagerloads(False), mimetype="application/json"
+    )
 
 
-def get_files():
-    raise NotFound
+def cancel_files(job_id, file_ids):
+    """
+    Cancel individual files - comma separated for multiple - within a job
+    """
+    job = _get_job(job_id)
 
+    if job.job_type != "N":
+        raise BadRequest(
+            "Multihop or reuse jobs must be cancelled at once (%s)" % str(job.job_type)
+        )
 
-def cancel_files():
-    raise NotFound
+    file_ids = file_ids.split(",")
+    changed_states = []
+
+    try:
+        # Mark files in the list as CANCELED
+        for file_id in file_ids:
+            file = Session.query(File).get(file_id)
+            if not file or file.job_id != job_id:
+                changed_states.append("File does not belong to the job")
+                continue
+
+            if file.file_state not in FileActiveStates:
+                changed_states.append(file.file_state)
+                continue
+
+            file.file_state = "CANCELED"
+            file.finish_time = datetime.utcnow()
+            file.dest_surl_uuid = None
+            changed_states.append("CANCELED")
+            Session.merge(file)
+
+        # Mark job depending on the status of the rest of files
+        not_changed_states = [
+            f.file_state for f in job.files if f.file_id not in file_ids
+        ]
+        all_states = not_changed_states + changed_states
+
+        # All files within the job have been canceled
+        if not not_changed_states:
+            job.job_state = "CANCELED"
+            job.cancel_job = True
+            job.job_finished = datetime.utcnow()
+            log.warning("Cancelling all remaining files within the job %s" % job_id)
+        # No files in non-terminal, mark the job as CANCELED too
+        elif not any(s for s in all_states if s in FileActiveStates):
+            log.warning(
+                "Cancelling a file within a job with others in terminal state (%s)"
+                % job_id
+            )
+            job.job_state = "CANCELED"
+            job.cancel_job = True
+            job.job_finished = datetime.utcnow()
+        else:
+            log.warning(
+                "Cancelling files within a job with others still active (%s)" % job_id
+            )
+
+        Session.merge(job)
+        Session.commit()
+    except Exception:
+        Session.rollback()
+        raise
+    if len(changed_states) > 1:
+        return jsonify(changed_states)
+    else:
+        return jsonify(changed_states[0])
 
 
 def cancel_all_by_vo():
@@ -217,12 +294,35 @@ def cancel_all():
     raise NotFound
 
 
-def get_file_retries():
-    raise NotFound
+def get_file_retries(job_id, file_id):
+    """
+    Get the retries for a given file
+    """
+    owner = Session.query(Job.user_dn, Job.vo_name).filter(Job.job_id == job_id).all()
+    if owner is None or len(owner) < 1:
+        raise NotFound('No job with the id "%s" has been found' % job_id)
+    if not authorized(TRANSFER, resource_owner=owner[0][0], resource_vo=owner[0][1]):
+        raise Forbidden('Not enough permissions to check the job "%s"' % job_id)
+    f = Session.query(File.file_id).filter(File.file_id == file_id)
+    if not f:
+        raise NotFound('No file with the id "%d" has been found' % file_id)
+    retries = Session.query(FileRetryLog).filter(FileRetryLog.file_id == file_id)
+    return Response(retries.all(), mimetype="application/json")
 
 
-def get_dm():
-    raise NotFound
+def get_dm(job_id):
+    """
+    Get the data management tasks within a job
+    """
+    owner = Session.query(Job.user_dn, Job.vo_name).filter(Job.job_id == job_id).first()
+    if owner is None:
+        raise NotFound('No job with the id "%s" has been found' % job_id)
+    if not authorized(TRANSFER, resource_owner=owner[0], resource_vo=owner[1]):
+        raise Forbidden('Not enough permissions to check the job "%s"' % job_id)
+    dm = Session.query(DataManagement).filter(DataManagement.job_id == job_id)
+    return Response(
+        dm.yield_per(100).enable_eagerloads(False), mimetype="application/json"
+    )
 
 
 def get_field():
