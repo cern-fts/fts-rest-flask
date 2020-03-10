@@ -15,11 +15,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV LC_ALL en_US.utf-8
 ENV LANG en_US.utf-8
 
-COPY pipcompile.sh .
-COPY pipsyncdev.sh .
-COPY dev-requirements.in .
-COPY requirements.in .
+COPY --chown=ci pipcompile.sh pipsyncdev.sh dev-requirements.in requirements.in ./
 
 RUN python3 -m venv $VIRTUAL_ENV
 RUN pip3 install --upgrade pip && pip3 install pip-tools
-RUN ["/bin/bash", "-c", "source pipcompile.sh && source pipsyncdev.sh"]
+RUN chmod u+x pipcompile.sh && ./pipcompile.sh
+RUN chmod u+x pipsyncdev.sh && ./pipsyncdev.sh

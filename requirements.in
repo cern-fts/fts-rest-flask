@@ -3,4 +3,4 @@ SQLAlchemy
 M2Crypto
 requests
 dirq
-gfal2
+gfal2-python
