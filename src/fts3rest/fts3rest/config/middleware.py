@@ -9,7 +9,7 @@ def create_app(config_filename):
 
     @app.errorhandler(NotFound)
     def handle_invalid_usage(error):
-        response = jsonify(error=error.code, description=error.description)
+        response = jsonify(error=error.code, name=error.name)
         response.status_code = error.code
         return response
 
