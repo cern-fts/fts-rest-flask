@@ -1,3 +1,4 @@
+# pylint: skip-file
 #   Copyright  Members of the EMI Collaboration, 2013.
 #   Copyright 2020 CERN
 #
