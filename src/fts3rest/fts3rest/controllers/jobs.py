@@ -14,15 +14,12 @@
 #   limitations under the License.
 
 from flask import request, Response, jsonify
-from werkzeug.exceptions import Forbidden, BadRequest, NotFound, HTTPException
+from werkzeug.exceptions import Forbidden, BadRequest, NotFound, Conflict
 
 from datetime import datetime, timedelta
-from requests.exceptions import HTTPError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import noload
 
-
-import json
 import logging
 
 from fts3.model import Job, File, JobActiveStates, FileActiveStates
@@ -31,8 +28,11 @@ from fts3.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
 
 from fts3rest.lib.http_exceptions import *
-from fts3rest.lib.middleware.fts3auth.authorization import authorize, authorized
+from fts3rest.lib.middleware.fts3auth.authorization import authorized
 from fts3rest.lib.middleware.fts3auth.constants import TRANSFER, PRIVATE, NONE, VO
+from fts3rest.lib.helpers.misc import get_input_as_dict
+from fts3rest.lib.helpers.msgbus import submit_state_change
+from fts3rest.lib.JobBuilder import JobBuilder
 
 log = logging.getLogger(__name__)
 
@@ -325,17 +325,284 @@ def get_dm(job_id):
     )
 
 
-def get_field():
-    raise NotFound
+def get_field(job_id, field):
+    """
+    Get a specific field from the job identified by id
+    """
+    job = _get_job(job_id)
+    if hasattr(job, field):
+        return jsonify(getattr(job, field))
+    else:
+        raise NotFound("No such field")
 
 
-def cancel():
-    raise NotFound
+def _multistatus(responses, expecting_multistatus=False):
+    """
+    Return 200 if everything is Ok, 207 if there is any errors,
+    and, if input was only one, do not return an array
+    """
+    if not expecting_multistatus:
+        single = responses[0]
+        if isinstance(single, Job):
+            if single.http_status not in ("200 Ok", "304 Not Modified"):
+                return Response(
+                    single, status=single.http_status, mimetype="application/json"
+                )
+        elif single["http_status"] not in ("200 Ok", "304 Not Modified"):
+            return Response(
+                single, status=single["http_status"], mimetype="application/json"
+            )
+        return single
+
+    for response in responses:
+        if isinstance(response, dict) and not response.get(
+            "http_status", ""
+        ).startswith("2"):
+            return Response(responses, status=207, mimetype="application/json")
+    return responses
 
 
-def modify():
-    raise NotFound
+def cancel(job_id_list):
+    """
+    Cancel the given job
+
+    Returns the canceled job with its current status. CANCELED if it was canceled,
+    its final status otherwise
+    """
+    requested_job_ids = job_id_list.split(",")
+    cancellable_jobs = []
+    responses = []
+
+    # First, check which job ids exist and can be accessed
+    for job_id in requested_job_ids:
+        # Skip empty
+        if not job_id:
+            continue
+        try:
+            job = _get_job(job_id)
+            if job.job_state in JobActiveStates:
+                cancellable_jobs.append(job)
+            else:
+                setattr(job, "http_status", "304 Not Modified")
+                setattr(job, "http_message", "The job is in a terminal state")
+                log.warning(
+                    "The job %s can not be canceled, since it is %s"
+                    % (job_id, job.job_state)
+                )
+                responses.append(job)
+        except HTTPException as ex:
+            responses.append(
+                dict(
+                    job_id=job_id,
+                    http_status="%s %s" % (ex.code, ex.name),
+                    http_message=ex.description,
+                )
+            )
+
+    # Now, cancel those that can be canceled
+    now = datetime.utcnow()
+    try:
+        for job in cancellable_jobs:
+            job.job_state = "CANCELED"
+            job.cancel_job = True
+            job.job_finished = now
+            job.reason = "Job canceled by the user"
+
+            # FTS3 daemon expects finish_time to be NULL in order to trigger the signal
+            # to fts_url_copy, but this only makes sense if pid is set
+            Session.query(File).filter(File.job_id == job.job_id).filter(
+                File.file_state.in_(FileActiveStates), File.pid != None
+            ).update(
+                {
+                    "file_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "dest_surl_uuid": None,
+                    "finish_time": None,
+                },
+                synchronize_session=False,
+            )
+            Session.query(File).filter(File.job_id == job.job_id).filter(
+                File.file_state.in_(FileActiveStates), File.pid == None
+            ).update(
+                {
+                    "file_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "dest_surl_uuid": None,
+                    "finish_time": now,
+                },
+                synchronize_session=False,
+            )
+            # However, for data management operations there is nothing to signal, so
+            # set job_finished
+            Session.query(DataManagement).filter(
+                DataManagement.job_id == job.job_id
+            ).filter(DataManagement.file_state.in_(DataManagementActiveStates)).update(
+                {
+                    "file_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "job_finished": now,
+                    "finish_time": now,
+                },
+                synchronize_session=False,
+            )
+            job = Session.merge(job)
+
+            log.info("Job %s canceled" % job.job_id)
+            setattr(job, "http_status", "200 Ok")
+            setattr(job, "http_message", None)
+            responses.append(job)
+            Session.expunge(job)
+        Session.commit()
+        Session.expire_all()
+    except Exception:
+        Session.rollback()
+        raise
+
+    return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
+
+
+def modify(job_id_list):
+    """
+    Modify a job, or set of jobs
+    """
+    requested_job_ids = job_id_list.split(",")
+    modifiable_jobs = []
+    responses = []
+
+    # First, check which job ids exist and can be accessed
+    for job_id in requested_job_ids:
+        # Skip empty
+        if not job_id:
+            continue
+        try:
+            job = _get_job(job_id)
+            if job.job_state in JobActiveStates:
+                modifiable_jobs.append(job)
+            else:
+                setattr(job, "http_status", "304 Not Modified")
+                setattr(job, "http_message", "The job is in a terminal state")
+                log.warning(
+                    "The job %s can not be modified, since it is %s"
+                    % (job_id, job.job_state)
+                )
+                responses.append(job)
+        except HTTPException as ex:
+            responses.append(
+                dict(
+                    job_id=job_id,
+                    http_status="%s %s" % (ex.code, ex.name),
+                    http_message=ex.description,
+                )
+            )
+
+    # Now, modify those that can be
+    modification = get_input_as_dict(request)
+    priority = None
+    try:
+        # todo: verify this is correct for the migration
+        priority = int(modification["priority"])
+    except KeyError:
+        pass
+    except ValueError:
+        raise BadRequest("Invalid priority value")
+
+    try:
+        for job in modifiable_jobs:
+            if priority:
+                for file in job.files:
+                    file.priority = priority
+                    Session.merge(file)
+                    log.info(
+                        "File from Job %s priority changed to %d"
+                        % (job.job_id, priority)
+                    )
+                job.priority = priority
+                job = Session.merge(job)
+                log.info("Job %s priority changed to %d" % (job.job_id, priority))
+            setattr(job, "http_status", "200 Ok")
+            setattr(job, "http_message", None)
+            responses.append(job)
+            Session.expunge(job)
+        Session.commit()
+        Session.expire_all()
+    except Exception:
+        Session.rollback()
+        raise
+
+    return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
 
 
 def submit():
-    raise NotFound
+    """
+    Submits a new job
+
+    It returns the information about the new submitted job. To know the format for the
+    submission, /api-docs/schema/submit gives the expected format encoded as a JSON-schema.
+    It can be used to validate (i.e in Python, jsonschema.validate)
+    """
+    # First, the request has to be valid JSON
+    submitted_dict = get_input_as_dict(request)
+
+    # The auto-generated delegation id must be valid
+    user = request.environ["fts3.User.Credentials"]
+    credential = Session.query(Credential).get((user.delegation_id, user.user_dn))
+    if credential is None:
+        raise HTTPAuthenticationTimeout('No delegation found for "%s"' % user.user_dn)
+    if credential.expired():
+        remaining = credential.remaining()
+        seconds = abs(remaining.seconds + remaining.days * 24 * 3600)
+        raise HTTPAuthenticationTimeout(
+            "The delegated credentials expired %d seconds ago (%s)"
+            % (seconds, user.delegation_id)
+        )
+    if user.method != "oauth2" and credential.remaining() < timedelta(hours=1):
+        raise HTTPAuthenticationTimeout(
+            "The delegated credentials has less than one hour left (%s)"
+            % user.delegation_id
+        )
+
+    # Populate the job and files
+    populated = JobBuilder(user, **submitted_dict)
+
+    log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
+
+    # Insert the job
+    try:
+        try:
+            Session.execute(Job.__table__.insert(), [populated.job])
+        except IntegrityError:
+            raise Conflict("The sid provided by the user is duplicated")
+        if len(populated.files):
+            Session.execute(File.__table__.insert(), populated.files)
+        if len(populated.datamanagement):
+            Session.execute(DataManagement.__table__.insert(), populated.datamanagement)
+        Session.flush()
+        Session.commit()
+    except IntegrityError as err:
+        Session.rollback()
+        raise Conflict("The submission is duplicated " + str(err))
+    except:
+        Session.rollback()
+        raise
+
+    # Send messages
+    # Need to re-query so we get the file ids
+    job = Session.query(Job).get(populated.job_id)
+    for i in range(len(job.files)):
+        try:
+            submit_state_change(job, job.files[i], populated.files[0]["file_state"])
+        except Exception as ex:
+            log.warning("Failed to write state message to disk: %s" % str(ex))
+
+    if len(populated.files):
+        log.info(
+            "Job %s submitted with %d transfers"
+            % (populated.job_id, len(populated.files))
+        )
+    elif len(populated.datamanagement):
+        log.info(
+            "Job %s submitted with %d data management operations"
+            % (populated.job_id, len(populated.datamanagement))
+        )
+
+    return {"job_id": populated.job_id}
