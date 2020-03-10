@@ -26,7 +26,7 @@ from datetime import datetime
 import errno
 import logging
 import os
-import stat
+from stat import S_ISDIR
 import tempfile
 from urllib.parse import urlparse, unquote_plus
 
@@ -142,7 +142,7 @@ def _list_impl(context, surl):
     (entry, st_stat) = dir_handle.readpp()
     while entry:
         d_name = entry.d_name
-        if stat.S_ISDIR(st_stat.st_mode):
+        if S_ISDIR(st_stat.st_mode):
             d_name += "/"
         listing[d_name] = {
             "size": st_stat.st_size,
