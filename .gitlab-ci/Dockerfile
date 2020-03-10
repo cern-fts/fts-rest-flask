@@ -1,6 +1,6 @@
 FROM centos:7
 
-RUN yum install python3 git python3-devel openssl-devel swig gcc gcc-c++ make -y && \
+RUN yum install python3 git python3-devel openssl-devel swig gcc gcc-c++ make mysql-devel -y && \
 yum clean all
 
 RUN useradd --create-home ci
@@ -15,8 +15,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV LC_ALL en_US.utf-8
 ENV LANG en_US.utf-8
 
-RUN python3 -m venv $VIRTUAL_ENV
-RUN pip3 install --upgrade pip
-RUN pip3 install pip-tools black pylint radon bandit
-RUN pip3 install Flask SQLAlchemy M2Crypto requests
+COPY --chown=ci pipcompile.sh pipsyncdev.sh dev-requirements.in requirements.in ./
 
+RUN python3 -m venv $VIRTUAL_ENV
+RUN pip3 install --upgrade pip && pip3 install pip-tools
+RUN chmod u+x pipcompile.sh && ./pipcompile.sh
+RUN chmod u+x pipsyncdev.sh && ./pipsyncdev.sh
