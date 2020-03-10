@@ -498,9 +498,9 @@ def modify(job_id_list):
     # Now, modify those that can be
     modification = get_input_as_dict(request)
     priority = None
+    # todo: verify this is correct for the migration
     try:
-        # todo: verify this is correct for the migration
-        priority = int(modification["priority"])
+        priority = int(modification["params"]["priority"])
     except KeyError:
         pass
     except ValueError:
