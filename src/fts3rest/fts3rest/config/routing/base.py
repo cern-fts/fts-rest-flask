@@ -57,38 +57,43 @@ def do_connect(app):
     # app.add_url_rule("/<path:.*?>", api.options_handler, methods=["OPTIONS"])
 
     # Delegation and self-identification
-    app.add_url_rule("/whoami", "delegation.whoami", delegation.whoami, methods=["GET"])
+    app.add_url_rule(
+        "/whoami", "delegation.whoami", delegation.whoami.as_view(), methods=["GET"]
+    )
     app.add_url_rule(
         "/whoami/certificate",
         "delegation.certificate",
-        delegation.certificate,
+        delegation.certificate.as_view(),
         methods=["GET"],
     )
     app.add_url_rule(
-        "/delegation/<dlg_id>", "delegation.view", delegation.view, methods=["GET"]
+        "/delegation/<dlg_id>",
+        "delegation.view",
+        delegation.view.as_view(),
+        methods=["GET"],
     )
     app.add_url_rule(
         "/delegation/<dlg_id>",
         "delegation.delete",
-        delegation.delete,
+        delegation.delete.as_view(),
         methods=["DELETE"],
     )
     app.add_url_rule(
         "/delegation/<dlg_id>/request",
         "delegation.request",
-        delegation.request,
+        delegation.request.as_view(),
         methods=["GET"],
     )
     app.add_url_rule(
         "/delegation/<dlg_id>/credential",
         "delegation.credential",
-        delegation.credential,
+        delegation.credential.as_view(),
         methods=["PUT", "POST"],
     )
     app.add_url_rule(
         "/delegation/<dlg_id>/voms",
         "delegation.voms",
-        delegation.voms,
+        delegation.voms.as_view(),
         methods=["POST"],
     )
 
@@ -96,7 +101,7 @@ def do_connect(app):
     app.add_url_rule(
         "/delegation",
         "delegation.delegation_page",
-        delegation.delegation_page,
+        delegation.delegation_page.as_view(),
         methods=["GET"],
     )
 
