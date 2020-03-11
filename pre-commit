@@ -77,7 +77,7 @@ INFO "Running pylint    (checking syntax errors)"
 for file in $FILES
 do
     pylint_output="$(pylint --output-format colorized --disable C,R,W,E0402,E0602 \
-    --init-hook='from sys.path mport append; append("src/fts3rest"); append("src/fts3")' \
+    --init-hook='import sys; sys.path.append("src/fts3rest"); sys.path.append("src/")' \
     --ignored-modules=sqlalchemy --reports no --persistent no $file 2>&1)"
     # ignore E0402 because pylint doesn't know top-level package
     # ignore E0602 because pylint doesn't see imports
