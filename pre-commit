@@ -76,7 +76,8 @@ run_pylint () {
 INFO "Running pylint    (checking syntax errors)"
 for file in $FILES
 do
-    pylint_output="$(pylint --output-format colorized --disable C,R,W,E0402,E0602 --reports no --persistent no $file 2>&1)"
+    pylint_output="$(pylint --output-format colorized --disable C,R,W,E0402,E0602 \
+    --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy --reports no --persistent no $file 2>&1)"
     # ignore E0402 because pylint doesn't know top-level package
     # ignore E0602 because pylint doesn't see imports
     exit_code=$?
