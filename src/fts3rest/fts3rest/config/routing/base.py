@@ -57,46 +57,46 @@ def do_connect(app):
     # app.add_url_rule("/<path:.*?>", api.options_handler, methods=["OPTIONS"])
 
     # Delegation and self-identification
-    app.add_url_rule("/whoami", "delegation.whoami", delegation.whoami, methods=["GET"])
     app.add_url_rule(
-        "/whoami/certificate",
-        "delegation.certificate",
-        delegation.certificate,
+        "/whoami",
+        view_func=delegation.whoami.as_view("delegation.whoami"),
         methods=["GET"],
     )
     app.add_url_rule(
-        "/delegation/<dlg_id>", "delegation.view", delegation.view, methods=["GET"]
+        "/whoami/certificate",
+        view_func=delegation.certificate.as_view("delegation.certificate"),
+        methods=["GET"],
     )
     app.add_url_rule(
         "/delegation/<dlg_id>",
-        "delegation.delete",
-        delegation.delete,
+        view_func=delegation.view.as_view("delegation.view"),
+        methods=["GET"],
+    )
+    app.add_url_rule(
+        "/delegation/<dlg_id>",
+        view_func=delegation.delete.as_view("delegation.delete"),
         methods=["DELETE"],
     )
     app.add_url_rule(
         "/delegation/<dlg_id>/request",
-        "delegation.request",
-        delegation.request,
+        view_func=delegation.request.as_view("delegation.request"),
         methods=["GET"],
     )
     app.add_url_rule(
         "/delegation/<dlg_id>/credential",
-        "delegation.credential",
-        delegation.credential,
+        view_func=delegation.credential.as_view("delegation.credential"),
         methods=["PUT", "POST"],
     )
     app.add_url_rule(
         "/delegation/<dlg_id>/voms",
-        "delegation.voms",
-        delegation.voms,
+        view_func=delegation.voms.as_view("delegation.voms"),
         methods=["POST"],
     )
 
     # Delegation HTML view
     app.add_url_rule(
         "/delegation",
-        "delegation.delegation_page",
-        delegation.delegation_page,
+        view_func=delegation.delegation_page.as_view("delegation.delegation_page"),
         methods=["GET"],
     )
 
