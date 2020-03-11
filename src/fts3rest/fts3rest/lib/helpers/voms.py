@@ -27,8 +27,8 @@ class VomsException(Exception):
     Exception thrown by the VOMS client wrapper
     """
 
-    def __int__(self, *args, **kwargs):
-        super(self, VomsException).__init__(args, kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
 
 
 def _check_proxy_validity(proxy_path):

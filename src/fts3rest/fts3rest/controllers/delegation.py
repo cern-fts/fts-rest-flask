@@ -27,7 +27,7 @@ from flask import current_app as app
 from flask.views import View
 from fts3.model import CredentialCache, Credential
 from fts3rest.model.meta import Session
-from fts3rest.lib.helpers import voms
+from fts3rest.lib.helpers.voms import VomsClient, VomsException
 from fts3rest.lib.middleware.fts3auth.authorization import require_certificate
 from fts3rest.lib.JobBuilder import get_base_id, get_vo_id
 from werkzeug.exceptions import NotFound, BadRequest, Forbidden, FailedDependency
@@ -378,9 +378,9 @@ class voms(Delegation):
             raise Forbidden("Delegated proxy already expired")
 
         try:
-            voms_client = voms.VomsClient(credential.proxy)
+            voms_client = VomsClient(credential.proxy)
             (new_proxy, new_termination_time) = voms_client.init(voms_list)
-        except voms.VomsException as ex:
+        except VomsException as ex:
             # Error generating the proxy because of the request itself
             raise FailedDependency(str(ex))
 
