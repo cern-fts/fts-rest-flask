@@ -21,7 +21,8 @@ import M2Crypto.threading
 
 from datetime import datetime
 from M2Crypto import X509, RSA, EVP, BIO
-from flask import request, jsonify, Response, render_template
+import flask
+from flask import jsonify, Response, render_template
 from flask import current_app as app
 from flask.views import View
 from fts3.model import CredentialCache, Credential
@@ -188,7 +189,7 @@ class whoami(Delegation):
         """
         Returns the active credentials of the user
         """
-        whoami = request.environ["fts3.User.Credentials"]
+        whoami = flask.request.environ["fts3.User.Credentials"]
         whoami.base_id = str(get_base_id())
         for vo in whoami.vos:
             whoami.vos_id.append(str(get_vo_id(vo)))
@@ -202,10 +203,10 @@ class certificate(Delegation):
         """
         n = 0
         full_cert = ""
-        cert = request.environ.get("SSL_CLIENT_CERT", None)
+        cert = flask.request.environ.get("SSL_CLIENT_CERT", None)
         while cert:
             full_cert += cert
-            cert = request.environ.get("SSL_CLIENT_CERT_CHAIN_%d" % n, None)
+            cert = flask.request.environ.get("SSL_CLIENT_CERT_CHAIN_%d" % n, None)
             n += 1
         if len(full_cert) > 0:
             ret = full_cert
@@ -219,7 +220,7 @@ class view(Delegation):
         """
                 Get the termination time of the current delegated credential, if any
                 """
-        user = request.environ["fts3.User.Credentials"]
+        user = flask.request.environ["fts3.User.Credentials"]
 
         if dlg_id != user.delegation_id:
             raise Forbidden("The requested ID and the credentials ID do not match")
@@ -240,7 +241,7 @@ class delete(Delegation):
         """
         Delete the delegated credentials from the database
         """
-        user = request.environ["fts3.User.Credentials"]
+        user = flask.request.environ["fts3.User.Credentials"]
 
         if dlg_id != user.delegation_id:
             raise Forbidden("The requested ID and the credentials ID do not match")
@@ -266,7 +267,7 @@ class request(Delegation):
         The returned certificate request must be signed with the user's original
         credentials.
         """
-        user = request.environ["fts3.User.Credentials"]
+        user = flask.request.environ["fts3.User.Credentials"]
 
         if dlg_id != user.delegation_id:
             raise Forbidden("The requested ID and the credentials ID do not match")
@@ -308,7 +309,7 @@ class credential(Delegation):
             - The certificate subject matches the certificate issuer + '/CN=Proxy'
             - The certificate modulus matches the stored private key modulus
         """
-        user = request.environ["fts3.User.Credentials"]
+        user = flask.request.environ["fts3.User.Credentials"]
 
         if dlg_id != user.delegation_id:
             raise Forbidden("The requested ID and the credentials ID do not match")
@@ -319,7 +320,7 @@ class credential(Delegation):
         if credential_cache is None:
             raise BadRequest("No credential cache found")
 
-        x509_proxy_pem = request.body
+        x509_proxy_pem = flask.request.body
         log.debug("Received delegated credentials for %s" % dlg_id)
         log.debug(x509_proxy_pem)
 
@@ -356,13 +357,13 @@ class voms(Delegation):
         The input must be a json-serialized list of strings, where each strings
         is a voms command (i.e. ["dteam", "dteam:/dteam/Role=lcgadmin"])
         """
-        user = request.environ["fts3.User.Credentials"]
+        user = flask.request.environ["fts3.User.Credentials"]
 
         if dlg_id != user.delegation_id:
             raise Forbidden("The requested ID and the credentials ID do not match")
 
         try:
-            voms_list = json.loads(request.body)
+            voms_list = json.loads(flask.request.body)
             log.debug(
                 "VOMS request received for %s: %s" % (dlg_id, ", ".join(voms_list))
             )
@@ -403,13 +404,13 @@ class delegation_page(Delegation):
         """
         Render an HTML form to delegate the credentials
         """
-        user = request.environ["fts3.User.Credentials"]
+        user = flask.request.environ["fts3.User.Credentials"]
         return render_template(
             "/delegation.html",
             extra_vars={
                 "user": user,
                 "vos": self.vo_list,
-                "certificate": request.environ.get("SSL_CLIENT_CERT", None),
+                "certificate": flask.request.environ.get("SSL_CLIENT_CERT", None),
                 "site": app.config["fts3.SiteName"],
             },
         )
