@@ -60,7 +60,7 @@ do
     if [ $exit_code -eq 0 ] && [ $formatted -eq 0 ]
     then 
         INFO "    formatted $file"
-        at_least_one_formatted=true
+        git add $file
     fi
     if [ $exit_code -eq 123 ]
     then 
@@ -70,18 +70,15 @@ do
     fi
 done
 
-if [ "$at_least_one_formatted" = true ]
-then
-    git add --update
-    #FILES=$(git diff --cached --name-only --diff-filter=ACMR "*.py") not necessary
-fi
 }
 
 run_pylint () {
 INFO "Running pylint    (checking syntax errors)"
 for file in $FILES
 do
-    pylint_output="$(pylint --output-format colorized --disable C,R,W,E0402,E0602 --reports no --persistent no $file 2>&1)"
+    pylint_output="$(pylint --output-format colorized --disable C,R,W,E0402,E0602 \
+    --init-hook='import sys; sys.path.append("src/fts3rest"); sys.path.append("src/")' \
+    --ignored-modules=sqlalchemy --reports no --persistent no $file 2>&1)"
     # ignore E0402 because pylint doesn't know top-level package
     # ignore E0602 because pylint doesn't see imports
     exit_code=$?

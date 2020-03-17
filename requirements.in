@@ -3,3 +3,5 @@ SQLAlchemy
 M2Crypto  #
 requests
 mysqlclient  #  requires python3-devel mysql-devel
+dirq
+

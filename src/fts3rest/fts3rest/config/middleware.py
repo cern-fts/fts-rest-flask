@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from werkzeug.exceptions import NotFound
 from sqlalchemy import engine_from_config, event
+import MySQLdb
 
 from fts3rest.config.routing import base
 from fts3.util.config import fts3_config_load
@@ -25,8 +26,6 @@ def create_app(default_config_filename):
     # Setup the SQLAlchemy database engine
     kwargs = dict()
     if app.config["sqlalchemy.url"].startswith("mysql://"):
-        import MySQLdb.cursors
-
         kwargs["connect_args"] = {"cursorclass": MySQLdb.cursors.SSCursor}
     engine = engine_from_config(app.config, "sqlalchemy.", pool_recycle=7200, **kwargs)
     init_model(engine)
@@ -49,7 +48,7 @@ def create_app(default_config_filename):
 
     @app.errorhandler(NotFound)
     def handle_invalid_usage(error):
-        response = jsonify(error=error.code, description=error.description)
+        response = jsonify(error=error.code, name=error.name)
         response.status_code = error.code
         return response
 
