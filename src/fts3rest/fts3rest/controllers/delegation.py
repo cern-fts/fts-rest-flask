@@ -29,7 +29,7 @@ from fts3.model import CredentialCache, Credential
 from fts3rest.model.meta import Session
 from fts3rest.lib.helpers.voms import VomsClient, VomsException
 from fts3rest.lib.middleware.fts3auth.authorization import require_certificate
-from fts3rest.lib.JobBuilder import get_base_id, get_vo_id
+from fts3rest.lib.JobBuilder_utils import get_base_id, get_vo_id
 from werkzeug.exceptions import NotFound, BadRequest, Forbidden, FailedDependency
 
 log = logging.getLogger(__name__)
