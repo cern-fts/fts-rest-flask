@@ -21,7 +21,7 @@ import logging
 
 from fts3.model import File
 from fts3rest.model.meta import Session
-from fts3rest.lib.JobBuilder import get_storage_element
+from fts3rest.lib.JobBuilder_utils import get_storage_element
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import *
 from fts3rest.lib.http_exceptions import *
