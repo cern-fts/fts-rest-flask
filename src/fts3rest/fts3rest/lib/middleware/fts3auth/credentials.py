@@ -92,7 +92,7 @@ class InvalidCredentials(Exception):
     pass
 
 
-class UserCredentials(object):
+class UserCredentials:
     """
     Handles the user credentials and privileges
     """

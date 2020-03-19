@@ -6,7 +6,7 @@ reduce the complexity of the module.
 import logging
 import random
 import uuid
-from flask import request
+from flask import current_app as app
 from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError
 
 from fts3.model import BannedSE
@@ -66,7 +66,7 @@ def is_dest_surl_uuid_enabled(vo_name):
     Args:
         vo_name: Name of the vo
     """
-    list_of_vos = request.config.get("fts3.CheckDuplicates", "None")
+    list_of_vos = app.config.get("fts3.CheckDuplicates", "None")
     if not list_of_vos:
         return False
     if vo_name in list_of_vos or "*" in list_of_vos:
