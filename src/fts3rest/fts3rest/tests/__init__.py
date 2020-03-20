@@ -189,7 +189,7 @@ class TestController(TestCase):
         Session.commit()
 
         # Delete messages
-        if "fts3.MessagingDirectory" in app.config:
+        if "fts3.MessagingDirectory" in self.flask_app.config:
             try:
                 shutil.rmtree(self.flask_app.config["fts3.MessagingDirectory"])
             except Exception:
