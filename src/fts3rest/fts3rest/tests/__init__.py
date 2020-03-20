@@ -16,9 +16,6 @@ from fts3rest.config.middleware import create_app
 from .ftstestclient import FTSTestClient
 
 
-environ = {}
-
-
 def _generate_mock_cert():
     rsa_key = RSA.gen_key(512, 65537)
     pkey = EVP.PKey()
@@ -37,27 +34,6 @@ def _generate_mock_cert():
     return pkey, cert
 
 
-def _app_post_json(self, url, params, **kwargs):
-    """
-    To be injected into TestApp if it doesn't have an post_json method available
-    """
-    from json import dumps
-
-    params = dumps(params)
-    kwargs["content_type"] = "application/json"
-    return self.post(url, params=params, **kwargs)
-
-
-def _app_get_json(self, url, *args, **kwargs):
-    """
-    Add get_json to TestApp for convenience
-    """
-    headers = kwargs.pop("headers", dict())
-    headers["Accept"] = "application/json"
-    kwargs["headers"] = headers
-    return self.get(url, *args, **kwargs)
-
-
 class TestController(TestCase):
     """
     Base class for the tests
@@ -72,7 +48,6 @@ class TestController(TestCase):
         self.flask_app.testing = True
         self.flask_app.test_client_class = FTSTestClient
         self.app = self.flask_app.test_client()
-        # todo adapt extra environ
 
     def setup_gridsite_environment(self, no_vo=False, dn=None):
         """
@@ -85,10 +60,10 @@ class TestController(TestCase):
         """
         if dn is None:
             dn = TestController.TEST_USER_DN
-        self.flask_app.extra_environ["GRST_CRED_AURI_0"] = "dn:" + dn
+        self.app.environ_base["GRST_CRED_AURI_0"] = "dn:" + dn
 
         if not no_vo:
-            self.flask_app.extra_environ.update(
+            self.app.environ_base.update(
                 {
                     "GRST_CRED_AURI_1": "fqan:/testvo/Role=NULL/Capability=NULL",
                     "GRST_CRED_AURI_2": "fqan:/testvo/Role=myrole/Capability=NULL",
@@ -97,14 +72,14 @@ class TestController(TestCase):
             )
         else:
             for grst in ["GRST_CRED_AURI_1", "GRST_CRED_AURI_2", "GRST_CRED_AURI_3"]:
-                if grst in self.flask_app.extra_environ:
-                    del self.flask_app.extra_environ[grst]
+                if grst in self.app.environ_base:
+                    del self.app.environ_base[grst]
 
     def get_user_credentials(self):
         """
         Get the user credentials from the environment
         """
-        return UserCredentials(self.flask_app.extra_environ, {"public": {"*": "all"}})
+        return UserCredentials(self.app.environ_base, {"public": {"*": "all"}})
 
     def push_delegation(self, lifetime=timedelta(hours=7)):
         """
