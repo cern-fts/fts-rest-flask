@@ -29,12 +29,11 @@ class FTSTestClient(FlaskClient):
     with old functional tests created for Pylon's WebTest
     """
 
-    get = _adapt_test(FlaskClient.get)
-    post = _adapt_test(FlaskClient.post)
-    put = _adapt_test(FlaskClient.put)
-    delete = _adapt_test(FlaskClient.delete)
-
     def __init__(self, *args, **kwargs):
+        self.get = _adapt_test(FlaskClient.get)
+        self.post = _adapt_test(FlaskClient.post)
+        self.put = _adapt_test(FlaskClient.put)
+        self.delete = _adapt_test(FlaskClient.delete)
         super().__init__(*args, **kwargs)
 
     def post_json(self, url, params, **kwargs):
