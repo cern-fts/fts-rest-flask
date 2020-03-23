@@ -29,10 +29,10 @@ class FTSTestClient(FlaskClient):
     with old functional tests created for Pylon's WebTest
     """
 
-    get = _adapt_test(super().get)
-    post = _adapt_test(super().post)
-    put = _adapt_test(super().put)
-    delete = _adapt_test(super().delete)
+    get = _adapt_test(FlaskClient.get)
+    post = _adapt_test(FlaskClient.post)
+    put = _adapt_test(FlaskClient.put)
+    delete = _adapt_test(FlaskClient.delete)
 
     def __init__(self, *args, **kwargs):
         kwargs["response_wrapper"] = TestResponse
