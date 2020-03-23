@@ -11,7 +11,7 @@ class TestResponse(Response):
 
 
 def _adapt_test(func):
-    @functools.wraps
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         path = kwargs.pop("url", "/")
         expected_status = kwargs.pop("status", 200)
@@ -29,12 +29,10 @@ class FTSTestClient(FlaskClient):
     with old functional tests created for Pylon's WebTest
     """
 
-    def __init__(self, *args, **kwargs):
-        self.get = _adapt_test(FlaskClient.get)
-        self.post = _adapt_test(FlaskClient.post)
-        self.put = _adapt_test(FlaskClient.put)
-        self.delete = _adapt_test(FlaskClient.delete)
-        super().__init__(*args, **kwargs)
+    get = _adapt_test(FlaskClient.get)
+    post = _adapt_test(FlaskClient.post)
+    put = _adapt_test(FlaskClient.put)
+    delete = _adapt_test(FlaskClient.delete)
 
     def post_json(self, url, params, **kwargs):
         params = json.dumps(params)

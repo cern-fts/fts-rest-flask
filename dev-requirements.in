@@ -4,5 +4,5 @@ black
 pylint
 bandit
 radon
-#pytest
+pytest
 #coverage
