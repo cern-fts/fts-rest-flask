@@ -13,7 +13,7 @@ from fts3rest.model.meta import Session
 from fts3.model import Credential, CredentialCache, DataManagement
 from fts3.model import Job, File, FileRetryLog, ServerConfig
 from fts3rest.config.middleware import create_app
-from .ftstestclient import FTSTestClient
+from .ftstestclient import FTSTestClient, TestResponse
 
 
 def _generate_mock_cert():
@@ -43,10 +43,11 @@ class TestController(TestCase):
 
     def setUp(self):
         self.pkey, self.cert = _generate_mock_cert()
-        test_config_default = "./fts3testconfig"
-        self.flask_app = create_app(test_config_default)
+        test_config_file = os.environ.get("FTS3TESTCONFIG", "./fts3testconfig")
+        self.flask_app = create_app(test_config_file)
         self.flask_app.testing = True
         self.flask_app.test_client_class = FTSTestClient
+        self.flask_app.response_class = TestResponse
         self.app = self.flask_app.test_client()
 
     def setup_gridsite_environment(self, no_vo=False, dn=None):

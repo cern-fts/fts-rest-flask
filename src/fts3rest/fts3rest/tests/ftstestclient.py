@@ -35,7 +35,6 @@ class FTSTestClient(FlaskClient):
     delete = _adapt_test(FlaskClient.delete)
 
     def __init__(self, *args, **kwargs):
-        kwargs["response_wrapper"] = TestResponse
         super().__init__(*args, **kwargs)
 
     def post_json(self, url, params, **kwargs):
