@@ -56,7 +56,7 @@ def generate_delegation_id(dn, fqans):
         The associated delegation id
     """
     d = hashlib.sha1()
-    d.update(dn)
+    d.update(dn.encode("utf-8"))
 
     for fqan in fqans:
         d.update(fqan)
