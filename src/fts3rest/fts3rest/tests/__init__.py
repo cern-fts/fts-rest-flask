@@ -43,8 +43,7 @@ class TestController(TestCase):
 
     def setUp(self):
         self.pkey, self.cert = _generate_mock_cert()
-        test_config_file = os.environ.get("FTS3TESTCONFIG", "./fts3testconfig")
-        self.flask_app = create_app(test_config_file)
+        self.flask_app = create_app(test=True)
         self.flask_app.testing = True
         self.flask_app.test_client_class = FTSTestClient
         self.flask_app.response_class = TestResponse

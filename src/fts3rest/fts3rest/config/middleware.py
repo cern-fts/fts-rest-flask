@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 from werkzeug.exceptions import NotFound
 from sqlalchemy import engine_from_config, event
 import MySQLdb
-
+import os
 from fts3rest.config.routing import base
 from fts3.util.config import fts3_config_load
 from fts3rest.model import init_model
@@ -13,11 +13,22 @@ from fts3rest.lib.helpers.connection_validator import (
 from fts3rest.model.meta import Session
 
 
-def create_app(default_config_filename):
+def create_app(default_config_file=None, test=False):
+    """
+    Create a new fts-rest Flask app
+    :param default_config_file: Config file to use if the environment variable
+    FTS3CONFIG is not set
+    :param test: True if testing. FTS3TESTCONFIG will be used instead of FTS3CONFIG
+    :return: the app
+    """
     app = Flask(__name__)
 
     # Load configuration
-    fts3cfg = fts3_config_load(default_config_filename)
+    if test:
+        config_file = os.environ.get("FTS3TESTCONFIG", default_config_file)
+    else:
+        config_file = os.environ.get("FTS3CONFIG", default_config_file)
+    fts3cfg = fts3_config_load(config_file)
     app.config.update(fts3cfg)
 
     # Add routes

@@ -1,6 +1,6 @@
 # Running user and group
-User=
-Group=
+User=ftsflask
+Group=ftsflask
 
 # mysql only
 DbType=mysql
@@ -155,6 +155,58 @@ UseFixedJobPriority=0
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
 TokenRefreshDaemonIntervalInSeconds=600
+# Logging configuration
+[loggers]
+keys = root, routes, fts3rest, sqlalchemy
+
+[handlers]
+keys = console, log_file
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = log_file
+
+[logger_routes]
+level = INFO
+handlers =
+qualname = routes.middleware
+# "level = DEBUG" logs the route matched and routing variables.
+
+[logger_fts3rest]
+level = INFO
+handlers =
+qualname = fts3rest
+
+[logger_sqlalchemy]
+level = WARN
+handlers =
+qualname = sqlalchemy.engine
+# "level = INFO" logs SQL queries.
+# "level = DEBUG" logs SQL queries and results.
+# "level = WARN" logs neither.  (Recommended for production systems.)
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[handler_log_file]
+# See
+# http://docs.python.org/2/library/logging.handlers.html
+class = logging.FileHandler
+args = ('/var/log/fts3rest/fts3rest.log', 'a')
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(module)s] %(message)s
+datefmt = %H:%M:%S
+
+
 
 [roles]
 Public = all:transfer
