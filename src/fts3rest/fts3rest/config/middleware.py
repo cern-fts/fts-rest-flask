@@ -3,6 +3,7 @@ from werkzeug.exceptions import NotFound
 from sqlalchemy import engine_from_config, event
 import MySQLdb
 import os
+import logging.config
 from fts3rest.config.routing import base
 from fts3.util.config import fts3_config_load
 from fts3rest.model import init_model
@@ -21,13 +22,15 @@ def create_app(default_config_file=None, test=False):
     :param test: True if testing. FTS3TESTCONFIG will be used instead of FTS3CONFIG
     :return: the app
     """
-    app = Flask(__name__)
-
-    # Load configuration
     if test:
         config_file = os.environ.get("FTS3TESTCONFIG", default_config_file)
     else:
         config_file = os.environ.get("FTS3CONFIG", default_config_file)
+
+    logging.config.fileConfig(config_file)
+    app = Flask(__name__)
+
+    # Load configuration
     fts3cfg = fts3_config_load(config_file)
     app.config.update(fts3cfg)
 
