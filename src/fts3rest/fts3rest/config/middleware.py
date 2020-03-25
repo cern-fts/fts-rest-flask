@@ -3,6 +3,7 @@ from werkzeug.exceptions import NotFound
 from sqlalchemy import engine_from_config, event
 import MySQLdb
 import os
+from io import StringIO
 import logging.config
 from fts3rest.config.routing import base
 from fts3.util.config import fts3_config_load
@@ -27,11 +28,26 @@ def create_app(default_config_file=None, test=False):
     else:
         config_file = os.environ.get("FTS3CONFIG", default_config_file)
 
-    logging.config.fileConfig(config_file)
-    app = Flask(__name__)
+    # ConfigParser doesn't handle files without headers.
+    # If the configuration file doesn't start with [fts3],
+    # add it for backwards compatibility, as before migrating to Flask
+    # the config file didn't have a header.
+    with open(config_file, "r") as config:
+        for line in config:
+            if not line.isspace():
+                if line.strip().startswith("[fts3]"):
+                    content = StringIO(config.read())
+                else:
+                    content = StringIO("[fts3]\n" + config.read())
+                break
+        raise IOError("Empty configuration file")
 
     # Load configuration
-    fts3cfg = fts3_config_load(config_file)
+    logging.config.fileConfig(content)
+    fts3cfg = fts3_config_load(content)
+    content.close()
+
+    app = Flask(__name__)
     app.config.update(fts3cfg)
 
     # Add routes
