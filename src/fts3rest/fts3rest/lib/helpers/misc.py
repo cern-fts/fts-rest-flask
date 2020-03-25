@@ -10,10 +10,10 @@ def get_input_as_dict(request, from_query=False):
     if from_query:
         input_dict = request.values
     elif request.content_type == "application/json, application/x-www-form-urlencoded":
-        input_dict = json.loads(unquote_plus(request.body))
+        input_dict = json.loads(unquote_plus(request.data))
     elif request.content_type.startswith("application/json") or request.method == "PUT":
         try:
-            input_dict = json.loads(request.body)
+            input_dict = json.loads(request.data)
         except Exception:
             raise BadRequest("Badly formatted JSON request")
     elif request.content_type.startswith("application/x-www-form-urlencoded"):

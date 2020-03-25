@@ -540,9 +540,6 @@ def submit():
     submission, /api-docs/schema/submit gives the expected format encoded as a JSON-schema.
     It can be used to validate (i.e in Python, jsonschema.validate)
     """
-    from flask import current_app as app
-
-    app.logger.info("submitting job")
     log.debug("submitting job")
     # First, the request has to be valid JSON
     submitted_dict = get_input_as_dict(request)
