@@ -28,12 +28,20 @@ def fts3_config_load(path="/etc/fts3/fts3config"):
     log.debug("entered fts3_config_load")
     fts3cfg = {}
 
-    # Dirty workaround: ConfigParser doesn't like files without
-    # headers, so fake one (since FTS3 config file doesn't have a
-    # default one)
+    # ConfigParser doesn't handle files without headers.
+    # If the configuration file doesn't start with [fts3],
+    # add it for backwards compatibility, as before migrating to Flask
+    # the config file didn't have a header.
     try:
-        with open(path) as config_file:
-            content = "[fts3]\n" + config_file.read()
+        with open(path, "r") as config_file:
+            for line in config_file:
+                if not line.isspace():
+                    if line.strip().startswith("[fts3]"):
+                        content = config_file.read()
+                    else:
+                        content = "[fts3]\n" + config_file.read()
+                    break
+            raise IOError("Empty configuration file")
     except IOError as ex:
         log.exception("Failed to load configuration file")
         raise ex
