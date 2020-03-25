@@ -35,8 +35,9 @@ def create_app(default_config_file=None, test=False):
     with open(config_file, "r") as config:
         content = None
         for line in config:
-            if not line.isspace():
-                if line.strip().startswith("[fts3]"):
+            if not line.isspace() and not line.lstrip().startswith("#"):
+                config.seek(0)
+                if line.lstrip().startswith("[fts3]"):
                     content = StringIO(config.read())
                 else:
                     content = StringIO("[fts3]\n" + config.read())
@@ -46,6 +47,7 @@ def create_app(default_config_file=None, test=False):
 
     # Load configuration
     logging.config.fileConfig(content)
+    content.seek(0)
     fts3cfg = fts3_config_load(content)
     content.close()
 
