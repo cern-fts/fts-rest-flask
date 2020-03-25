@@ -33,6 +33,7 @@ def create_app(default_config_file=None, test=False):
     # add it for backwards compatibility, as before migrating to Flask
     # the config file didn't have a header.
     with open(config_file, "r") as config:
+        content = None
         for line in config:
             if not line.isspace():
                 if line.strip().startswith("[fts3]"):
@@ -40,7 +41,8 @@ def create_app(default_config_file=None, test=False):
                 else:
                     content = StringIO("[fts3]\n" + config.read())
                 break
-        raise IOError("Empty configuration file")
+        if not content:
+            raise IOError("Empty configuration file")
 
     # Load configuration
     logging.config.fileConfig(content)
