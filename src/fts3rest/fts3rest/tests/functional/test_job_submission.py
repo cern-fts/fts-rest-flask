@@ -123,7 +123,7 @@ class TestJobSubmission(TestController):
         ).json["job_id"]
 
         # Make sure it was committed to the DB
-        self.assertGreater(job_id, 0)
+        self.assertTrue(job_id)
 
         self._validate_submitted(Session.query(Job).get(job_id))
 
@@ -158,7 +158,7 @@ class TestJobSubmission(TestController):
         ).json["job_id"]
 
         # Make sure it was committed to the DB
-        self.assertGreater(job_id, 0)
+        self.assertTrue(job_id)
 
         self._validate_submitted(Session.query(Job).get(job_id))
 
@@ -193,7 +193,7 @@ class TestJobSubmission(TestController):
         ).json["job_id"]
 
         # Make sure it was commited to the DB
-        self.assertGreater(len(job_id), 0)
+        self.assertTrue(job_id)
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.job_type, "Y")
@@ -229,7 +229,7 @@ class TestJobSubmission(TestController):
         ).json["job_id"]
 
         # Make sure it was commited to the DB
-        self.assertGreater(len(job_id), 0)
+        self.assertTrue(job_id)
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.job_type, "Y")
