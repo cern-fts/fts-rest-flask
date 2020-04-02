@@ -7,6 +7,11 @@ from fts3rest.model.meta import Session
 from fts3.model import File, Job
 import random
 import unittest
+from math import ceil
+
+
+def _ceil_time():
+    return ceil(time.time())
 
 
 class TestJobSubmission(TestController):
@@ -951,8 +956,8 @@ class TestJobSubmission(TestController):
         # max_time_in_queue was effectively ignored by FTS3
         # Since FTS-311, this field stores the timestamp when the job expires
         job = Session.query(Job).get(job_id)
-        self.assertGreater(job.max_time_in_queue, time.time())
-        self.assertLessEqual(job.max_time_in_queue, (8 * 60 * 60) + int(time.time()))
+        self.assertGreater(job.max_time_in_queue, _ceil_time())
+        self.assertLessEqual(job.max_time_in_queue, (8 * 60 * 60) + _ceil_time())
 
     def test_submit_max_time_in_queue_suffix(self):
         """
@@ -979,8 +984,8 @@ class TestJobSubmission(TestController):
         ).json["job_id"]
 
         job = Session.query(Job).get(job_id)
-        self.assertGreater(job.max_time_in_queue, time.time())
-        self.assertLessEqual(job.max_time_in_queue, 8 + time.time())
+        self.assertGreater(job.max_time_in_queue, _ceil_time())
+        self.assertLessEqual(job.max_time_in_queue, 8 + _ceil_time())
 
     def test_submit_max_time_in_queue_suffix2(self):
         """
@@ -1007,8 +1012,8 @@ class TestJobSubmission(TestController):
         ).json["job_id"]
 
         job = Session.query(Job).get(job_id)
-        self.assertGreater(job.max_time_in_queue, time.time())
-        self.assertLessEqual(job.max_time_in_queue, 120 + time.time())
+        self.assertGreater(job.max_time_in_queue, _ceil_time())
+        self.assertLessEqual(job.max_time_in_queue, 120 + _ceil_time())
 
     def test_submit_ipv4(self):
         """
