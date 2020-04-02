@@ -194,3 +194,5 @@ class TestController(TestCase):
                 shutil.rmtree(self.flask_app.config["fts3.MessagingDirectory"])
             except Exception:
                 pass
+
+        self.flask_app.do_teardown_appcontext()
