@@ -952,7 +952,7 @@ class TestJobSubmission(TestController):
         # Since FTS-311, this field stores the timestamp when the job expires
         job = Session.query(Job).get(job_id)
         self.assertGreater(job.max_time_in_queue, time.time())
-        self.assertLessEqual(job.max_time_in_queue, (8 * 60 * 60) + time.time())
+        self.assertLessEqual(job.max_time_in_queue, (8 * 60 * 60) + int(time.time()))
 
     def test_submit_max_time_in_queue_suffix(self):
         """
