@@ -18,7 +18,7 @@ class TestJobInvalidSubmits(TestController):
 
         error = self.app.put(url="/jobs", params="thisXisXnotXjson", status=400).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
+        self.assertEqual(error["status"], "400 Bad Request")
         self.assertTrue(error["message"].startswith("Badly formatted JSON request"))
 
     def test_submit_no_transfers(self):
@@ -31,8 +31,8 @@ class TestJobInvalidSubmits(TestController):
 
         error = self.app.put(url="/jobs", params=json.dumps(job), status=400).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
-        self.assertEquals(
+        self.assertEqual(error["status"], "400 Bad Request")
+        self.assertEqual(
             error["message"], "No transfers or namespace operations specified"
         )
 
@@ -52,8 +52,8 @@ class TestJobInvalidSubmits(TestController):
             status=400,
         ).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
-        self.assertEquals(
+        self.assertEqual(error["status"], "400 Bad Request")
+        self.assertEqual(
             error["message"],
             "Invalid value within the request: Missing scheme (/etc/passwd)",
         )
@@ -81,8 +81,8 @@ class TestJobInvalidSubmits(TestController):
             status=400,
         ).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
-        self.assertEquals(
+        self.assertEqual(error["status"], "400 Bad Request")
+        self.assertEqual(
             error["message"],
             "Invalid value within the request: Can not transfer local files (file:///etc/passwd)",
         )
@@ -115,8 +115,8 @@ class TestJobInvalidSubmits(TestController):
             status=400,
         ).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
-        self.assertEquals(
+        self.assertEqual(error["status"], "400 Bad Request")
+        self.assertEqual(
             error["message"],
             "Invalid value within the request: Missing host (gsiftp:/source.es:8446/file)",
         )
@@ -149,8 +149,8 @@ class TestJobInvalidSubmits(TestController):
             status=400,
         ).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
-        self.assertEquals(
+        self.assertEqual(error["status"], "400 Bad Request")
+        self.assertEqual(
             error["message"],
             "Invalid value within the request: Missing path (gsiftp://source.es:8446/)",
         )
@@ -174,8 +174,8 @@ class TestJobInvalidSubmits(TestController):
             status=400,
         ).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
-        self.assertEquals(
+        self.assertEqual(error["status"], "400 Bad Request")
+        self.assertEqual(
             error["message"], "No transfers or namespace operations specified"
         )
 
@@ -205,8 +205,8 @@ class TestJobInvalidSubmits(TestController):
             status=400,
         ).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
-        self.assertEquals(
+        self.assertEqual(error["status"], "400 Bad Request")
+        self.assertEqual(
             error["message"],
             "Invalid value within the request: Missing host (http:/// //source.es/file)",
         )
@@ -218,7 +218,7 @@ class TestJobInvalidSubmits(TestController):
         self.assertFalse("GRST_CRED_AURI_0" in self.app.environ_base)
         error = self.app.put(url="/jobs", params="thisXisXnotXjson", status=403).json
 
-        self.assertEquals(error["status"], "403 Forbidden")
+        self.assertEqual(error["status"], "403 Forbidden")
 
     def test_submit_no_delegation(self):
         """
@@ -238,8 +238,8 @@ class TestJobInvalidSubmits(TestController):
 
         error = self.app.put(url="/jobs", params=json.dumps(job), status=419).json
 
-        self.assertEquals(error["status"], "419 Authentication Timeout")
-        self.assertEquals(
+        self.assertEqual(error["status"], "419 Authentication Timeout")
+        self.assertEqual(
             error["message"],
             'No delegation found for "%s"' % TestController.TEST_USER_DN,
         )
@@ -262,8 +262,8 @@ class TestJobInvalidSubmits(TestController):
 
         error = self.app.put(url="/jobs", params=json.dumps(job), status=419).json
 
-        self.assertEquals(error["status"], "419 Authentication Timeout")
-        self.assertEquals(error["message"][0:33], "The delegated credentials expired")
+        self.assertEqual(error["status"], "419 Authentication Timeout")
+        self.assertEqual(error["message"][0:33], "The delegated credentials expired")
 
     def test_submit_almost_expired_credentials(self):
         """
@@ -283,7 +283,7 @@ class TestJobInvalidSubmits(TestController):
 
         error = self.app.put(url="/jobs", params=json.dumps(job), status=419).json
 
-        self.assertEquals(error["status"], "419 Authentication Timeout")
+        self.assertEqual(error["status"], "419 Authentication Timeout")
         self.assertTrue(
             error["message"].startswith(
                 "The delegated credentials has less than one hour left"
@@ -308,8 +308,8 @@ class TestJobInvalidSubmits(TestController):
 
         error = self.app.put(url="/jobs", params=json.dumps(job), status=400).json
 
-        self.assertEquals(error["status"], "400 Bad Request")
-        self.assertEquals(
+        self.assertEqual(error["status"], "400 Bad Request")
+        self.assertEqual(
             error["message"],
             "Invalid value within the request: Missing path (http://google.com)",
         )

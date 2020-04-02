@@ -80,8 +80,8 @@ class TestJobListing(TestController):
         self.setup_gridsite_environment()
         error = self.app.get(url="/jobs/1234x", status=404).json
 
-        self.assertEquals(error["status"], "404 Not Found")
-        self.assertEquals(error["message"], 'No job with the id "1234x" has been found')
+        self.assertEqual(error["status"], "404 Not Found")
+        self.assertEqual(error["message"], 'No job with the id "1234x" has been found')
 
     def test_list_job_default(self):
         """

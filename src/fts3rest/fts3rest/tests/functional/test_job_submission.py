@@ -49,7 +49,7 @@ class TestJobSubmission(TestController):
         else:
             self.assertEqual(files[0].vo_name, "testvo")
 
-        self.assertEquals(files[0].activity, "default")
+        self.assertEqual(files[0].activity, "default")
 
         # Validate submitter
         self.assertEqual(socket.getfqdn(), job.submit_host)
