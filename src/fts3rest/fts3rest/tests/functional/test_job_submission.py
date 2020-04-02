@@ -83,7 +83,7 @@ class TestJobSubmission(TestController):
         ).json["job_id"]
 
         # Make sure it was committed to the DB
-        self.assertGreater(job_id, 0)
+        self.assertTrue(job_id)  # not empty
 
         self._validate_submitted(Session.query(Job).get(job_id))
 
