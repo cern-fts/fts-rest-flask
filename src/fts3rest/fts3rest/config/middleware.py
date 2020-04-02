@@ -12,22 +12,12 @@ from fts3rest.lib.helpers.connection_validator import (
     connection_validator,
     connection_set_sqlmode,
 )
+from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddleware
+from fts3rest.lib.middleware.timeout import TimeoutHandler
 from fts3rest.model.meta import Session
 
 
-def create_app(default_config_file=None, test=False):
-    """
-    Create a new fts-rest Flask app
-    :param default_config_file: Config file to use if the environment variable
-    FTS3CONFIG is not set
-    :param test: True if testing. FTS3TESTCONFIG will be used instead of FTS3CONFIG
-    :return: the app
-    """
-    if test:
-        config_file = os.environ.get("FTS3TESTCONFIG", default_config_file)
-    else:
-        config_file = os.environ.get("FTS3CONFIG", default_config_file)
-
+def _load_configuration(config_file):
     # ConfigParser doesn't handle files without headers.
     # If the configuration file doesn't start with [fts3],
     # add it for backwards compatibility, as before migrating to Flask
@@ -50,13 +40,10 @@ def create_app(default_config_file=None, test=False):
     content.seek(0)
     fts3cfg = fts3_config_load(content)
     content.close()
+    return fts3cfg
 
-    app = Flask(__name__)
-    app.config.update(fts3cfg)
 
-    # Add routes
-    base.do_connect(app)
-
+def _load_db(app):
     # Setup the SQLAlchemy database engine
     kwargs = dict()
     if app.config["sqlalchemy.url"].startswith("mysql://"):
@@ -79,6 +66,39 @@ def create_app(default_config_file=None, test=False):
     @app.teardown_appcontext
     def shutdown_session(exception=None):
         Session.remove()
+
+
+def create_app(default_config_file=None, test=False):
+    """
+    Create a new fts-rest Flask app
+    :param default_config_file: Config file to use if the environment variable
+    FTS3CONFIG is not set
+    :param test: True if testing. FTS3TESTCONFIG will be used instead of FTS3CONFIG
+    :return: the app
+    """
+    app = Flask(__name__)
+
+    if test:
+        config_file = os.environ.get("FTS3TESTCONFIG", default_config_file)
+    else:
+        config_file = os.environ.get("FTS3CONFIG", default_config_file)
+
+    fts3cfg = _load_configuration(config_file)
+
+    # Add configuration
+    app.config.update(fts3cfg)
+
+    # Add routes
+    base.do_connect(app)
+
+    # Add DB
+    _load_db(app)
+
+    # FTS3 authentication/authorization middleware
+    app.wsgi_app = FTS3AuthMiddleware(app.wsgi_app, fts3cfg)
+
+    # Catch DB Timeout
+    app.wsgi_app = TimeoutHandler(app.wsgi_app, fts3cfg)
 
     @app.errorhandler(NotFound)
     def handle_invalid_usage(error):
