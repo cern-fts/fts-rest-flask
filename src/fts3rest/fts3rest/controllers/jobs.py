@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from flask import request, Response, jsonify
+from flask import request, Response
 from werkzeug.exceptions import Forbidden, BadRequest, NotFound, Conflict
 
 from datetime import datetime, timedelta
@@ -31,6 +31,7 @@ from fts3rest.lib.http_exceptions import *
 from fts3rest.lib.middleware.fts3auth.authorization import authorized
 from fts3rest.lib.middleware.fts3auth.constants import TRANSFER, PRIVATE, NONE, VO
 from fts3rest.lib.helpers.misc import get_input_as_dict
+from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.msgbus import submit_state_change
 from fts3rest.lib.JobBuilder import JobBuilder
 
@@ -41,6 +42,7 @@ Operations on jobs and transfers
 """
 
 
+@jsonify
 def index():
     """
     Get a list of active jobs, or those that match the filter requirements
@@ -128,7 +130,7 @@ def index():
 
         return Response(_field_subset(), mimetype="application/json")
     else:
-        return jsonify(jobs)
+        return jobs
 
 
 def _get_job(job_id, env=None):
@@ -142,6 +144,7 @@ def _get_job(job_id, env=None):
     return job
 
 
+@jsonify
 def get(job_list):
     """
     Get the job with the given ID
@@ -197,9 +200,10 @@ def get(job_list):
     if multistatus:
         return Response(statuses, status=207, mimetype="application/json")
     else:
-        return jsonify(statuses)
+        return statuses
 
 
+@jsonify
 def get_files(job_id):
     """
     Get the files within a job
@@ -217,6 +221,7 @@ def get_files(job_id):
     )
 
 
+@jsonify
 def cancel_files(job_id, file_ids):
     """
     Cancel individual files - comma separated for multiple - within a job
@@ -281,19 +286,154 @@ def cancel_files(job_id, file_ids):
         Session.rollback()
         raise
     if len(changed_states) > 1:
-        return jsonify(changed_states)
+        return changed_states
     else:
-        return jsonify(changed_states[0])
+        return changed_states[0]
 
 
-def cancel_all_by_vo():
-    raise NotFound
+@jsonify
+def cancel_all_by_vo(vo_name):
+    """
+    Cancel all files by the given vo_name
+    """
+    user = request.environ["fts3.User.Credentials"]
+
+    now = datetime.utcnow()
+    if not user.is_root:
+        raise Forbidden("User does not have root privileges")
+
+    try:
+        # FTS3 daemon expects finish_time to be NULL in order to trigger the signal
+        # to fts_url_copy
+        file_count = (
+            Session.query(File)
+            .filter(File.vo_name == vo_name)
+            .filter(File.file_state.in_(FileActiveStates))
+            .update(
+                {
+                    "file_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "dest_surl_uuid": None,
+                    "finish_time": None,
+                },
+                synchronize_session=False,
+            )
+        )
+
+        # However, for data management operations there is nothing to signal, so
+        # set job_finished
+        dm_count = (
+            Session.query(DataManagement)
+            .filter(DataManagement.vo_name == vo_name)
+            .filter(DataManagement.file_state.in_(DataManagementActiveStates))
+            .update(
+                {
+                    "file_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "job_finished": now,
+                    "finish_time": now,
+                },
+                synchronize_session=False,
+            )
+        )
+
+        job_count = (
+            Session.query(Job)
+            .filter(Job.vo_name == vo_name)
+            .filter(Job.job_state.in_(JobActiveStates))
+            .update(
+                {
+                    "job_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "job_finished": now,
+                },
+                synchronize_session=False,
+            )
+        )
+        Session.commit()
+        Session.expire_all()
+        log.info("Active jobs for VO %s canceled" % vo_name)
+    except Exception:
+        Session.rollback()
+        raise
+    return {
+        "affected_files": file_count,
+        "affected_dm": dm_count,
+        "affected_jobs": job_count,
+    }
 
 
+@jsonify
 def cancel_all():
-    raise NotFound
+    """
+    Cancel all files
+    """
+    user = request.environ["fts3.User.Credentials"]
+
+    now = datetime.utcnow()
+    if not user.is_root:
+        raise Forbidden("User does not have root privileges")
+
+    try:
+        # FTS3 daemon expects finish_time to be NULL in order to trigger the signal
+        # to fts_url_copy
+        file_count = (
+            Session.query(File)
+            .filter(File.file_state.in_(FileActiveStates))
+            .update(
+                {
+                    "file_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "dest_surl_uuid": None,
+                    "finish_time": None,
+                },
+                synchronize_session=False,
+            )
+        )
+
+        # However, for data management operations there is nothing to signal, so
+        # set job_finished
+        dm_count = (
+            Session.query(DataManagement)
+            .filter(DataManagement.file_state.in_(DataManagementActiveStates))
+            .update(
+                {
+                    "file_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "job_finished": now,
+                    "finish_time": now,
+                },
+                synchronize_session=False,
+            )
+        )
+
+        job_count = (
+            Session.query(Job)
+            .filter(Job.job_state.in_(JobActiveStates))
+            .update(
+                {
+                    "job_state": "CANCELED",
+                    "reason": "Job canceled by the user",
+                    "job_finished": now,
+                },
+                synchronize_session=False,
+            )
+        )
+        Session.commit()
+        Session.expire_all()
+        log.info("Active jobs canceled")
+    except Exception:
+        Session.rollback()
+        raise
+
+    return {
+        "affected_files": file_count,
+        "affected_dm": dm_count,
+        "affected_jobs": job_count,
+    }
 
 
+@jsonify
 def get_file_retries(job_id, file_id):
     """
     Get the retries for a given file
@@ -310,6 +450,7 @@ def get_file_retries(job_id, file_id):
     return Response(retries.all(), mimetype="application/json")
 
 
+@jsonify
 def get_dm(job_id):
     """
     Get the data management tasks within a job
@@ -325,13 +466,14 @@ def get_dm(job_id):
     )
 
 
+@jsonify
 def get_field(job_id, field):
     """
     Get a specific field from the job identified by id
     """
     job = _get_job(job_id)
     if hasattr(job, field):
-        return jsonify(getattr(job, field))
+        return getattr(job, field)
     else:
         raise NotFound("No such field")
 
@@ -362,6 +504,7 @@ def _multistatus(responses, expecting_multistatus=False):
     return responses
 
 
+@jsonify
 def cancel(job_id_list):
     """
     Cancel the given job
@@ -461,6 +604,7 @@ def cancel(job_id_list):
     return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
 
 
+@jsonify
 def modify(job_id_list):
     """
     Modify a job, or set of jobs
@@ -532,6 +676,7 @@ def modify(job_id_list):
     return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
 
 
+@jsonify
 def submit():
     """
     Submits a new job
