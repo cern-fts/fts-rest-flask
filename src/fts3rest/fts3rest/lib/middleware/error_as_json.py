@@ -47,7 +47,9 @@ class ErrorAsJson:
         response = self.app(environ, override_start_response)
 
         if self._status_code >= 400 and is_json_accepted:
-            err_msg = "".join(response)
+            # todo the problem is this contains html
+            # check src/fts3rest/fts3rest/lib/JobBuilder.py:            raise BadRequest("Invalid value within the request: %s" % str(ex))
+            err_msg = "".join(response.decode())
             json_error = {"status": self._status_msg, "message": err_msg}
             response = [json.dumps(json_error)]
         return response
