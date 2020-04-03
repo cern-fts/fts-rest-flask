@@ -727,7 +727,7 @@ def submit():
     except IntegrityError as err:
         Session.rollback()
         raise Conflict("The submission is duplicated " + str(err))
-    except:
+    except Exception:
         Session.rollback()
         raise
 

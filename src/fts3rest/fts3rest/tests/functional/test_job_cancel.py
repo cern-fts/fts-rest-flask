@@ -20,6 +20,7 @@ class TestJobCancel(TestController):
     """
 
     def tearDown(self):
+        super().tearDown()
         cert = "SSL_SERVER_S_DN"
         if cert in self.app.environ_base:
             del self.app.environ_base["SSL_SERVER_S_DN"]
@@ -375,9 +376,9 @@ class TestJobCancel(TestController):
 
     def test_cancel_reuse_small_files_and_big_files(self):
         """
-        Cancel a job with small files and two big files cannot be reused
+        Cancel a job with small files and one big file is reused
         """
-        job_id = self._submit_none_reuse(100, 2)
+        job_id = self._submit_none_reuse(100, 1)
         job = self.app.delete(url="/jobs/%s" % job_id, status=200).json
 
         self.assertEqual(job["job_id"], job_id)
@@ -387,7 +388,12 @@ class TestJobCancel(TestController):
         # Is it in the database?
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.job_state, "CANCELED")
-        self.assertEqual(job.job_type, "N")
+
+        auto_session_reuse = self.flask_app.config.get("fts3.AutoSessionReuse", "false")
+        if auto_session_reuse == "true":
+            self.assertEqual(job.job_type, "Y")
+        else:
+            self.assertEqual(job.job_type, "N")
 
         self.assertNotEqual(None, job.job_finished)
         for f in job.files:
