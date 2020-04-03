@@ -13,6 +13,7 @@ from fts3rest.lib.helpers.connection_validator import (
     connection_set_sqlmode,
 )
 from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddleware
+from fts3rest.lib.middleware.error_as_json import ErrorAsJson
 from fts3rest.lib.middleware.timeout import TimeoutHandler
 from fts3rest.model.meta import Session
 
@@ -100,10 +101,13 @@ def create_app(default_config_file=None, test=False):
     # Catch DB Timeout
     app.wsgi_app = TimeoutHandler(app.wsgi_app, fts3cfg)
 
-    @app.errorhandler(NotFound)
-    def handle_invalid_usage(error):
-        response = jsonify(error=error.code, name=error.name)
-        response.status_code = error.code
-        return response
+    # Convert errors to JSON
+    app.wsgi_app = ErrorAsJson(app.wsgi_app)
+
+    # @app.errorhandler(NotFound)
+    # def handle_invalid_usage(error):
+    #     response = jsonify(error=error.code, name=error.name)
+    #     response.status_code = error.code
+    #     return response
 
     return app
