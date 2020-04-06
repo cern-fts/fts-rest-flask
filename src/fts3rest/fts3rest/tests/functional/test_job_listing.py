@@ -534,15 +534,15 @@ class TestJobListing(TestController):
             url="/files?dest_surl=gsiftp://test-query2/path", status=200
         ).json
 
-        self.assertNotIn(job1, map(lambda f: f["job_id"], files))
-        self.assertIn(job2, map(lambda f: f["job_id"], files))
+        self.assertNotIn(job1, list(map(lambda f: f["job_id"], files)))
+        self.assertIn(job2, list(map(lambda f: f["job_id"], files)))
 
         files = self.app.get(
             url="/files?dest_surl=gsiftp://test-query1/path", status=200
         ).json
 
-        self.assertIn(job1, map(lambda f: f["job_id"], files))
-        self.assertNotIn(job2, map(lambda f: f["job_id"], files))
+        self.assertIn(job1, list(map(lambda f: f["job_id"], files)))
+        self.assertNotIn(job2, list(map(lambda f: f["job_id"], files)))
 
     def test_list_granted_private(self):
         """
@@ -599,7 +599,7 @@ class TestJobListing(TestController):
         UserCredentials.get_granted_level_for = old_granted
 
         self.assertEqual(3, len(jobs))
-        job_ids = map(lambda j: j["job_id"], jobs)
+        job_ids = list(map(lambda j: j["job_id"], jobs))
         self.assertIn(job1, job_ids)
         self.assertIn(job2, job_ids)
         self.assertIn(job3, job_ids)
