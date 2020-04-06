@@ -295,7 +295,7 @@ class TestJobListing(TestController):
         old_granted = UserCredentials.get_granted_level_for
         UserCredentials.get_granted_level_for = lambda self_, op: None
 
-        error = self.app.get("/jobs/%s" % job_id, status=403).json
+        error = self.app.get(url="/jobs/%s" % job_id, status=403).json
 
         UserCredentials.get_granted_level_for = old_granted
 
