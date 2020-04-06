@@ -34,6 +34,7 @@ Operations on Files
 """
 
 
+@authorize(TRANSFER)
 @jsonify
 def index():
     """

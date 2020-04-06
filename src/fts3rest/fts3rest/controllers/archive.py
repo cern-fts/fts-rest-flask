@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from werkzeug.exceptions import NotFound, Forbidden
-from flask import jsonify
+from fts3rest.lib.helpers.jsonify import jsonify
 
 from fts3.model import ArchivedJob
 from fts3rest.model.meta import Session
@@ -22,6 +22,7 @@ from fts3rest.lib.middleware.fts3auth.authorization import authorized
 from fts3rest.lib.middleware.fts3auth.constants import *
 
 
+@jsonify
 def index():
     """
     Just give the operations that can be performed
@@ -36,7 +37,7 @@ def index():
             },
         }
     }
-    return jsonify(ret)
+    return ret
 
 
 def _get_job(job_id):
@@ -48,6 +49,7 @@ def _get_job(job_id):
     return job
 
 
+@jsonify
 def get(job_id):
     """
     Get the job with the given ID
@@ -58,6 +60,7 @@ def get(job_id):
     return job
 
 
+@jsonify
 def get_field(job_id, field):
     """
     Get a specific field from the job identified by id

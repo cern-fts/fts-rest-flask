@@ -20,7 +20,7 @@ from werkzeug.exceptions import (
     InternalServerError,
     ServiceUnavailable,
 )
-from flask import request, jsonify
+from flask import request
 from datetime import datetime
 
 import errno
@@ -39,6 +39,7 @@ from fts3rest.lib.http_exceptions import HTTPAuthenticationTimeout
 from fts3rest.lib.gfal2_wrapper import Gfal2Wrapper, Gfal2Error
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import DATAMANAGEMENT
+from fts3rest.lib.helpers.jsonify import jsonify
 
 log = logging.getLogger(__name__)
 
@@ -202,6 +203,8 @@ def _mkdir_impl(context, mkdir_dict):
     return context.mkdir(str(path), 0o775)
 
 
+@authorize(DATAMANAGEMENT)
+@jsonify
 def list():
     """
     List the content of a remote directory
@@ -211,7 +214,7 @@ def list():
 
     m = Gfal2Wrapper(cred, _list_impl)
     try:
-        return jsonify(m(surl))
+        return m(surl)
     except Gfal2Error as ex:
         _http_error_from_gfal2_error(ex)
     finally:
@@ -220,6 +223,8 @@ def list():
             os.unlink(cred.name)
 
 
+@authorize(DATAMANAGEMENT)
+@jsonify
 def stat():
     """
     Stat a remote file
@@ -238,6 +243,8 @@ def stat():
             os.unlink(cred.name)
 
 
+@authorize(DATAMANAGEMENT)
+@jsonify
 def mkdir():
     """
     Create a remote file
@@ -271,6 +278,8 @@ def mkdir():
             os.unlink(cred.name)
 
 
+@authorize(DATAMANAGEMENT)
+@jsonify
 def unlink():
     """
     Remove a remote file
@@ -306,6 +315,8 @@ def unlink():
             os.unlink(cred.name)
 
 
+@authorize(DATAMANAGEMENT)
+@jsonify
 def rmdir():
     """
     Remove a remote folder
@@ -341,6 +352,8 @@ def rmdir():
             os.unlink(cred.name)
 
 
+@authorize(DATAMANAGEMENT)
+@jsonify
 def rename():
     """
     Stat a remote file

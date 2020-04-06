@@ -19,13 +19,15 @@ from fts3rest.lib.middleware.fts3auth.authorization import (
     require_certificate,
 )
 from fts3rest.lib.middleware.fts3auth.constants import *
-from flask import jsonify
+from fts3rest.lib.helpers.jsonify import jsonify
 
 """
 Server general status
 """
 
 
+@authorize(CONFIG)
+@jsonify
 def hosts_activity():
     """
     What are the hosts doing
@@ -52,4 +54,4 @@ def hosts_activity():
             response[host] = dict()
         response[host]["active"] = count
 
-    return jsonify(response)
+    return response
