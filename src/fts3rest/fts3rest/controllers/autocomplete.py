@@ -16,11 +16,14 @@
 from fts3.model import Credential, LinkConfig, Job
 
 from fts3rest.model.meta import Session
-from flask import jsonify, request
+from flask import request
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import *
+from fts3rest.lib.helpers.jsonify import jsonify
 
 
+@authorize(CONFIG)
+@jsonify
 def autocomplete_dn():
     """
     Autocomplete for users' dn
@@ -32,9 +35,11 @@ def autocomplete_dn():
         .distinct()
         .all()
     )
-    return jsonify([r[0] for r in matches])
+    return [r[0] for r in matches]
 
 
+@authorize(CONFIG)
+@jsonify
 def autocomplete_source():
     """
     Autocomplete source SE
@@ -46,9 +51,11 @@ def autocomplete_source():
         .distinct()
         .all()
     )
-    return jsonify([r[0] for r in matches])
+    return [r[0] for r in matches]
 
 
+@authorize(CONFIG)
+@jsonify
 def autocomplete_destination():
     """
     Autocomplete destination SE
@@ -60,9 +67,11 @@ def autocomplete_destination():
         .distinct()
         .all()
     )
-    return jsonify([r[0] for r in matches])
+    return [r[0] for r in matches]
 
 
+@authorize(CONFIG)
+@jsonify
 def autocomplete_storage():
     """
     Autocomplete a storage, regardless of it being source or destination
@@ -84,9 +93,11 @@ def autocomplete_storage():
     srcs = map(lambda r: r[0], src_matches)
     dsts = map(lambda r: r[0], dest_matches)
 
-    return jsonify(set(srcs).union(set(dsts)))
+    return set(srcs).union(set(dsts))
 
 
+@authorize(CONFIG)
+@jsonify
 def autocomplete_vo():
     """
     Autocomplete VO
@@ -95,4 +106,4 @@ def autocomplete_vo():
     matches = (
         Session.query(Job.vo_name).filter(Job.vo_name.startswith(term)).distinct().all()
     )
-    return jsonify([r[0] for r in matches])
+    return [r[0] for r in matches]

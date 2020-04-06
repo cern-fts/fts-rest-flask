@@ -22,7 +22,7 @@ import M2Crypto.threading
 from datetime import datetime
 from M2Crypto import X509, RSA, EVP, BIO
 import flask
-from flask import jsonify, Response, render_template
+from flask import Response, render_template
 from flask import current_app as app
 from flask.views import View
 from fts3.model import CredentialCache, Credential
@@ -31,6 +31,7 @@ from fts3rest.lib.helpers.voms import VomsClient, VomsException
 from fts3rest.lib.middleware.fts3auth.authorization import require_certificate
 from fts3rest.lib.JobBuilder_utils import get_base_id, get_vo_id
 from werkzeug.exceptions import NotFound, BadRequest, Forbidden, FailedDependency
+from fts3rest.lib.helpers.jsonify import jsonify
 
 log = logging.getLogger(__name__)
 
@@ -185,6 +186,7 @@ class Delegation(View):
 
 
 class whoami(Delegation):
+    @jsonify
     def dispatch_request(self):
         """
         Returns the active credentials of the user
@@ -193,10 +195,11 @@ class whoami(Delegation):
         whoami.base_id = str(get_base_id())
         for vo in whoami.vos:
             whoami.vos_id.append(str(get_vo_id(vo)))
-        return jsonify(whoami)
+        return whoami
 
 
 class certificate(Delegation):
+    @require_certificate
     def dispatch_request(self):
         """
         Returns the user certificate
@@ -216,10 +219,11 @@ class certificate(Delegation):
 
 
 class view(Delegation):
+    @jsonify
     def dispatch_request(self, dlg_id):
         """
-                Get the termination time of the current delegated credential, if any
-                """
+        Get the termination time of the current delegated credential, if any
+        """
         user = flask.request.environ["fts3.User.Credentials"]
 
         if dlg_id != user.delegation_id:
@@ -237,6 +241,7 @@ class view(Delegation):
 
 
 class delete(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         Delete the delegated credentials from the database
@@ -260,6 +265,7 @@ class delete(Delegation):
 
 
 class request(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         First step of the delegation process: get a certificate request
@@ -300,6 +306,7 @@ class request(Delegation):
 
 
 class credential(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         Second step of the delegation process: put the generated certificate
@@ -350,6 +357,7 @@ class credential(Delegation):
 
 
 class voms(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         Generate VOMS extensions for the delegated proxy
@@ -400,6 +408,7 @@ class voms(Delegation):
 
 # todo render template
 class delegation_page(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         Render an HTML form to delegate the credentials

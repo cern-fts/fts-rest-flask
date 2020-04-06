@@ -13,7 +13,7 @@
 #   limitations under the License.
 from werkzeug.exceptions import NotFound, BadRequest, Conflict
 from fts3rest.controllers.config import audit_configuration
-from flask import request, jsonify, Response
+from flask import request, Response
 import json
 import logging
 from datetime import datetime
@@ -24,6 +24,7 @@ from fts3rest.model.meta import Session
 from fts3rest.lib.http_exceptions import *
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import *
+from fts3rest.lib.helpers.jsonify import jsonify
 
 log = logging.getLogger(__name__)
 
@@ -268,6 +269,8 @@ def _reenter_queue(storage, vo_name):
     return job_ids
 
 
+@authorize(CONFIG)
+@jsonify
 def ban_se():
     """
     Ban a storage element. Returns affected jobs ids.
@@ -308,9 +311,11 @@ def ban_se():
     log.warning(
         "Storage %s banned (%s), %d jobs affected" % (storage, status, len(affected))
     )
-    return jsonify(affected)
+    return affected
 
 
+@authorize(CONFIG)
+@jsonify
 def unban_se():
     """
     Unban a storage element
@@ -335,6 +340,8 @@ def unban_se():
     return Response([], status=204, mimetype="application/json")
 
 
+@authorize(CONFIG)
+@jsonify
 def list_banned_se():
     """
     List banned storage elements
@@ -342,6 +349,8 @@ def list_banned_se():
     return Response(Session.query(BannedSE).all(), mimetype="application/json")
 
 
+@authorize(CONFIG)
+@jsonify
 def ban_dn():
     """
     Ban a user
@@ -371,6 +380,7 @@ def ban_dn():
     return affected
 
 
+@authorize(CONFIG)
 def unban_dn():
     """
     Unban a user
@@ -395,6 +405,8 @@ def unban_dn():
     return Response([], status=204, mimetype="application/json")
 
 
+@authorize(CONFIG)
+@jsonify
 def list_banned_dn():
     """
     List banned users
