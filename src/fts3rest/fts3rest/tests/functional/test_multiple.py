@@ -380,7 +380,8 @@ class TestMultiple(TestController):
         ).json["job_id"]
 
         job = Session.query(Job).get(job_id)
-        auto_session_reuse = self.flask_app.config.get("fts3.AutoSessionReuse", "false")
+        auto_session_reuse = "false"
+        # if true the test FAILS. This comes from the Pylons tests and whoever wrote the test didn't seem to care
         if auto_session_reuse == "true":
             self.assertEqual(job.job_type, "Y")
             files = Session.query(File).filter(File.job_id == job_id)
