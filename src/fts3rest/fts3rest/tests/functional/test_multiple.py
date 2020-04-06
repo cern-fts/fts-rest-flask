@@ -114,7 +114,7 @@ class TestMultiple(TestController):
         )
 
         # Validate job in the database
-        job_id = json.loads(answer.body)["job_id"]
+        job_id = json.loads(answer.data)["job_id"]
         db_job = Session.query(Job).get(job_id)
 
         self.assertEqual(db_job.job_type, "R")
@@ -170,7 +170,7 @@ class TestMultiple(TestController):
         )
 
         # Validate job in the database
-        job_id = json.loads(answer.body)["job_id"]
+        job_id = json.loads(answer.data)["job_id"]
         db_job = Session.query(Job).get(job_id)
 
         self.assertEqual(db_job.job_type, "R")
