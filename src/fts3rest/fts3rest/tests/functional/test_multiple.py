@@ -464,7 +464,7 @@ class TestMultiple(TestController):
         self.assertEqual(job.job_type, "H")
 
         files = Session.query(File).filter(File.job_id == job_id).all()
-        self.assertEquals(2, len(files))
+        self.assertEqual(2, len(files))
         hashed = files[0].hashed_id
         for f in files:
             self.assertEqual(hashed, f.hashed_id)
@@ -504,7 +504,7 @@ class TestMultiple(TestController):
         self.assertEqual(job.job_type, "H")
 
         files = Session.query(File).filter(File.job_id == job_id).all()
-        self.assertEquals(2, len(files))
+        self.assertEqual(2, len(files))
         hashed = files[0].hashed_id
         for f in files:
             self.assertEqual(hashed, f.hashed_id)
