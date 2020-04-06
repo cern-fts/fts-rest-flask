@@ -86,7 +86,11 @@ def jsonify(func):
             response = data
             data = response.response
 
-        if hasattr(data, "__iter__") and not isinstance(data, dict):
+        if (
+            hasattr(data, "__iter__")
+            and not isinstance(data, dict)
+            and not isinstance(data, str)
+        ):
             data = stream_response(data)
         else:
             log.debug("Sending directly json response")
