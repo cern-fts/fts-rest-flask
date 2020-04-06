@@ -26,6 +26,7 @@ Server general status
 """
 
 
+@require_certificate
 @authorize(CONFIG)
 @jsonify
 def hosts_activity():

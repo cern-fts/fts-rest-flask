@@ -199,6 +199,7 @@ class whoami(Delegation):
 
 
 class certificate(Delegation):
+    @require_certificate
     def dispatch_request(self):
         """
         Returns the user certificate
@@ -240,6 +241,7 @@ class view(Delegation):
 
 
 class delete(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         Delete the delegated credentials from the database
@@ -263,6 +265,7 @@ class delete(Delegation):
 
 
 class request(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         First step of the delegation process: get a certificate request
@@ -303,6 +306,7 @@ class request(Delegation):
 
 
 class credential(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         Second step of the delegation process: put the generated certificate
@@ -353,6 +357,7 @@ class credential(Delegation):
 
 
 class voms(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         Generate VOMS extensions for the delegated proxy
@@ -403,6 +408,7 @@ class voms(Delegation):
 
 # todo render template
 class delegation_page(Delegation):
+    @require_certificate
     def dispatch_request(self, dlg_id):
         """
         Render an HTML form to delegate the credentials
