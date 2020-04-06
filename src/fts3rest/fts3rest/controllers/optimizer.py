@@ -21,21 +21,24 @@ from werkzeug.exceptions import BadRequest
 
 import json
 import logging
-from flask import request, jsonify, current_app as app
+from flask import request, current_app as app
 from fts3rest.model.meta import Session
 from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3.model import OptimizerEvolution, Optimizer
 from datetime import datetime
 from fts3rest.lib.http_exceptions import *
+from fts3rest.lib.helpers.jsonify import jsonify
 
 
+@jsonify
 def is_enabled():
     """
     Indicates if the optimizer is enabled in the server
     """
-    return jsonify(app.config["fts3.Optimizer"])
+    return app.config["fts3.Optimizer"]
 
 
+@jsonify
 def evolution():
     """
     Returns the optimizer evolution
@@ -52,9 +55,10 @@ def evolution():
 
     evolution = evolution.order_by(OptimizerEvolution.datetime.desc())
 
-    return jsonify(evolution[:50])
+    return evolution[:50]
 
 
+@jsonify
 def get_optimizer_values():
     """
     Returns the current number of actives and streams
@@ -67,9 +71,10 @@ def get_optimizer_values():
 
     optimizer = optimizer.order_by(Optimizer.datetime.desc())
 
-    return jsonify(optimizer)
+    return optimizer
 
 
+@jsonify
 def set_optimizer_values():
     """
     Set the number of actives and streams
@@ -183,4 +188,4 @@ def set_optimizer_values():
         Session.rollback()
         raise
 
-    return jsonify(evolution, optimizer)
+    return evolution, optimizer
