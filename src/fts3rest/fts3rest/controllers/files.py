@@ -14,7 +14,7 @@
 from werkzeug.exceptions import Forbidden
 
 from datetime import datetime, timedelta
-from flask import request, jsonify
+from flask import request
 from urllib.parse import urlparse
 import json
 import logging
@@ -87,4 +87,4 @@ def index():
     else:
         files = files.filter(File.finish_time == None)
 
-    return jsonify(files[:filter_limit])
+    return files[:filter_limit]
