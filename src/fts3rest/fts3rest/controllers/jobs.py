@@ -76,7 +76,7 @@ def index():
         raise BadRequest(
             "The provided DN and delegation id do not correspond to the same user"
         )
-    if filter_limit is not None and filter_limit < 0 or filter_limit > 500:
+    if filter_limit is not None and (filter_limit < 0 or filter_limit > 500):
         raise BadRequest("The limit must be positive and less or equal than 500")
 
     # Automatically apply filters depending on granted level
