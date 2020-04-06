@@ -25,15 +25,16 @@ from fts3rest.lib.JobBuilder_utils import get_storage_element
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import *
 from fts3rest.lib.http_exceptions import *
-
+from fts3rest.lib.helpers.jsonify import jsonify
 
 log = logging.getLogger(__name__)
 
 """
-    Operations on Files
-    """
+Operations on Files
+"""
 
 
+@jsonify
 def index():
     """
     Get a list of active jobs, or those that match the filter requirements
