@@ -2,9 +2,7 @@ import string
 from urllib.parse import urlparse, urlencode, urlunparse, parse_qsl
 from random import SystemRandom
 
-UNICODE_ASCII_CHARACTERS = string.ascii_letters.decode("ascii") + string.digits.decode(
-    "ascii"
-)
+UNICODE_ASCII_CHARACTERS = string.ascii_letters + string.digits
 
 
 def random_ascii_string(length):

@@ -28,19 +28,9 @@ def fts3_config_load(path="/etc/fts3/fts3config"):
     log.debug("entered fts3_config_load")
     fts3cfg = {}
 
-    # Dirty workaround: ConfigParser doesn't like files without
-    # headers, so fake one (since FTS3 config file doesn't have a
-    # default one)
-    try:
-        with open(path) as config_file:
-            content = "[fts3]\n" + config_file.read()
-    except IOError as ex:
-        log.exception("Failed to load configuration file")
-        raise ex
-
     parser = ConfigParser()
     parser.optionxform = str
-    parser.read_string(content)
+    parser.read_file(path)
 
     # Map all options
     for name, value in parser.items("fts3"):

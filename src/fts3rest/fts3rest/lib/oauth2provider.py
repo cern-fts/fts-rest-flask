@@ -317,7 +317,12 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                 )
             else:
                 credential = jwt.decode(
-                    access_token, pub_key.export_to_pem(), algorithms=[algorithm]
+                    access_token,
+                    pub_key.export_to_pem(),
+                    algorithms=[algorithm],
+                    options={
+                        "verify_aud": False
+                    },  # We don't check audience for non-WLCG token
                 )
             log.debug("offline_response::: {}".format(credential))
         except Exception as ex:

@@ -274,7 +274,7 @@ def ban_se():
     """
     if request.content_type == "application/json":
         try:
-            input_dict = json.loads(request.body)
+            input_dict = json.loads(request.data)
         except Exception:
             raise BadRequest("Malformed input")
     else:
@@ -348,7 +348,7 @@ def ban_dn():
     """
     if request.content_type == "application/json":
         try:
-            input_dict = json.loads(request.body)
+            input_dict = json.loads(request.data)
         except Exception:
             raise BadRequest("Malformed input")
     else:

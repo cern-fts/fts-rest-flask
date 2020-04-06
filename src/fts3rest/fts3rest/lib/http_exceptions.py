@@ -22,4 +22,5 @@ from werkzeug.exceptions import HTTPException
 
 class HTTPAuthenticationTimeout(HTTPException):
     code = 419
+    name = "Authentication Timeout"
     description = "The authentication has expired"
