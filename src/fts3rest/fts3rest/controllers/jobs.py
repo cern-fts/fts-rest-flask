@@ -28,7 +28,7 @@ from fts3.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
 
 from fts3rest.lib.http_exceptions import *
-from fts3rest.lib.middleware.fts3auth.authorization import authorized
+from fts3rest.lib.middleware.fts3auth.authorization import authorized, authorize
 from fts3rest.lib.middleware.fts3auth.constants import TRANSFER, PRIVATE, NONE, VO
 from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3rest.lib.helpers.jsonify import jsonify
@@ -42,6 +42,7 @@ Operations on jobs and transfers
 """
 
 
+@authorize(TRANSFER)
 @jsonify
 def index():
     """
@@ -676,6 +677,7 @@ def modify(job_id_list):
     return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
 
 
+@authorize(TRANSFER)
 @jsonify
 def submit():
     """
