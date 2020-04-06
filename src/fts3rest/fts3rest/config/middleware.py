@@ -16,6 +16,8 @@ from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddlewa
 from fts3rest.lib.middleware.error_as_json import ErrorAsJson
 from fts3rest.lib.middleware.timeout import TimeoutHandler
 from fts3rest.model.meta import Session
+from werkzeug.exceptions import HTTPException
+import json
 
 
 def _load_configuration(config_file):
@@ -102,7 +104,18 @@ def create_app(default_config_file=None, test=False):
     app.wsgi_app = TimeoutHandler(app.wsgi_app, fts3cfg)
 
     # Convert errors to JSON
-    app.wsgi_app = ErrorAsJson(app.wsgi_app)
+    # app.wsgi_app = ErrorAsJson(app.wsgi_app)
+    @app.errorhandler(HTTPException)
+    def handle_exception(e):
+        """Return JSON instead of HTML for HTTP errors."""
+        # start with the correct headers and status code from the error
+        response = e.get_response()
+        # replace the body with JSON
+        response.data = json.dumps(
+            {"code": e.code, "name": e.name, "description": e.description,}
+        )
+        response.content_type = "application/json"
+        return response
 
     # @app.errorhandler(NotFound)
     # def handle_invalid_usage(error):
