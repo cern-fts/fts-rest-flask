@@ -112,7 +112,7 @@ def create_app(default_config_file=None, test=False):
         response = e.get_response()
         # replace the body with JSON
         response.data = json.dumps(
-            {"code": e.code, "name": e.name, "description": e.description,}
+            {"status": f"{e.code} {e.name}", "message": e.description,}
         )
         response.content_type = "application/json"
         return response
