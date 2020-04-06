@@ -247,9 +247,9 @@ def mkdir():
     try:
         if request.method == "POST":
             if request.content_type == "application/json":
-                unencoded_body = request.body
+                unencoded_body = request.data
             else:
-                unencoded_body = unquote_plus(request.body)
+                unencoded_body = unquote_plus(request.data)
         else:
             raise BadRequest("Unsupported method %s" % request.method)
 
@@ -280,9 +280,9 @@ def unlink():
     try:
         if request.method == "POST":
             if request.content_type == "application/json":
-                unencoded_body = request.body
+                unencoded_body = request.data
             else:
-                unencoded_body = unquote_plus(request.body)
+                unencoded_body = unquote_plus(request.data)
         else:
             raise BadRequest("Unsupported method %s" % request.method)
 
@@ -315,9 +315,9 @@ def rmdir():
     try:
         if request.method == "POST":
             if request.content_type == "application/json":
-                unencoded_body = request.body
+                unencoded_body = request.data
             else:
-                unencoded_body = unquote_plus(request.body)
+                unencoded_body = unquote_plus(request.data)
         else:
             raise BadRequest("Unsupported method %s" % request.method)
 
@@ -351,9 +351,9 @@ def rename():
 
         if request.method == "POST":
             if request.content_type == "application/json":
-                unencoded_body = request.body
+                unencoded_body = request.data
             else:
-                unencoded_body = unquote_plus(request.body)
+                unencoded_body = unquote_plus(request.data)
         else:
             raise BadRequest("Unsupported method %s" % request.method)
 

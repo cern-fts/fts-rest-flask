@@ -320,7 +320,7 @@ class credential(Delegation):
         if credential_cache is None:
             raise BadRequest("No credential cache found")
 
-        x509_proxy_pem = flask.request.body
+        x509_proxy_pem = flask.request.data
         log.debug("Received delegated credentials for %s" % dlg_id)
         log.debug(x509_proxy_pem)
 
@@ -363,7 +363,7 @@ class voms(Delegation):
             raise Forbidden("The requested ID and the credentials ID do not match")
 
         try:
-            voms_list = json.loads(flask.request.body)
+            voms_list = json.loads(flask.request.data)
             log.debug(
                 "VOMS request received for %s: %s" % (dlg_id, ", ".join(voms_list))
             )

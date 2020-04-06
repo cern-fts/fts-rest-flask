@@ -7,16 +7,24 @@ def get_input_as_dict(request, from_query=False):
     """
     Return a valid dictionary from the request input
     """
+    content_type = request.content_type
     if from_query:
         input_dict = request.values
-    elif request.content_type == "application/json, application/x-www-form-urlencoded":
-        input_dict = json.loads(unquote_plus(request.body))
-    elif request.content_type.startswith("application/json") or request.method == "PUT":
+    elif (
+        content_type
+        and content_type == "application/json, application/x-www-form-urlencoded"
+    ):
+        input_dict = json.loads(unquote_plus(request.data))
+    elif (
+        content_type and content_type.startswith("application/json")
+    ) or request.method == "PUT":
         try:
-            input_dict = json.loads(request.body)
+            input_dict = json.loads(request.data)
         except Exception:
             raise BadRequest("Badly formatted JSON request")
-    elif request.content_type.startswith("application/x-www-form-urlencoded"):
+    elif content_type and request.content_type.startswith(
+        "application/x-www-form-urlencoded"
+    ):
         input_dict = dict(request.values)
     else:
         raise BadRequest(

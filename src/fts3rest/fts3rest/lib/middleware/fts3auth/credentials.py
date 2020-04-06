@@ -56,10 +56,10 @@ def generate_delegation_id(dn, fqans):
         The associated delegation id
     """
     d = hashlib.sha1()
-    d.update(dn)
+    d.update(dn.encode("utf-8"))
 
     for fqan in fqans:
-        d.update(fqan)
+        d.update(fqan.encode("utf-8"))
 
     # Original implementation only takes into account first 16 characters
     return d.hexdigest()[:16]

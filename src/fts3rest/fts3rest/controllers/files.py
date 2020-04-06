@@ -14,7 +14,7 @@
 from werkzeug.exceptions import Forbidden
 
 from datetime import datetime, timedelta
-from flask import request, jsonify
+from flask import request
 from urllib.parse import urlparse
 import json
 import logging
@@ -25,15 +25,16 @@ from fts3rest.lib.JobBuilder_utils import get_storage_element
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import *
 from fts3rest.lib.http_exceptions import *
-
+from fts3rest.lib.helpers.jsonify import jsonify
 
 log = logging.getLogger(__name__)
 
 """
-    Operations on Files
-    """
+Operations on Files
+"""
 
 
+@jsonify
 def index():
     """
     Get a list of active jobs, or those that match the filter requirements
@@ -86,4 +87,4 @@ def index():
     else:
         files = files.filter(File.finish_time == None)
 
-    return jsonify(files[:filter_limit])
+    return files[:filter_limit]

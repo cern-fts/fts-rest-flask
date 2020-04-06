@@ -39,12 +39,24 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 
 
 # How to run development server
+```
 export PYTHONPATH=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest 
-export FLASK_APP=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3rest.wsgi
+export FLASK_APP=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3restwsgi.py
 export FLASK_ENV=development
 flask run 
 curl  http://127.0.0.1:5000/hello
+```
+# Connect to local database
+```
 
+```
+# Run tests 
+```
+source venv/bin/activate
+export PYTHONPATH=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest 
+export FTS3TESTCONFIG=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3rest/tests/fts3testconfig
+python3 -m pytest -x src/fts3rest/fts3rest/tests/functional/test_job_submission.py 
+```
 # Migration status
 Starting with the client, as it requires small changes only. Will not migrate pycurlrequest.py, as it is not used
  anymore. 
