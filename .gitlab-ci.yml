@@ -32,7 +32,8 @@ pylint37:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
-  - export PYENV_VERSION=3.7.7
+  - source ~/.bashrc
+  - pyenv global 3.7.7
   - source /home/ci/venv_37/bin/activate
   - python --version
   - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
@@ -41,7 +42,8 @@ pylint38:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
-  - export PYENV_VERSION=3.8.2
+  - source ~/.bashrc
+  - pyenv global 3.8.2
   - source /home/ci/venv_38/bin/activate
   - python --version
   - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
@@ -96,7 +98,7 @@ functional_tests38:
     MYSQL_ROOT_PASSWORD: asdf
   script:
   - source ~/.bashrc
-  - export PYENV_VERSION=3.8.2
+  - pyenv global 3.8.2
   - source /home/ci/venv_38/bin/activate
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
