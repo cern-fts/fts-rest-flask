@@ -8,6 +8,7 @@
 
 image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 
+
 stages:
   - static_code_analysis
   - tests
@@ -34,10 +35,16 @@ radon:
 
 functional_tests:
   stage: tests
+  services:
+    - centos/mariadb:latest
+  variables:
+    MYSQL_DATABASE: ftsflask
+    MYSQL_ROOT_PASSWORD: asdf
   script:
+  - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
-  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig
-  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/
+  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
+  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
 bandit:
