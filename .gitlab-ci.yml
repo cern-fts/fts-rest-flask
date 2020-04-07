@@ -35,7 +35,7 @@ radon:
 functional_tests:
   stage: tests
   script:
-  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest
+  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/
   - coverage report
 
 bandit:
