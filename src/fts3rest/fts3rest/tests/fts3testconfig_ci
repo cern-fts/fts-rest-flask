@@ -6,7 +6,7 @@ Group=ci
 DbType=mysql
 
 #db username
-DbUserName=ftsflask
+DbUserName=root
 
 #db password
 DbPassword=asdf
