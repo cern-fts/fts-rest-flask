@@ -77,7 +77,8 @@ functional_tests37:
     MYSQL_DATABASE: ftsflask
     MYSQL_ROOT_PASSWORD: asdf
   script:
-  - export PYENV_VERSION=3.7.7
+  - source ~/.bashrc
+  - pyenv global 3.7.7
   - source /home/ci/venv_37/bin/activate
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
@@ -94,6 +95,7 @@ functional_tests38:
     MYSQL_DATABASE: ftsflask
     MYSQL_ROOT_PASSWORD: asdf
   script:
+  - source ~/.bashrc
   - export PYENV_VERSION=3.8.2
   - source /home/ci/venv_38/bin/activate
   - source .gitlab-ci/db.sh

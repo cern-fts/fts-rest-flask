@@ -23,7 +23,7 @@ echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nf
 source ~/.bashrc && \
 pyenv install 3.6.10 && \
 pyenv install 3.7.7 && \
-pyenv install 3.8.2 
+pyenv install 3.8.2
 
 # this is needed for pip-tools
 ENV LC_ALL en_US.utf-8
