@@ -6,7 +6,7 @@ Group=ci
 DbType=mysql
 
 #db username
-DbUserName=root
+DbUserName=ci
 
 #db password
 DbPassword=asdf
