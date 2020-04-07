@@ -21,3 +21,9 @@ RUN python3 -m venv $VIRTUAL_ENV
 RUN pip3 install --upgrade pip && pip3 install pip-tools
 RUN chmod u+x pipcompile.sh && ./pipcompile.sh
 RUN chmod u+x pipsyncdev.sh && ./pipsyncdev.sh
+
+USER root
+RUN mkdir /var/log/fts3rest
+RUN chmod o+rwx /var/log/fts3rest
+
+USER ci
