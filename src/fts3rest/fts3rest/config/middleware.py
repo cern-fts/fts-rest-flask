@@ -85,6 +85,8 @@ def create_app(default_config_file=None, test=False):
         config_file = os.environ.get("FTS3TESTCONFIG", default_config_file)
     else:
         config_file = os.environ.get("FTS3CONFIG", default_config_file)
+    if not config_file:
+        raise ValueError("The configuration file has not been specified")
 
     fts3cfg = _load_configuration(config_file)
 
