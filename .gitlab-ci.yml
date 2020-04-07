@@ -36,6 +36,7 @@ functional_tests:
   stage: tests
   script:
   - export PYTHONPATH=./src:./src/fts3rest
+  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/
   - coverage report
 
