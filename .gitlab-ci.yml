@@ -8,8 +8,10 @@
 
 image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 
+
 stages:
   - static_code_analysis
+  - tests
   - security
   - schedule
 
@@ -30,6 +32,21 @@ radon:
   stage: static_code_analysis
   script:
   - source .gitlab-ci/radon.sh
+
+functional_tests:
+  stage: tests
+  services:
+    - name: centos/mariadb:latest
+      alias: mariadb
+  variables:
+    MYSQL_DATABASE: ftsflask
+    MYSQL_ROOT_PASSWORD: asdf
+  script:
+  - source .gitlab-ci/db.sh
+  - export PYTHONPATH=./src:./src/fts3rest
+  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
+  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+  - coverage report
 
 bandit:
   # Find potential security issues in file. 

@@ -21,3 +21,13 @@ RUN python3 -m venv $VIRTUAL_ENV
 RUN pip3 install --upgrade pip && pip3 install pip-tools
 RUN chmod u+x pipcompile.sh && ./pipcompile.sh
 RUN chmod u+x pipsyncdev.sh && ./pipsyncdev.sh
+
+
+USER root
+# create directory for logs
+RUN mkdir /var/log/fts3rest
+RUN chown ci /var/log/fts3rest
+RUN yum install mariadb -y && \
+yum clean all
+
+USER ci
