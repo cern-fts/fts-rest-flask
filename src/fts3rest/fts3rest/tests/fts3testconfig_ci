@@ -13,7 +13,7 @@ DbPassword=asdf
 
 
 #For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db")
-DbConnectString=centos__mariadb:3306/ftsflask
+DbConnectString=mariadb:3306/ftsflask
 
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
 DbThreadsNum=30

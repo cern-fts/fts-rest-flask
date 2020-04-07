@@ -36,7 +36,8 @@ radon:
 functional_tests:
   stage: tests
   services:
-    - centos/mariadb:latest
+    - name: centos/mariadb:latest
+      alias: mariadb
   variables:
     MYSQL_DATABASE: ftsflask
     MYSQL_ROOT_PASSWORD: asdf

@@ -27,5 +27,7 @@ USER root
 # create directory for logs
 RUN mkdir /var/log/fts3rest
 RUN chown ci /var/log/fts3rest
+RUN yum install mariadb -y && \
+yum clean all
 
 USER ci
