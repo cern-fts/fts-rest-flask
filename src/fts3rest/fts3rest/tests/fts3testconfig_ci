@@ -1,6 +1,6 @@
 # Running user and group
-User=ftsflask
-Group=ftsflask
+User=ci
+Group=ci
 
 # mysql only
 DbType=mysql
