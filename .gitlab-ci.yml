@@ -10,6 +10,7 @@ image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 
 stages:
   - static_code_analysis
+  - tests
   - security
   - schedule
 
@@ -30,6 +31,12 @@ radon:
   stage: static_code_analysis
   script:
   - source .gitlab-ci/radon.sh
+
+functional_tests:
+  stage: tests
+  script:
+  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest
+  - coverage report
 
 bandit:
   # Find potential security issues in file. 
