@@ -21,11 +21,30 @@ black:
   script:
   - black --check --fast --target-version py36 src/
 
-pylint:
+pylint36:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
   - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
+
+pylint37:
+  # Check that every file doesn't have syntax errors
+  stage: static_code_analysis
+  script:
+  - deactivate
+  - pyenv global 3.7.7
+  - source /home/ci/venv_37/bin/activate
+  - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
+
+pylint38:
+  # Check that every file doesn't have syntax errors
+  stage: static_code_analysis
+  script:
+  - deactivate
+  - pyenv global 3.8.2
+  - source /home/ci/venv_38/bin/activate
+  - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
+
 
 radon:
   # Check metrics for every file
@@ -33,7 +52,7 @@ radon:
   script:
   - source .gitlab-ci/radon.sh
 
-functional_tests:
+functional_tests36:
   stage: tests
   services:
     - name: centos/mariadb:latest
@@ -47,6 +66,43 @@ functional_tests:
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
+
+functional_tests37:
+  stage: tests
+  services:
+    - name: centos/mariadb:latest
+      alias: mariadb
+  variables:
+    MYSQL_DATABASE: ftsflask
+    MYSQL_ROOT_PASSWORD: asdf
+  script:
+  - deactivate
+  - pyenv global 3.7.7
+  - source /home/ci/venv_37/bin/activate
+  - source .gitlab-ci/db.sh
+  - export PYTHONPATH=./src:./src/fts3rest
+  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
+  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+  - coverage report
+
+functional_tests38:
+  stage: tests
+  services:
+    - name: centos/mariadb:latest
+      alias: mariadb
+  variables:
+    MYSQL_DATABASE: ftsflask
+    MYSQL_ROOT_PASSWORD: asdf
+  script:
+  - deactivate
+  - pyenv global 3.8.2
+  - source /home/ci/venv_38/bin/activate
+  - source .gitlab-ci/db.sh
+  - export PYTHONPATH=./src:./src/fts3rest
+  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
+  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+  - coverage report
+
 
 bandit:
   # Find potential security issues in file. 
@@ -63,6 +119,5 @@ bandit_schedule:
   stage: schedule
   only:
     - schedules
-  stage: static_code_analysis
   script:
   - bandit -r src/
