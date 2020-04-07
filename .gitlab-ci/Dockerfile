@@ -15,15 +15,19 @@ RUN chown ci /var/log/fts3rest
 WORKDIR /home/ci
 USER ci
 
+ENV PY36 3.6.10
+ENV PY37 3.7.7
+ENV PY38 3.8.2
+
 # install pyenv, following instructions from https://github.com/pyenv/pyenv
 RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc && \
 echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc && \
 echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bashrc && \
 source ~/.bashrc && \
-pyenv install 3.6.10 && \
-pyenv install 3.7.7 && \
-pyenv install 3.8.2
+pyenv install $PY36 && \
+pyenv install $PY37 && \
+pyenv install $PY38
 
 # this is needed for pip-tools
 ENV LC_ALL en_US.utf-8
@@ -32,35 +36,23 @@ ENV LANG en_US.utf-8
 # copy the requirements files
 COPY --chown=ci pipcompile.sh pipsyncdev.sh dev-requirements.in requirements.in ./
 
-# Prepare virtual environments this is needed to run pip in the venv
-ENV VIRTUAL_ENV_36 /home/ci/venv_36
-ENV _OLD_VIRTUAL_PATH="$PATH"
-ENV PATH="$VIRTUAL_ENV_36/bin:$PATH"
-RUN source ~/.bashrc && pyenv global 3.6.10 && python -m venv $VIRTUAL_ENV_36 && \
-pip3 install --upgrade pip && pip3 install pip-tools && \
-chmod u+x pipcompile.sh && ./pipcompile.sh && \
-chmod u+x pipsyncdev.sh && ./pipsyncdev.sh
-ENV PATH="$_OLD_VIRTUAL_PATH"
+# Prepare virtual environments
+ENV VENV_36 /home/ci/venv_36
+ENV VENV_37 /home/ci/venv_37
+ENV VENV_38 /home/ci/venv_38
 
-ENV VIRTUAL_ENV_37 /home/ci/venv_37
-ENV _OLD_VIRTUAL_PATH="$PATH"
-ENV PATH="$VIRTUAL_ENV_37/bin:$PATH"
-RUN source ~/.bashrc && pyenv global 3.7.7 && python -m venv $VIRTUAL_ENV_37 && \
-pip3 install --upgrade pip && pip3 install pip-tools && \
-chmod u+x pipcompile.sh && ./pipcompile.sh && \
-chmod u+x pipsyncdev.sh && ./pipsyncdev.sh
-ENV PATH="$_OLD_VIRTUAL_PATH"
+RUN . ~/.bashrc && pyenv global $PY36 && python -m venv $VENV_36 && \
+. $VENV_36/bin/activate && pip install --upgrade pip && pip install pip-tools && \
+. pipcompile.sh && . pipsyncdev.sh && deactivate
 
-ENV VIRTUAL_ENV_38 /home/ci/venv_38
-ENV _OLD_VIRTUAL_PATH="$PATH"
-ENV PATH="$VIRTUAL_ENV_38/bin:$PATH"
-RUN source ~/.bashrc && pyenv global 3.8.2 && python -m venv $VIRTUAL_ENV_38 && \
-pip3 install --upgrade pip && pip3 install pip-tools && \
-chmod u+x pipcompile.sh && ./pipcompile.sh && \
-chmod u+x pipsyncdev.sh && ./pipsyncdev.sh
-ENV PATH="$_OLD_VIRTUAL_PATH"
+RUN . ~/.bashrc && pyenv global $PY37 && python -m venv $VENV_37 && \
+. $VENV_37/bin/activate && pip install --upgrade pip && pip install pip-tools && \
+. pipcompile.sh && . pipsyncdev.sh && deactivate
+
+RUN . ~/.bashrc && pyenv global $PY38 && python -m venv $VENV_38 && \
+. $VENV_38/bin/activate && pip install --upgrade pip && pip install pip-tools && \
+. pipcompile.sh && . pipsyncdev.sh && deactivate
 
 # by default we run on the lowest version supported
-ENV VIRTUAL_ENV_36 /home/ci/venv_36
-ENV PATH="$VIRTUAL_ENV_36/bin:$PATH"
-RUN source ~/.bashrc && pyenv global 3.6.10
+RUN . ~/.bashrc && pyenv global $PY36
+ENV PATH="$VENV_36/bin:$PATH"
