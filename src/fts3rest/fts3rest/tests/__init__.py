@@ -11,7 +11,7 @@ from M2Crypto.ASN1 import UTC
 from fts3rest.lib.middleware.fts3auth.credentials import UserCredentials
 from fts3rest.model.meta import Session
 from fts3.model import Credential, CredentialCache, DataManagement
-from fts3.model import Job, File, FileRetryLog, ServerConfig
+from fts3.model import *
 from fts3rest.config.middleware import create_app
 from .ftstestclient import FTSTestClient, TestResponse
 
@@ -186,6 +186,8 @@ class TestController(TestCase):
         Session.query(DataManagement).delete()
         Session.query(Job).delete()
         Session.query(ServerConfig).delete()
+        Session.query(OptimizerEvolution).delete()
+        Session.query(ActivityShare).delete()
         Session.commit()
 
         # Delete messages
