@@ -33,6 +33,7 @@ class FTSTestClient(FlaskClient):
     post = _adapt_test(FlaskClient.post)
     put = _adapt_test(FlaskClient.put)
     delete = _adapt_test(FlaskClient.delete)
+    options = _adapt_test(FlaskClient.options)
 
     def post_json(self, url, params, **kwargs):
         params = json.dumps(params)
