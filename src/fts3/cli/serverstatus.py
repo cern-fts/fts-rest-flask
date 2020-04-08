@@ -45,7 +45,7 @@ class ServerStatus(Base):
         total_count = dict(active=0, staging=0)
         for host in hosts:
             self.logger.info(host)
-            for state, count in host_activity.get(host, {}).iteritems():
+            for state, count in host_activity.get(host, {}).items():
                 self.logger.info("\t%s: %d" % (state, count))
                 total_count[state] += count
 
