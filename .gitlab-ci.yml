@@ -34,7 +34,7 @@ pylint37:
   script:
   - source ~/.bashrc
   - pyenv global $PY37
-  - source VENV_37/bin/activate
+  - source $VENV_37/bin/activate
   - python --version
   - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
 
@@ -44,7 +44,7 @@ pylint38:
   script:
   - source ~/.bashrc
   - pyenv global $PY38
-  - source VENV_38/bin/activate
+  - source $VENV_38/bin/activate
   - python --version
   - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
 
@@ -83,7 +83,7 @@ functional_tests37:
   - source ~/.bashrc
   - pyenv global $PY37
   - python --version
-  - source VENV_37/bin/activate
+  - source $VENV_37/bin/activate
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
@@ -102,7 +102,7 @@ functional_tests38:
   - source ~/.bashrc
   - pyenv global $PY38
   - python --version
-  - source VENV_38/bin/activate
+  - source $VENV_38/bin/activate
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
