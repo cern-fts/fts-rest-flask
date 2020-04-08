@@ -33,8 +33,8 @@ pylint37:
   stage: static_code_analysis
   script:
   - source ~/.bashrc
-  - pyenv global 3.7.7
-  - source /home/ci/venv_37/bin/activate
+  - pyenv global $PY37
+  - source VENV_37/bin/activate
   - python --version
   - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
 
@@ -43,8 +43,8 @@ pylint38:
   stage: static_code_analysis
   script:
   - source ~/.bashrc
-  - pyenv global 3.8.2
-  - source /home/ci/venv_38/bin/activate
+  - pyenv global $PY38
+  - source VENV_38/bin/activate
   - python --version
   - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
 
@@ -80,8 +80,8 @@ functional_tests37:
     MYSQL_ROOT_PASSWORD: asdf
   script:
   - source ~/.bashrc
-  - pyenv global 3.7.7
-  - source /home/ci/venv_37/bin/activate
+  - pyenv global $PY37
+  - source VENV_37/bin/activate
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
@@ -98,8 +98,8 @@ functional_tests38:
     MYSQL_ROOT_PASSWORD: asdf
   script:
   - source ~/.bashrc
-  - pyenv global 3.8.2
-  - source /home/ci/venv_38/bin/activate
+  - pyenv global $PY38
+  - source VENV_38/bin/activate
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
