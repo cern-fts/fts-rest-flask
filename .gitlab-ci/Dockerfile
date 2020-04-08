@@ -43,15 +43,15 @@ ENV VENV_38 /home/ci/venv_38
 
 RUN . ~/.bashrc && pyenv global $PY36 && python -m venv $VENV_36 && \
 . $VENV_36/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-. pipcompile.sh && . pipsyncdev.sh && deactivate
+. ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
 
 RUN . ~/.bashrc && pyenv global $PY37 && python -m venv $VENV_37 && \
 . $VENV_37/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-. pipcompile.sh && . pipsyncdev.sh && deactivate
+. ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
 
 RUN . ~/.bashrc && pyenv global $PY38 && python -m venv $VENV_38 && \
 . $VENV_38/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-. pipcompile.sh && . pipsyncdev.sh && deactivate
+. ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
 
 # by default we run on the lowest version supported
 RUN . ~/.bashrc && pyenv global $PY36
