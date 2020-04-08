@@ -22,8 +22,6 @@ class TestScheduler(TestController):
         Session.commit()
 
     def tearDown(self):
-        Session.query(Job).delete()
-        Session.query(File).delete()
         Session.query(OptimizerEvolution).delete()
         Session.query(ActivityShare).delete()
         Session.commit()
