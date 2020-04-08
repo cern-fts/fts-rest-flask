@@ -13,10 +13,12 @@ class TestResponse(Response):
 def _adapt_test(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        path = kwargs.pop("url", "/")
+        if "url" in kwargs:
+            kwargs["path"] = kwargs.pop("url")
+            # else case url is a positional argument
         expected_status = kwargs.pop("status", 200)
         data = kwargs.pop("params", None)
-        res = func(*args, **kwargs, path=path, data=data)
+        res = func(*args, **kwargs, data=data)
         assert res.status_code == expected_status
         return res
 
