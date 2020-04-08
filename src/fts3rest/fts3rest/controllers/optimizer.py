@@ -175,9 +175,9 @@ def set_optimizer_values():
         filesize_stddev=filesize_stddev,
     )
 
-    for key, value in input_dict.iteritems():
+    for key, value in input_dict.items():
         setattr(evolution, key, value)
-    for key, value in input_dict.iteritems():
+    for key, value in input_dict.items():
         setattr(optimizer, key, value)
 
     Session.merge(evolution)
