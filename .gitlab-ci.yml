@@ -64,6 +64,7 @@ functional_tests36:
     MYSQL_DATABASE: ftsflask
     MYSQL_ROOT_PASSWORD: asdf
   script:
+  - python --version
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
@@ -81,6 +82,7 @@ functional_tests37:
   script:
   - source ~/.bashrc
   - pyenv global $PY37
+  - python --version
   - source VENV_37/bin/activate
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
@@ -99,6 +101,7 @@ functional_tests38:
   script:
   - source ~/.bashrc
   - pyenv global $PY38
+  - python --version
   - source VENV_38/bin/activate
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
