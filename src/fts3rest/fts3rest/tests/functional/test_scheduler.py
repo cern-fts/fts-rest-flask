@@ -16,17 +16,6 @@ class TestScheduler(TestController):
     Test different selection strategies at submission time
     """
 
-    def setUp(self):
-        super().setUp()
-        Session.query(OptimizerEvolution).delete()
-        Session.commit()
-
-    def tearDown(self):
-        Session.query(OptimizerEvolution).delete()
-        Session.query(ActivityShare).delete()
-        Session.commit()
-        super().tearDown()
-
     @staticmethod
     def fill_file_queue(self):
         for i in range(0, 15):
