@@ -112,7 +112,7 @@ def _validate_proxy(proxy_pem, private_key_pem):
     x509_proxy_issuer = x509_list[1]
 
     expiration_time = x509_proxy.get_not_after().get_datetime().replace(tzinfo=None)
-    private_key = EVP.load_key_string(str(private_key_pem), callback=_mute_callback)
+    private_key = EVP.load_key_string(private_key_pem, callback=_mute_callback)
 
     # The modulus of the stored private key and the modulus of the proxy must match
     if x509_proxy.get_pubkey().get_modulus() != private_key.get_modulus():
