@@ -15,14 +15,17 @@
 
 import glob
 
-
+from flask.views import View
 from fts3.model import SchemaVersion
 
 
 from fts3rest.model.meta import Session
 from fts3rest.lib.helpers import jsonify
 
-# from fts3rest.lib import api
+from fts3rest.lib import api
+from werkzeug.exceptions import NotFound
+from flask import current_app as app
+from flask import Response
 
 API_VERSION = dict(major=3, minor=10, patch=0)
 
@@ -43,7 +46,7 @@ def _get_fts_core_version():
         return versions
 
 
-class ApiController(BaseController):
+class Api(View):
     """
     API documentation
     """
@@ -59,8 +62,10 @@ class ApiController(BaseController):
 
         self.fts_core_version = _get_fts_core_version()
 
+
+class api_version(Api):
     @jsonify
-    def api_version(self):
+    def dispatch_request(self):
         schema_v = (
             Session.query(SchemaVersion)
             .order_by(
@@ -107,8 +112,10 @@ class ApiController(BaseController):
             },
         }
 
+
+class submit_schema(Api):
     @jsonify
-    def submit_schema(self):
+    def dispatch_request(self):
         """
         Json-schema for the submission operation
 
@@ -117,8 +124,10 @@ class ApiController(BaseController):
         """
         return api.SubmitSchema
 
+
+class api_docs(Api):
     @jsonify
-    def api_docs(self):
+    def dispatch_request(self):
         """
         Auto-generated API documentation
 
@@ -136,14 +145,15 @@ class ApiController(BaseController):
             },
         }
 
-    @doc.response(404, "The resource can not be found")
+
+class resource_doc(Api):
     @jsonify
-    def resource_doc(self, resource):
+    def dispatch_request(self, resource):
         """
         Auto-generated API documentation for a specific resource
         """
         if resource not in self.apis:
-            raise HTTPNotFound("API not found: " + resource)
+            raise NotFound("API not found: " + resource)
         return {
             "basePath": "/",
             "swaggerVersion": "1.2",
@@ -154,54 +164,27 @@ class ApiController(BaseController):
             "models": self.models.get(resource, []),
         }
 
-    def options_handler(self, path, environ):
+
+class options_handler(Api):
+    def dispatch_request(self, path):
         """
         Generates a response for an OPTIONS request
         """
-        mapper = request_config(original=False).mapper
-        mapper.create_regs()
-
         full_path = "/" + path
-        routes = list()
-        for route in mapper.matchlist:
-            match = route.match(full_path)
-            if isinstance(match, dict) or match:
-                routes.append(route)
+        rules = []
+        for rule in app.url_map.iter_rules():
+            if rule.match(full_path):
+                rules.append(rules)
 
-        if len(routes) == 0:
-            raise HTTPNotFound()
+        if not rules:
+            raise NotFound()
 
         allowed = set()
-        for route in routes:
-            if route.conditions and "method" in route.conditions:
-                allowed.update(set(route.conditions["method"]))
+        for rule in rules:
+            allowed.update(rule.methods)
 
         # If only this handler matches, consider this a Not Found
-        if allowed == set(["OPTIONS"]):
-            raise HTTPNotFound()
+        if allowed == set("OPTIONS"):
+            raise NotFound()
 
-        pylons.response.headers["Allow"] = ", ".join(allowed)
-        return None
-
-
-from werkzeug.exceptions import NotFound
-
-
-def api_version():
-    raise NotFound
-
-
-def options_handler():
-    raise NotFound
-
-
-def submit_schema():
-    raise NotFound
-
-
-def api_docs():
-    raise NotFound
-
-
-def resource_doc():
-    raise NotFound
+        return Response(None, headers=[("Allow", ", ".join(allowed))])
