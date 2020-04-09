@@ -183,7 +183,7 @@ class options_handler(Api):
         allowed = set()
         for rule in rules:
             allowed.update(rule.methods)
-
+        allowed.discard("HEAD")
         # If only this handler matches, consider this a Not Found
         if allowed == set("OPTIONS"):
             raise NotFound()
