@@ -112,7 +112,7 @@ def _validate_proxy(proxy_pem, private_key_pem):
     x509_proxy_issuer = x509_list[1]
 
     expiration_time = x509_proxy.get_not_after().get_datetime().replace(tzinfo=None)
-    private_key = EVP.load_key_string(str(private_key_pem), callback=_mute_callback)
+    private_key = EVP.load_key_string(private_key_pem, callback=_mute_callback)
 
     # The modulus of the stored private key and the modulus of the proxy must match
     if x509_proxy.get_pubkey().get_modulus() != private_key.get_modulus():
@@ -153,7 +153,7 @@ def _build_full_proxy(x509_pem, privkey_pem):
         A full proxy
     """
     x509_list = _read_x509_list(x509_pem)
-    x509_chain = "".join(map(lambda x: x.as_pem(), x509_list[1:]))
+    x509_chain = b"".join(map(lambda x: x.as_pem(), x509_list[1:]))
     return x509_list[0].as_pem() + privkey_pem + x509_chain
 
 
@@ -331,11 +331,13 @@ class credential(Delegation):
         log.debug("Received delegated credentials for %s" % dlg_id)
         log.debug(x509_proxy_pem)
 
+        if credential_cache.priv_key and isinstance(credential_cache.priv_key, str):
+            priv_key = bytes(credential_cache.priv_key, "utf-8")
+        else:
+            priv_key = credential_cache.priv_key
         try:
-            expiration_time = _validate_proxy(x509_proxy_pem, credential_cache.priv_key)
-            x509_full_proxy_pem = _build_full_proxy(
-                x509_proxy_pem, credential_cache.priv_key
-            )
+            expiration_time = _validate_proxy(x509_proxy_pem, priv_key)
+            x509_full_proxy_pem = _build_full_proxy(x509_proxy_pem, priv_key)
         except ProxyException as ex:
             raise BadRequest("Could not process the proxy: " + str(ex))
 
