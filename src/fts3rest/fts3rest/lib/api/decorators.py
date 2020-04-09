@@ -13,6 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+# TODO migrate correctly if necessary.
+# Some of this code may have not been converted to Flask yet
+
 
 def _json_type_name(type):
     if not type:

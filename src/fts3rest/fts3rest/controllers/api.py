@@ -22,13 +22,16 @@ from fts3.model import SchemaVersion
 from fts3rest.model.meta import Session
 
 
-from fts3rest.lib import api
+from fts3rest.lib.api.submit_schema import SubmitSchema
+from fts3rest.lib.api.introspect import introspect
 from werkzeug.exceptions import NotFound
-from flask import current_app as app
-from flask import Response
 from fts3rest.lib.helpers.jsonify import jsonify
 
 API_VERSION = dict(major=3, minor=10, patch=0)
+
+
+# TODO migrate correctly if necessary.
+# Some of this code may have not been converted to Flask yet
 
 
 def _get_fts_core_version():
@@ -53,13 +56,14 @@ class Api(View):
     """
 
     def __init__(self):
-        self.resources, self.apis, self.models = api.introspect()
-        self.resources.sort(key=lambda res: res["id"])
-        for r in self.apis.values():
-            r.sort(key=lambda a: a["path"])
-        # Add path to each resource
-        for r in self.resources:
-            r["path"] = "/" + r["id"]
+        super().__init__()
+        # self.resources, self.apis, self.models = introspect()
+        # self.resources.sort(key=lambda res: res["id"])
+        # for r in self.apis.values():
+        #     r.sort(key=lambda a: a["path"])
+        # # Add path to each resource
+        # for r in self.resources:
+        #     r["path"] = "/" + r["id"]
 
         self.fts_core_version = _get_fts_core_version()
 
@@ -123,7 +127,7 @@ class submit_schema(Api):
         This can be used to validate the submission. For instance, in Python,
         jsonschema.validate
         """
-        return api.SubmitSchema
+        return SubmitSchema
 
 
 class api_docs(Api):
@@ -134,17 +138,18 @@ class api_docs(Api):
 
         Compatible with Swagger-UI
         """
-        return {
-            "swaggerVersion": "1.2",
-            "apis": self.resources,
-            "info": {
-                "title": "FTS3 RESTful API",
-                "description": "FTS3 RESTful API documentation",
-                "contact": "fts-devel@cern.ch",
-                "license": "Apache 2.0",
-                "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.html",
-            },
-        }
+        raise NotFound
+        # return {
+        #     "swaggerVersion": "1.2",
+        #     "apis": self.resources,
+        #     "info": {
+        #         "title": "FTS3 RESTful API",
+        #         "description": "FTS3 RESTful API documentation",
+        #         "contact": "fts-devel@cern.ch",
+        #         "license": "Apache 2.0",
+        #         "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.html",
+        #     },
+        # }
 
 
 class resource_doc(Api):
@@ -153,14 +158,15 @@ class resource_doc(Api):
         """
         Auto-generated API documentation for a specific resource
         """
-        if resource not in self.apis:
-            raise NotFound("API not found: " + resource)
-        return {
-            "basePath": "/",
-            "swaggerVersion": "1.2",
-            "produces": ["application/json"],
-            "resourcePath": "/" + resource,
-            "authorizations": {},
-            "apis": self.apis.get(resource, []),
-            "models": self.models.get(resource, []),
-        }
+        raise NotFound
+        # if resource not in self.apis:
+        #     raise NotFound("API not found: " + resource)
+        # return {
+        #     "basePath": "/",
+        #     "swaggerVersion": "1.2",
+        #     "produces": ["application/json"],
+        #     "resourcePath": "/" + resource,
+        #     "authorizations": {},
+        #     "apis": self.apis.get(resource, []),
+        #     "models": self.models.get(resource, []),
+        # }

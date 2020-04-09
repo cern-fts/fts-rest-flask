@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #   Copyright  Members of the EMI Collaboration, 2013.
 #   Copyright 2020 CERN
@@ -14,6 +14,11 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+
+
+# TODO migrate correctly if necessary.
+# Some of this code may have not been converted to Flask yet
+
 
 import logging
 import imp
@@ -421,9 +426,10 @@ def introspect():
     """
     Returns a tuple (resources, apis, models) populated instrospecting the API
     """
-    mapper = get_mapper()
-    controllers = get_controllers()
-    routes = get_routes(mapper)
-    resources = generate_resources(routes, controllers)
-    apis, models = generate_apis_and_models(routes, controllers)
-    return resources, apis, models
+    return None
+    # mapper = get_mapper()
+    # controllers = get_controllers()
+    # routes = get_routes(mapper)
+    # resources = generate_resources(routes, controllers)
+    # apis, models = generate_apis_and_models(routes, controllers)
+    # return resources, apis, models
