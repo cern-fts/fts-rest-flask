@@ -331,8 +331,12 @@ class credential(Delegation):
         log.debug("Received delegated credentials for %s" % dlg_id)
         log.debug(x509_proxy_pem)
 
+        if credential_cache.priv_key and isinstance(credential_cache.priv_key, str):
+            priv_key = bytes(credential_cache.priv_key, "utf-8")
+        else:
+            priv_key = credential_cache.priv_key
         try:
-            expiration_time = _validate_proxy(x509_proxy_pem, credential_cache.priv_key)
+            expiration_time = _validate_proxy(x509_proxy_pem, priv_key)
             x509_full_proxy_pem = _build_full_proxy(
                 x509_proxy_pem, credential_cache.priv_key
             )
