@@ -337,9 +337,7 @@ class credential(Delegation):
             priv_key = credential_cache.priv_key
         try:
             expiration_time = _validate_proxy(x509_proxy_pem, priv_key)
-            x509_full_proxy_pem = _build_full_proxy(
-                x509_proxy_pem, credential_cache.priv_key
-            )
+            x509_full_proxy_pem = _build_full_proxy(x509_proxy_pem, priv_key)
         except ProxyException as ex:
             raise BadRequest("Could not process the proxy: " + str(ex))
 
