@@ -20,12 +20,13 @@ from fts3.model import SchemaVersion
 
 
 from fts3rest.model.meta import Session
-from fts3rest.lib.helpers import jsonify
+
 
 from fts3rest.lib import api
 from werkzeug.exceptions import NotFound
 from flask import current_app as app
 from flask import Response
+from fts3rest.lib.helpers.jsonify import jsonify
 
 API_VERSION = dict(major=3, minor=10, patch=0)
 
