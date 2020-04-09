@@ -6,7 +6,7 @@ class TestOptions(TestController):
     Tests for the OPTIONS method
     """
 
-    def assertCountEqual(self, first, second):
+    def assertCountEqual(self, first, second, msg=...) -> None:
         second = set(second)
         second.discard("HEAD")
         super().assertCountEqual(first, second)

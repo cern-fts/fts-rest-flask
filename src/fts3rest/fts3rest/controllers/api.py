@@ -164,29 +164,3 @@ class resource_doc(Api):
             "apis": self.apis.get(resource, []),
             "models": self.models.get(resource, []),
         }
-
-
-class options_handler(Api):
-    def dispatch_request(self, pathname):
-        """
-        Generates a response for an OPTIONS request
-        """
-        full_path = "/" + pathname
-        rules = []
-        for rule in app.url_map.iter_rules():
-            if rule.match(full_path):
-                rules.append(rules)
-
-        if not rules:
-            raise NotFound()
-
-        allowed = set()
-        for rule in rules:
-            allowed.update(rule.methods)
-        allowed.discard("HEAD")
-        # If only this handler matches, consider this a Not Found
-
-        if allowed == set("OPTIONS"):
-            raise NotFound()
-
-        return Response(None, headers=[("Allow", ", ".join(allowed))])
