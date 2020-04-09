@@ -129,7 +129,7 @@ class TestController(TestCase):
         if subject is None:
             subject = issuer + [("CN", "proxy")]
 
-        x509_request = X509.load_request_string(str(request_pem))
+        x509_request = X509.load_request_string(request_pem)
 
         not_before = ASN1.ASN1_UTCTIME()
         not_before.set_datetime(datetime.now(UTC))
