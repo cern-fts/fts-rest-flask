@@ -6,10 +6,10 @@ class TestOptions(TestController):
     Tests for the OPTIONS method
     """
 
-    def assertItemsEqual(self, iter1, iter2):
-        iter2 = set(iter2)
-        iter2.discard("HEAD")
-        super().assertCountEqual(iter1, iter2)
+    def assertCountEqual(self, first, second):
+        second = set(second)
+        second.discard("HEAD")
+        super().assertCountEqual(first, second)
 
     def test_options_whoami(self):
         """
