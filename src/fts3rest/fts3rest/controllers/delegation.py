@@ -153,7 +153,7 @@ def _build_full_proxy(x509_pem, privkey_pem):
         A full proxy
     """
     x509_list = _read_x509_list(x509_pem)
-    x509_chain = "".join(map(lambda x: x.as_pem(), x509_list[1:]))
+    x509_chain = b"".join(map(lambda x: x.as_pem(), x509_list[1:]))
     return x509_list[0].as_pem() + privkey_pem + x509_chain
 
 
