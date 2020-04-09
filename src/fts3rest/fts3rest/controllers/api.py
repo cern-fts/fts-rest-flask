@@ -188,4 +188,6 @@ class options_handler(Api):
         if allowed == set("OPTIONS"):
             raise NotFound()
 
-        return Response(None, headers=[("Allow", ", ".join(allowed))])
+        ret = Response(None)
+        ret.headers = [("Allow", ", ".join(allowed))]
+        return ret
