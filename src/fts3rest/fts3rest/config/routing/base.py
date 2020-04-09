@@ -50,11 +50,13 @@ def do_connect(app):
         return "Hello, World!"
 
     # Root
-    app.add_url_rule("/", "api.api_version", api.api_version)
+    app.add_url_rule("/", view_func=api.api_version.as_view("api.api_version"))
 
     # OPTIONS handler
     app.add_url_rule(
-        "/<path:pathname>", view_func=api.options_handler, methods=["OPTIONS"]
+        "/<path:pathname>",
+        view_func=api.options_handler.as_view("api.options_handler"),
+        methods=["OPTIONS"],
     )
 
     # Delegation and self-identification
