@@ -53,7 +53,7 @@ class TestDelegation(TestController):
         request = self.app.get(
             url="/delegation/%s/request" % creds.delegation_id, status=200
         )
-        proxy = self.get_x509_proxy(request.data)
+        proxy = self.get_x509_proxy(request.get_data(as_text=True))
 
         Session.delete(
             Session.query(CredentialCache).get((creds.delegation_id, creds.user_dn))
@@ -90,7 +90,7 @@ class TestDelegation(TestController):
         request = self.app.get(
             url="/delegation/%s/request" % creds.delegation_id, status=200
         )
-        proxy = self.get_x509_proxy(request.data)
+        proxy = self.get_x509_proxy(request.get_data(as_text=True))
 
         self.app.put(
             url="/delegation/%s/credential" % creds.delegation_id,
@@ -113,7 +113,9 @@ class TestDelegation(TestController):
             url="/delegation/%s/request" % creds.delegation_id, status=200
         )
 
-        proxy = self.get_x509_proxy(request.data, subject=[("DC", "dummy")])
+        proxy = self.get_x509_proxy(
+            request.get_data(as_text=True), subject=[("DC", "dummy")]
+        )
 
         self.app.put(
             url="/delegation/%s/credential" % creds.delegation_id,
@@ -133,7 +135,9 @@ class TestDelegation(TestController):
             url="/delegation/%s/request" % creds.delegation_id, status=200
         )
 
-        proxy = self.get_x509_proxy(request.data, private_key=EVP.PKey())
+        proxy = self.get_x509_proxy(
+            request.get_data(as_text=True), private_key=EVP.PKey()
+        )
 
         self.app.put(
             url="/delegation/%s/credential" % creds.delegation_id,
@@ -238,7 +242,7 @@ class TestDelegation(TestController):
         )
 
         proxy = self.get_x509_proxy(
-            request.data,
+            request.get_data(as_text=True),
             subject=[
                 ("DC", "ch"),
                 ("DC", "cern"),
@@ -265,5 +269,7 @@ class TestDelegation(TestController):
             cert = "SSL_CLIENT_CERT"
         self.app.environ_base["SSL_CLIENT_CERT"] = "certificate:" + cert
 
-        returns = self.app.get(url="/whoami/certificate", status=200).data
+        returns = self.app.get(url="/whoami/certificate", status=200).get_data(
+            as_text=True
+        )
         self.assertEqual("certificate:" + cert, returns)
