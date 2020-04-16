@@ -96,7 +96,6 @@ class ArchivedFile(Base):
     file_id = Column(FileId, primary_key=True)
     file_index = Column(Integer)
     job_id = Column(String(36), ForeignKey("t_job_backup.job_id"))
-    dest_surl_uuid = Column(String(255), unique=True)
     source_se = Column(String(255))
     dest_se = Column(String(255))
     priority = Column(Integer)
