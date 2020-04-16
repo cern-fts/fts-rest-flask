@@ -178,7 +178,7 @@ def _cancel_jobs(dn):
     jobs = Session.query(Job.job_id).filter(
         Job.job_state.in_(JobActiveStates), Job.user_dn == dn, Job.job_finished == None
     )
-    job_ids = map(lambda j: j[0], jobs)
+    job_ids = [j[0] for j in jobs]
 
     try:
         now = datetime.utcnow()
