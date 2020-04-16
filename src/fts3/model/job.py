@@ -81,7 +81,6 @@ class ArchivedJob(Base):
     job_state = Column(String(32))
     job_type = Column(String(1), default="N")
     cancel_job = Column(Flag(negative=None))
-    job_params = Column(String(255))
     submit_host = Column(String(255))
     user_dn = Column(String(1024))
     cred_id = Column(String(100))
