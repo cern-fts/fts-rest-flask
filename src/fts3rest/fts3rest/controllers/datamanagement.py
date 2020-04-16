@@ -243,7 +243,10 @@ def stat():
     finally:
         # Delete the temp file if we are using a certificate based auth method
         if not isinstance(cred, str):
-            os.unlink(cred.name)
+            try:
+                os.unlink(cred.name)
+            except Exception:
+                pass
 
 
 @authorize(DATAMANAGEMENT)
