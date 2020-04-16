@@ -361,7 +361,7 @@ def ban_dn():
         except Exception:
             raise BadRequest("Malformed input")
     else:
-        input_dict = request.params
+        input_dict = request.values
 
     user = request.environ["fts3.User.Credentials"]
     dn = input_dict.get("user_dn", None)
@@ -385,7 +385,7 @@ def unban_dn():
     """
     Unban a user
     """
-    dn = request.params.get("user_dn", None)
+    dn = request.values.get("user_dn", None)
     if not dn:
         raise BadRequest("Missing user_dn parameter")
 

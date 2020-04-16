@@ -60,9 +60,9 @@ class TestBanning(TestController):
         self.setup_gridsite_environment()
 
     def tearDown(self):
-        super().tearDown()
         Session.query(BannedDN).delete()
         Session.query(BannedSE).delete()
+        super().tearDown()
 
     def test_ban_dn(self):
         """
