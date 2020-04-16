@@ -53,7 +53,7 @@ except ImportError as import_ex:
 
 
 def _get_valid_surl():
-    surl = request.params.get("surl")
+    surl = request.values.get("surl")
     if not surl:
         raise BadRequest("Missing surl parameter")
     parsed = urlparse(surl)
