@@ -178,7 +178,7 @@ def _cancel_jobs(dn):
     jobs = Session.query(Job.job_id).filter(
         Job.job_state.in_(JobActiveStates), Job.user_dn == dn, Job.job_finished == None
     )
-    job_ids = map(lambda j: j[0], jobs)
+    job_ids = [j[0] for j in jobs]
 
     try:
         now = datetime.utcnow()
@@ -361,7 +361,7 @@ def ban_dn():
         except Exception:
             raise BadRequest("Malformed input")
     else:
-        input_dict = request.params
+        input_dict = request.values
 
     user = request.environ["fts3.User.Credentials"]
     dn = input_dict.get("user_dn", None)
@@ -385,7 +385,7 @@ def unban_dn():
     """
     Unban a user
     """
-    dn = request.params.get("user_dn", None)
+    dn = request.values.get("user_dn", None)
     if not dn:
         raise BadRequest("Missing user_dn parameter")
 
