@@ -209,9 +209,9 @@ datefmt = %H:%M:%S
 
 
 [roles]
-Public = all:transfer
-lcgadmin = vo:transfer;vo:config
-production = all:config
+Public = vo:transfer;all:datamanagement
+lcgadmin = all:config
+
 
 [providers]
 xdc=https://iam.extreme-datacloud.eu
