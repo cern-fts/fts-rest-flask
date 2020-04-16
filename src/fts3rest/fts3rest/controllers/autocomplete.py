@@ -102,7 +102,7 @@ def autocomplete_vo():
     """
     Autocomplete VO
     """
-    term = request.params.get("term", "srm://")
+    term = request.values.get("term", "srm://")
     matches = (
         Session.query(Job.vo_name).filter(Job.vo_name.startswith(term)).distinct().all()
     )
