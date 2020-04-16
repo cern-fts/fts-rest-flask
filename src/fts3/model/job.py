@@ -79,7 +79,7 @@ class ArchivedJob(Base):
     source_se = Column(String(255))
     dest_se = Column(String(255))
     job_state = Column(String(32))
-    reuse_job = Column(Flag(negative="N"))
+    job_type = Column(String(1), default="N")
     cancel_job = Column(Flag(negative=None))
     job_params = Column(String(255))
     submit_host = Column(String(255))
