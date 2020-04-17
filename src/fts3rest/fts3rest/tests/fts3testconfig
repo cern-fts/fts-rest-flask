@@ -176,7 +176,7 @@ qualname = routes.middleware
 # "level = DEBUG" logs the route matched and routing variables.
 
 [logger_fts3rest]
-level = INFO
+level = DEBUG
 handlers =
 qualname = fts3rest
 
@@ -209,9 +209,9 @@ datefmt = %H:%M:%S
 
 
 [roles]
-Public = all:transfer
-lcgadmin = vo:transfer;vo:config
-production = all:config
+Public = vo:transfer;all:datamanagement
+lcgadmin = all:config
+
 
 [providers]
 xdc=https://iam.extreme-datacloud.eu
