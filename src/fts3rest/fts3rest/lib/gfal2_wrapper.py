@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 from io import StringIO
 
 try:
-    import gfal2
+    import gfal2  # this requires an RPM: gfal2-python3
 
     context_type = gfal2.creat_context
 except Exception:

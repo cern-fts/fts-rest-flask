@@ -35,6 +35,7 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 
 # Installation requirements
 - yum install mod_wsgi python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
+- gfal2-python3
 # Installation requirements for development
 
 

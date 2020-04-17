@@ -176,7 +176,7 @@ qualname = routes.middleware
 # "level = DEBUG" logs the route matched and routing variables.
 
 [logger_fts3rest]
-level = INFO
+level = DEBUG
 handlers =
 qualname = fts3rest
 

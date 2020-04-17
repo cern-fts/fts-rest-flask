@@ -220,10 +220,7 @@ def list():
     finally:
         # Delete the temp file if we are using a certificate based auth method
         if not isinstance(cred, str):
-            try:
-                os.unlink(cred.name)
-            except Exception:
-                pass
+            os.unlink(cred.name)
 
 
 @authorize(DATAMANAGEMENT)
@@ -243,10 +240,7 @@ def stat():
     finally:
         # Delete the temp file if we are using a certificate based auth method
         if not isinstance(cred, str):
-            try:
-                os.unlink(cred.name)
-            except Exception:
-                pass
+            os.unlink(cred.name)
 
 
 @authorize(DATAMANAGEMENT)
