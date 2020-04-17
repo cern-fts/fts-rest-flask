@@ -6,7 +6,7 @@ yum clean all
 RUN yum install gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel tk-devel libffi-devel -y && \
 yum clean all
 
-RUN yum install gfal2-python3 -y && \
+RUN yum install epel-release gfal2-python3 -y && \
 yum clean all
 
 RUN useradd --create-home ci
