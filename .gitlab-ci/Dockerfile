@@ -6,9 +6,6 @@ yum clean all
 RUN yum install gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel tk-devel libffi-devel -y && \
 yum clean all
 
-RUN yum install epel-release gfal2-python3 -y && \
-yum clean all
-
 RUN useradd --create-home ci
 
 # create directory for logs
@@ -43,19 +40,16 @@ COPY --chown=ci pipcompile.sh pipsyncdev.sh dev-requirements.in requirements.in 
 ENV VENV_36 /home/ci/venv_36
 ENV VENV_37 /home/ci/venv_37
 ENV VENV_38 /home/ci/venv_38
-# this is because gfal2-python3 isn't found in pip
-ENV VENVOPT '--system-site-packages'
 
-
-RUN . ~/.bashrc && pyenv global $PY36 && python -m venv $VENV_36 $VENVOPT && \
+RUN . ~/.bashrc && pyenv global $PY36 && python -m venv $VENV_36 && \
 . $VENV_36/bin/activate && pip install --upgrade pip && pip install pip-tools && \
 . ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
 
-RUN . ~/.bashrc && pyenv global $PY37 && python -m venv $VENV_37 $VENVOPT && \
+RUN . ~/.bashrc && pyenv global $PY37 && python -m venv $VENV_37 && \
 . $VENV_37/bin/activate && pip install --upgrade pip && pip install pip-tools && \
 . ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
 
-RUN . ~/.bashrc && pyenv global $PY38 && python -m venv $VENV_38 $VENVOPT && \
+RUN . ~/.bashrc && pyenv global $PY38 && python -m venv $VENV_38 && \
 . $VENV_38/bin/activate && pip install --upgrade pip && pip install pip-tools && \
 . ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
 
