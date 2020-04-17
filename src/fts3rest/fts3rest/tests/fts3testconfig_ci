@@ -206,12 +206,10 @@ formatter = generic
 format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(module)s] %(message)s
 datefmt = %H:%M:%S
 
-
-
 [roles]
-Public = all:transfer
-lcgadmin = vo:transfer;vo:config
-production = all:config
+Public = vo:transfer;all:datamanagement
+lcgadmin = all:config
+
 
 [providers]
 xdc=https://iam.extreme-datacloud.eu
