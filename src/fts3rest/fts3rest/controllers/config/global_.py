@@ -65,7 +65,7 @@ def set_global_config():
     if not db_cfg:
         db_cfg = ServerConfig(vo_name=vo_name)
 
-    for key, value in cfg.iteritems():
+    for key, value in cfg.items():
         value = validate_type(ServerConfig, key, value)
         setattr(db_cfg, key, value)
 

@@ -365,7 +365,7 @@ def actions_from_controller(controller):
     methods that do not start with _
     """
     actions = []
-    for name, value in controller.__dict__.iteritems():
+    for name, value in controller.__dict__.items():
         if isinstance(value, FunctionType) and not name.startswith("_"):
             actions.append(name)
     return actions

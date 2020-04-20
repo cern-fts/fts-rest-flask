@@ -44,7 +44,7 @@ def set_se_config():
     """
     input_dict = get_input_as_dict(request)
     try:
-        for storage, cfg in input_dict.iteritems():
+        for storage, cfg in input_dict.items():
             if not storage or storage.isspace():
                 raise ValueError
             se_info = None
@@ -53,7 +53,7 @@ def set_se_config():
                 se_info = Session.query(Se).get(storage)
                 if not se_info:
                     se_info = Se(storage=storage)
-                for key, value in se_info_new.iteritems():
+                for key, value in se_info_new.items():
                     # value = validate_type(Se, key, value)
                     setattr(se_info, key, value)
 
@@ -65,8 +65,8 @@ def set_se_config():
                 # Operation limits
                 operations = cfg.get("operations", None)
                 if operations:
-                    for vo, limits in operations.iteritems():
-                        for op, limit in limits.iteritems():
+                    for vo, limits in operations.items():
+                        for op, limit in limits.items():
                             limit = int(limit)
                             new_limit = Session.query(OperationConfig).get(
                                 (vo, storage, op)
