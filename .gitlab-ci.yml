@@ -59,7 +59,6 @@ radon:
 variables:
   MYSQL_DATABASE: ftsflask
   MYSQL_ROOT_PASSWORD: asdf
-  IGNORED_TESTS: src/fts3rest/fts3rest/tests/functional/test_datamanagement.py
 
 functional_tests36:
   stage: tests
@@ -71,7 +70,6 @@ functional_tests36:
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
-  - rm $IGNORED_TESTS
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
@@ -88,7 +86,6 @@ functional_tests37:
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
-  - rm $IGNORED_TESTS
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
@@ -105,7 +102,6 @@ functional_tests38:
   - source .gitlab-ci/db.sh
   - export PYTHONPATH=./src:./src/fts3rest
   - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
-  - rm $IGNORED_TESTS
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
