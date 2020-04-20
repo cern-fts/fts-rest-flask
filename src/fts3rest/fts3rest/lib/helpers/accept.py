@@ -15,25 +15,20 @@
 from werkzeug.exceptions import NotAcceptable
 from fts3rest.lib.helpers.jsonify import to_json
 import functools
-from flask import request
+from flask import request, Response, render_template
 import logging
 
 log = logging.getLogger(__name__)
+from flask import current_app as app
 
 
-def accept(html_template=None, html_redirect=None, json=True):
+def accept(html_template):
     """
     Depending on the Accept headers returns a different representation of the data
     returned by the decorated method
     """
-    assert (html_template and not html_redirect) or (
-        not html_template and html_redirect
-    )
-
     # We give a higher server quality to json, so */* matches it best
-    offers = [("text/html", 1)]
-    if json:
-        offers.append(("application/json", 1.1))
+    offers = [("text/html", 1), ("application/json", 1.1)]
 
     def accept_inner(func):
         @functools.wraps(func)
@@ -44,26 +39,22 @@ def accept(html_template=None, html_redirect=None, json=True):
                 )
             except Exception:
                 best_match = "application/json"
-            log.debut("best_match {}".format(best_match))
+            log.debug("best_match {}".format(best_match))
             if not best_match:
                 raise NotAcceptable("Available: %s" % ", ".join(offers))
 
             data = func(*args, **kwargs)
             if best_match == "text/html":
-                if html_template:
-                    return render(
-                        html_template,
-                        extra_vars={
-                            "data": data,
-                            "config": pylons.config,
-                            "user": pylons.request.environ["fts3.User.Credentials"],
-                        },
-                    )
-                else:
-                    return redirect(html_redirect, code=303)
+                return render_template(
+                    html_template,
+                    **{
+                        "data": data,
+                        "config": app.config,
+                        "user": request.environ["fts3.User.Credentials"],
+                    },
+                )
             else:
-                pylons.response.headers["Content-Type"] = "application/json"
-                return to_json(data)
+                return Response(to_json(data), mimetype="application/json")
 
         return wrapper
 
