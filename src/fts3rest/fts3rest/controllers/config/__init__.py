@@ -13,14 +13,17 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import json
 import logging
+from numbers import Number
 from flask import request
+
 from fts3.model import *
 from fts3rest.model.meta import Session
+from fts3rest.lib.helpers.accept import accept
+from werkzeug.exceptions import BadRequest
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import CONFIG
-from werkzeug.exceptions import NotFound
+
 
 log = logging.getLogger(__name__)
 
@@ -39,5 +42,46 @@ def audit_configuration(action, config):
     log.info(action)
 
 
+def validate_type(Type, key, value):
+    """
+    Validate that value is of a suitable type of the attribute key of the type Type
+    """
+    column = Type.__table__.columns.get(key, None)
+    if column is None:
+        raise BadRequest("Field %s unknown" % key)
+
+    type_map = {
+        Integer: int,
+        String: str,
+        Flag: bool,
+        DateTime: str,
+        Float: Number,
+    }
+
+    expected_type = type_map.get(type(column.type), str)
+    if not isinstance(value, expected_type):
+        # Attempt to cast if a string
+        if isinstance(value, str):
+            try:
+                if expected_type == bool:
+                    value = value.lower() in ["true", "yes", "on"]
+                else:
+                    value = expected_type(value)
+            except:
+                raise BadRequest(
+                    "Field %s is expected to be %s" % (key, expected_type.__name__)
+                )
+        else:
+            raise BadRequest(
+                "Field %s is expected to be %s" % (key, expected_type.__name__)
+            )
+    return value
+
+
+@authorize(CONFIG)
+@accept(html_template="/config/index.html")
 def index():
-    raise NotFound
+    """
+    Configuration entry point. Only makes sense with html
+    """
+    return Session.query(Host).order_by(Host.hostname, Host.service_name).all()
