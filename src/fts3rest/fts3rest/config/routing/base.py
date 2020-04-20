@@ -321,7 +321,7 @@ def do_connect(app):
     app.add_url_rule(
         "/config/cloud_storage",
         "config.cloud.set_cloud_storages",
-        config.cloud.set_cloud_storages,
+        config.cloud.set_cloud_storage,
         methods=["POST"],
     )
     app.add_url_rule(
