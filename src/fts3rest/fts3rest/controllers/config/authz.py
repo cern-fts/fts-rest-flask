@@ -12,23 +12,22 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-import json
 import logging
 
+from flask import request, Response
+from werkzeug.exceptions import BadRequest
 
 from fts3.model import *
-from fts3rest.model.meta import Session
-from fts3rest.lib.helpers.jsonify import jsonify
+from fts3rest.controllers.config import audit_configuration
 from fts3rest.lib.helpers.accept import accept
+from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3rest.lib.middleware.fts3auth.authorization import (
     authorize,
     require_certificate,
 )
 from fts3rest.lib.middleware.fts3auth.constants import CONFIG
-from fts3rest.controllers.config import audit_configuration
-from werkzeug.exceptions import BadRequest
-from flask import request, Response
+from fts3rest.model.meta import Session
 
 log = logging.getLogger(__name__)
 
