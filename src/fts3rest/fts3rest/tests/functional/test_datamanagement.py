@@ -1,4 +1,5 @@
 from fts3rest.tests import TestController
+from unittest import SkipTest
 
 
 class TestDatamanagement(TestController):
@@ -7,6 +8,10 @@ class TestDatamanagement(TestController):
     """
 
     def setUp(self):
+        try:
+            import gfal2
+        except ImportError:
+            raise SkipTest("Failed to import gfal2")
         super().setUp()
         self.setup_gridsite_environment()
 
