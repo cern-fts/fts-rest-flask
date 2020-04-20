@@ -14,19 +14,21 @@
 #   limitations under the License.
 import json
 import logging
+
+from flask import request, Response
+from werkzeug.exceptions import BadRequest, NotFound
+
 from fts3.model import *
 from fts3rest.controllers.config import audit_configuration
-from fts3rest.model.meta import Session
-from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.accept import accept
+from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3rest.lib.middleware.fts3auth.authorization import (
     authorize,
     require_certificate,
 )
 from fts3rest.lib.middleware.fts3auth.constants import *
-from flask import request, Response
-from werkzeug.exceptions import BadRequest, NotFound
+from fts3rest.model.meta import Session
 
 log = logging.getLogger(__name__)
 
