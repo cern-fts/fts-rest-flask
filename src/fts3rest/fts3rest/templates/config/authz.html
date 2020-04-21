@@ -1,0 +1,49 @@
+<%include file="header.html" args="page='/config/authorize', subtitle='Authorization'"/>
+
+<div class="container">
+    <h2>Static authorization</h2>
+
+    <p>
+        These settings allow granting giving permissions to users based only on their DN, so
+        no VO extensions are required.
+    </p>
+    <p>
+        This is particularly handy precisely for the web configuration.
+    </p>
+
+    <form method="POST" id="authz-add-frm">
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 5em"></th>
+                <th>User</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="authz-list">
+        </tbody>
+        <tbody id="authz-add">
+            <tr>
+                <td>
+                    <button class="btn btn-link" type="submit" id="auth-add-frm-submit">
+                        <i class="glyphicon glyphicon-plus" onclick=""></i>
+                    </button>
+                </td>
+                <td>
+                    <input type="text" placeholder="User dn" size="60" name="dn" id="authz-add-field-dn" class="form-control" pattern="/.*[\w:]+" required
+					title="some examples: /C=RU/O=RDIG/OU=users/OU=ihep.su/CN=Name Surname ---or---  /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cernlogin/CN=XXXXXX/CN=Name Surname"/>
+                </td>
+                <td>
+                    <select name="operation" class="form-control">
+                        <option value="config">Configure</option>
+                    </select>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    </form>
+</div>
+
+<script src="/js/config/authz.js" onload="setupAuthz()"></script>
+
+<%include file="footer.html"/>
