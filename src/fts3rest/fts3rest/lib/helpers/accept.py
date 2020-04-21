@@ -15,7 +15,8 @@
 from werkzeug.exceptions import NotAcceptable
 from fts3rest.lib.helpers.jsonify import to_json
 import functools
-from flask import request, Response, render_template
+from flask import request, Response
+from fts3rest.templates.mako import render_template
 import logging
 
 log = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ def accept(html_template):
     """
     # We give a higher server quality to json, so */* matches it best
     offers = [("text/html", 1), ("application/json", 1.1)]
-
+    # todo: maybe we have to lstrip "/" from template name if it doesnt work
     def accept_inner(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
