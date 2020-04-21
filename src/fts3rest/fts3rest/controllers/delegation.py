@@ -22,7 +22,7 @@ import M2Crypto.threading
 from datetime import datetime
 from M2Crypto import X509, RSA, EVP, BIO
 import flask
-from flask import Response, render_template
+from flask import Response
 from flask import current_app as app
 from flask.views import View
 from fts3.model import CredentialCache, Credential
@@ -30,6 +30,7 @@ from fts3rest.model.meta import Session
 from fts3rest.lib.helpers.voms import VomsClient, VomsException
 from fts3rest.lib.middleware.fts3auth.authorization import require_certificate
 from fts3rest.lib.JobBuilder_utils import get_base_id, get_vo_id
+from fts3rest.templates.mako import render_template
 from werkzeug.exceptions import NotFound, BadRequest, Forbidden, FailedDependency
 from fts3rest.lib.helpers.jsonify import jsonify
 
@@ -408,7 +409,6 @@ class voms(Delegation):
         return Response([str(new_termination_time)], status=203, mimetype="text/plain")
 
 
-# todo render template
 class delegation_page(Delegation):
     @require_certificate
     def dispatch_request(self, dlg_id):
@@ -418,7 +418,7 @@ class delegation_page(Delegation):
         user = flask.request.environ["fts3.User.Credentials"]
         return render_template(
             "/delegation.html",
-            extra_vars={
+            **{
                 "user": user,
                 "vos": self.vo_list,
                 "certificate": flask.request.environ.get("SSL_CLIENT_CERT", None),
