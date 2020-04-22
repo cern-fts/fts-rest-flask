@@ -24,41 +24,47 @@ def do_connect(app):
     app.register_blueprint(bp)
 
     bp.add_url_rule(
-        "/cs/registered/<service>", cloudStorage.is_registered, methods=["GET"],
+        "/cs/registered/<service>",
+        view_func=cloudStorage.is_registered,
+        methods=["GET"],
     )
 
     bp.add_url_rule(
         "/cs/access_request/<service>",
-        cloudStorage.is_access_requested,
+        view_func=cloudStorage.is_access_requested,
         methods=["GET"],
     )
     bp.add_url_rule(
         "/cs/access_request/<service>/",
-        cloudStorage.is_access_requested,
+        view_func=cloudStorage.is_access_requested,
         methods=["GET"],
     )
 
     bp.add_url_rule(
-        "/cs/access_grant/<service>", cloudStorage.remove_token, methods=["DELETE"],
+        "/cs/access_grant/<service>",
+        view_func=cloudStorage.remove_token,
+        methods=["DELETE"],
     )
 
     bp.add_url_rule(
         "/cs/access_request/<service>/request",
-        cloudStorage.get_access_requested,
+        view_func=cloudStorage.get_access_requested,
         methods=["GET"],
     )
     bp.add_url_rule(
-        "/cs/access_grant/<service>", cloudStorage.get_access_granted, methods=["GET"],
+        "/cs/access_grant/<service>",
+        view_func=cloudStorage.get_access_granted,
+        methods=["GET"],
     )
 
     bp.add_url_rule(
         "/cs/remote_content/<service>",
-        cloudStorage.get_folder_content,
+        view_func=cloudStorage.get_folder_content,
         methods=["GET"],
     )
 
     bp.add_url_rule(
         "/cs/file_urllink/<service>/<path>",
-        cloudStorage.get_file_link,
+        view_func=cloudStorage.get_file_link,
         methods=["GET"],
     )
