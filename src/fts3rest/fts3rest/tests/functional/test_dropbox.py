@@ -140,7 +140,7 @@ class TestDropbox(TestController):
         Session.commit()
         self.setup_gridsite_environment()
 
-        def overriden_info(self):
+        def overriden_info():
             raise Exception
             return "401"
 

@@ -34,11 +34,11 @@ def do_connect(app):
         view_func=cloudStorage.is_access_requested,
         methods=["GET"],
     )
-    bp.add_url_rule(
-        "/cs/access_request/<service>/",
-        view_func=cloudStorage.is_access_requested,
-        methods=["GET"],
-    )
+    # bp.add_url_rule(
+    #    "/cs/access_request/<service>/",
+    #    view_func=cloudStorage.is_access_requested,
+    #    methods=["GET"],
+    # )
 
     bp.add_url_rule(
         "/cs/access_grant/<service>",
