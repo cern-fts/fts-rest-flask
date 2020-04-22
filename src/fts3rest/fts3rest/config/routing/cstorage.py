@@ -30,7 +30,7 @@ def do_connect(app):
     )
 
     bp.add_url_rule(
-        "/cs/access_request/<service>",
+        "/cs/access_request/<service>/",
         view_func=cloudStorage.is_access_requested,
         methods=["GET"],
         strict_slashes=False,
