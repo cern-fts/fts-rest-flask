@@ -18,12 +18,6 @@ class TestConfigShares(TestController):
         Session.query(ServerConfig).delete()
         Session.query(ConfigAudit).delete()
         Session.query(OperationConfig).delete()
-        Session.execute(
-            "INSERT INTO "
-            "t_link_config(source_se, dest_se, symbolic_name,"
-            " min_active, max_active, optimizer_mode, nostreams)"
-            " VALUES('*', '*', '*', 2, 130, 2, 0);"
-        )
         Session.commit()
 
     def tearDown(self):
@@ -39,6 +33,12 @@ class TestConfigShares(TestController):
         """
         Set up shares config
         """
+        Session.execute(
+            "INSERT INTO "
+            "t_link_config(source_se, dest_se, symbolic_name,"
+            " min_active, max_active, optimizer_mode, nostreams)"
+            " VALUES('gsiftp://source', 'gsiftp://nowhere', '*', 2, 130, 2, 0);"
+        )
         self.app.post_json(
             url="/config/shares",
             params=dict(
