@@ -40,16 +40,10 @@ class TestDropbox(TestController):
     Tests dropbox api
     """
 
-    def __init__(self, *args, **kwargs):
-        """
-        Set up the environment
-        """
-        super(TestDropbox, self).__init__(*args, **kwargs)
-        # Monkey-patch the controller as to be us who answer :)
-        DropboxConnector._make_call = _mocked_dropbox_make_call
-
     def setUp(self):
         super(TestDropbox, self).setUp()
+        # Monkey-patch the controller as to be us who answer :)
+        DropboxConnector._make_call = _mocked_dropbox_make_call
         # Inject a Dropbox app
         cs = CloudStorage(
             storage_name="DROPBOX",
@@ -125,26 +119,3 @@ class TestDropbox(TestController):
             ("/DC=ch/DC=cern/CN=Test User", "DROPBOX", "")
         )
         self.assertTrue(csu is None)
-
-    def test_401(self):
-        """
-        Get 401
-        """
-        csu = CloudStorageUser(
-            storage_name="DROPBOX",
-            user_dn="/DC=ch/DC=cern/CN=Test User",
-            access_token=None,
-            vo_name="",
-        )
-        Session.merge(csu)
-        Session.commit()
-        self.setup_gridsite_environment()
-
-        def overriden_info(self):
-            raise Exception
-            return "401"
-
-        info = None
-        with mock.patch.object(DropboxConnector, "_make_call", overriden_info):
-            info = self.app.get(url="/cs/access_request/dropbox/", status=200)
-            # 404 should be
