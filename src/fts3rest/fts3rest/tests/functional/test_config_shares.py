@@ -13,16 +13,16 @@ class TestConfigShares(TestController):
     def setUp(self):
         super(TestConfigShares, self).setUp()
         self.setup_gridsite_environment()
-        Session.query(LinkConfig).delete()
         Session.query(ShareConfig).delete()
+        Session.query(LinkConfig).delete()
         Session.query(ServerConfig).delete()
         Session.query(ConfigAudit).delete()
         Session.query(OperationConfig).delete()
         Session.commit()
 
     def tearDown(self):
-        Session.query(LinkConfig).delete()
         Session.query(ShareConfig).delete()
+        Session.query(LinkConfig).delete()
         Session.query(ServerConfig).delete()
         Session.query(ConfigAudit).delete()
         Session.query(OperationConfig).delete()
