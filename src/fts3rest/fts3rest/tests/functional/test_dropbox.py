@@ -83,7 +83,9 @@ class TestDropbox(TestController):
         self.app.get(url="/cs/access_request/dropbox", status=404)
 
         response = self.app.get(url="/cs/access_request/dropbox/request", status=200)
-        self.assertEqual("oauth_token_secret=1234&oauth_token=abcd", response.data)
+        self.assertEqual(
+            "oauth_token_secret=1234&oauth_token=abcd", response.data.decode()
+        )
 
         csu = Session.query(CloudStorageUser).get(
             ("/DC=ch/DC=cern/CN=Test User", "DROPBOX", "")
