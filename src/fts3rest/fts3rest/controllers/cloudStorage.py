@@ -37,12 +37,12 @@ def _get_user_dn():
     return user.user_dn
 
 
-def is_registered(self, service):
+def is_registered(service):
     """
     Return a boolean indicating if the user has a token registered
     for the given certificate
     """
-    controller = CSInterface(self._get_user_dn(), service)
+    controller = CSInterface(_get_user_dn(), service)
     return controller.is_registered()
 
 
