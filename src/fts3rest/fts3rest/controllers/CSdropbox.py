@@ -136,6 +136,7 @@ class DropboxConnector:
         )
 
         # It returns: oauth_token=<access-token>&oauth_token_secret=<access-token-secret>&uid=<user-id>
+        ret = access_tokens
         access_tokens = access_tokens.split("&")
         dropbox_user_info.access_token = access_tokens[1].split("=")[1]
         dropbox_user_info.access_token_secret = access_tokens[0].split("=")[1]
@@ -146,7 +147,7 @@ class DropboxConnector:
             Session.rollback()
             raise
 
-        return access_tokens
+        return ret
 
     def get_folder_content(self):
         surl = self._get_valid_surl()
