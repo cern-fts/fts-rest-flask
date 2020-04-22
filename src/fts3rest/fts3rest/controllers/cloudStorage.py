@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 
-from flask import request, Blueprint
+from flask import request, Blueprint, Response
 from .CSInterface import CSInterface
 from werkzeug.exceptions import Unauthorized
 
@@ -46,14 +46,13 @@ def is_registered(service):
     return controller.is_registered()
 
 
-def remove_token(service, start_response):
+def remove_token(service):
     """
     Remove the token associated with the given service
     """
     controller = CSInterface(_get_user_dn(), service)
     controller.remove_token()
-    start_response("204 No Content", [])
-    return [""]
+    return Response([""], status=204)
 
 
 def get_access_requested(service):
