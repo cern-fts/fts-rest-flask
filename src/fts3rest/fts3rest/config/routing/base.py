@@ -98,7 +98,7 @@ def do_connect(app):
 
     # Jobs
     app.add_url_rule("/jobs", "jobs.index", jobs.index, methods=["GET"])
-    app.add_url_rule("/jobs/", "jobs.index", jobs.index, methods=["GET"])
+    app.add_url_rule("/jobs/", "jobs.index/", jobs.index, methods=["GET"])
     app.add_url_rule("/jobs/<job_list>", "jobs.get", jobs.get, methods=["GET"])
     app.add_url_rule(
         "/jobs/<job_id>/files", "jobs.get_files", jobs.get_files, methods=["GET"]
@@ -138,11 +138,11 @@ def do_connect(app):
 
     # Query directly the transfers
     app.add_url_rule("/files", "files.index", files.index, methods=["GET"])
-    app.add_url_rule("/files/", "files.index", files.index, methods=["GET"])
+    app.add_url_rule("/files/", "files.index/", files.index, methods=["GET"])
 
     # Archive
     app.add_url_rule("/archive", "archive.index", archive.index, methods=["GET"])
-    app.add_url_rule("/archive/", "archive.index", archive.index, methods=["GET"])
+    app.add_url_rule("/archive/", "archive.index/", archive.index, methods=["GET"])
     app.add_url_rule("/archive/<job_id>", "archive.get", archive.get, methods=["GET"])
     app.add_url_rule(
         "/archive/<job_id>/<field>",
