@@ -100,7 +100,7 @@ class TestConfigActivityShare(TestController):
         activity_share = Session.query(ActivityShare).get("dteam")
         self.assertIsNone(activity_share)
         self.app.delete(url="/config/activity_shares/xxxx", status=404)
-        self.app.delete(url="/config/activity_shares", status=404)
+        self.app.delete(url="/config/activity_shares", status=405)
 
     def test_legacy_activity_share(self, legacy=False):
         """
