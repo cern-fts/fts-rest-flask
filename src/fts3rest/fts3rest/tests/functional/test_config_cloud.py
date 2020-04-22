@@ -7,9 +7,6 @@ class TestConfigCloud(TestController):
     def setUp(self):
         super(TestConfigCloud, self).setUp()
         self.setup_gridsite_environment()
-        Session.query(CloudStorage).delete()
-        Session.query(CloudStorageUser).delete()
-        Session.commit()
 
     def tearDown(self):
         Session.query(CloudStorage).delete()
