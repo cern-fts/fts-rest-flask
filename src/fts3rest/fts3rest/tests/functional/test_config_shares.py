@@ -1,20 +1,12 @@
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
-from fts3.model.config import (
-    ConfigAudit,
-    ServerConfig,
-    OperationConfig,
-    ShareConfig,
-    LinkConfig,
-)
+from fts3.model.config import ConfigAudit, ServerConfig, OperationConfig, ShareConfig
 
 
 class TestConfigShares(TestController):
     def setUp(self):
         super(TestConfigShares, self).setUp()
         self.setup_gridsite_environment()
-        Session.query(LinkConfig).delete()
-        Session.query(ShareConfig).delete()
         Session.query(ServerConfig).delete()
         Session.query(ConfigAudit).delete()
         Session.query(OperationConfig).delete()
