@@ -1,7 +1,6 @@
 import json
 import unittest.mock as mock
 
-from sqlalchemy.orm import scoped_session, sessionmaker
 from fts3rest.model.meta import Session
 from fts3rest.tests import TestController
 from fts3rest.controllers.CSdropbox import DropboxConnector
@@ -50,6 +49,7 @@ class TestDropbox(TestController):
         DropboxConnector._make_call = _mocked_dropbox_make_call
 
     def setUp(self):
+        super(TestDropbox, self).setUp()
         # Inject a Dropbox app
         cs = CloudStorage(
             storage_name="DROPBOX",
@@ -66,6 +66,7 @@ class TestDropbox(TestController):
         Session.query(CloudStorageUser).delete()
         Session.query(CloudStorage).delete()
         Session.commit()
+        super(TestDropbox, self).tearDown()
 
     def test_loaded(self):
         """
