@@ -100,7 +100,7 @@ def get_se_config():
     """
     Get the configurations status for a given SE
     """
-    se = request.params.get("se", None)
+    se = request.values.get("se", None)
     from_se = Session.query(Se)
     from_ops = Session.query(OperationConfig)
     if se:
@@ -145,7 +145,7 @@ def delete_se_config():
     """
     Delete the configuration for a given SE
     """
-    se = request.params.get("se", None)
+    se = request.values.get("se", None)
     if not se:
         raise BadRequest("Missing storage (se)")
 
