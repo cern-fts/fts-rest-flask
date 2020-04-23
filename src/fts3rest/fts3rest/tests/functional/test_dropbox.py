@@ -103,7 +103,7 @@ class TestDropbox(TestController):
         """
         Get a request token and grant access
         """
-        self.test_request_access()
+        self.app.get(url="/cs/access_request/dropbox/request", status=200)
         self.app.get(url="/cs/access_grant/dropbox", status=200)
 
         csu = Session.query(CloudStorageUser).get(

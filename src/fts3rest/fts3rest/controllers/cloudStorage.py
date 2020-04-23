@@ -59,7 +59,6 @@ def get_access_requested(service):
     """
     First authorization step: obtain a request token
     """
-    import pdb; pdb.set_trace()
     controller = Connector.factory(_get_user_dn(), service)
     return controller.get_access_requested()
 
