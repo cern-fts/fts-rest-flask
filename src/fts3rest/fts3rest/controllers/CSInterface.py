@@ -23,7 +23,7 @@ class Connector(ABC):
 
     @staticmethod
     def factory(user_dn, service):
-        if service == "DROPBOX":
+        if service.strip().upper() == "DROPBOX":
             # import here to avoid circular dependecy problemss
             from fts3rest.controllers.CSdropbox import DropboxConnector
             return DropboxConnector(user_dn, service)
