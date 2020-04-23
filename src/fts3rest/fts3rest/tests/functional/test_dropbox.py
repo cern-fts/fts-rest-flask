@@ -42,7 +42,7 @@ class TestDropbox(TestController):
     def setUp(self):
         super(TestDropbox, self).setUp()
         # Monkey-patch the controller as to be us who answer :)
-        patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
+
         # Inject a Dropbox app
         cs = CloudStorage(
             storage_name="DROPBOX",
@@ -60,6 +60,7 @@ class TestDropbox(TestController):
         Session.commit()
         super(TestDropbox, self).tearDown()
 
+    @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_loaded(self):
         """
         Just test if the Dropbox plugin has been loaded
@@ -68,6 +69,8 @@ class TestDropbox(TestController):
         is_registered = self.app.get(url="/cs/registered/dropbox", status=200).json
         self.assertFalse(is_registered)
 
+
+    @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_request_access(self):
         """
         Request a 'request' token
@@ -86,12 +89,16 @@ class TestDropbox(TestController):
         self.assertEqual("abcd", csu.request_token)
         self.assertEqual("1234", csu.request_token_secret)
 
+
+    @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_access_granted_no_request(self):
         """
         Access grant without a request must fail
         """
         self.app.get(url="/cs/access_grant/dropbox", status=400)
 
+
+    @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_access_granted(self):
         """
         Get a request token and grant access
@@ -106,6 +113,8 @@ class TestDropbox(TestController):
         self.assertEqual("cafesilvousplait", csu.access_token)
         self.assertEqual("blahblahsecret", csu.access_token_secret)
 
+
+    @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_delete_token(self):
         """
         Remove the stored token
