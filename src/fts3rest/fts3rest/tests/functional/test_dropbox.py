@@ -103,6 +103,7 @@ class TestDropbox(TestController):
         """
         Get a request token and grant access
         """
+        self.app.get(url="/cs/access_request/dropbox", status=404)
         self.app.get(url="/cs/access_request/dropbox/request", status=200)
         self.app.get(url="/cs/access_grant/dropbox", status=200)
 
