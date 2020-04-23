@@ -210,7 +210,7 @@ class DropboxConnector(Connector):
         values = {}
 
         try:
-            data = urlencode(values)
+            data = urlencode(values).encode()
             req = urllib.request.Request(command_url, data, headers)
             response = urllib.request.urlopen(req)
             res_con = response.read()
