@@ -71,7 +71,6 @@ class TestDropbox(TestController):
         is_registered = self.app.get(url="/cs/registered/dropbox", status=200).json
         self.assertFalse(is_registered)
 
-
     @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_request_access(self):
         """
@@ -91,14 +90,12 @@ class TestDropbox(TestController):
         self.assertEqual("abcd", csu.request_token)
         self.assertEqual("1234", csu.request_token_secret)
 
-
     @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_access_granted_no_request(self):
         """
         Access grant without a request must fail
         """
         self.app.get(url="/cs/access_grant/dropbox", status=400)
-
 
     @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_access_granted(self):
@@ -115,7 +112,6 @@ class TestDropbox(TestController):
         self.assertTrue(csu is not None)
         self.assertEqual("cafesilvousplait", csu.access_token)
         self.assertEqual("blahblahsecret", csu.access_token_secret)
-
 
     @patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
     def test_delete_token(self):
