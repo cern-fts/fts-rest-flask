@@ -17,7 +17,7 @@ from fts3rest.controllers.CSdropbox import DropboxConnector
 from abc import ABC, abstractmethod
 
 
-class CSInterface(ABC):
+class Connector(ABC):
     def __init__(self, user_dn, service):
         self.user_dn = user_dn.strip()
         self.service = service.strip().upper()

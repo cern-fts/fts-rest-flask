@@ -14,7 +14,7 @@
 
 
 from flask import request, Blueprint, Response
-from fts3rest.controllers.CSInterface import CSInterface
+from fts3rest.controllers.CSInterface import Connector
 from werkzeug.exceptions import Unauthorized
 
 """
@@ -42,7 +42,7 @@ def is_registered(service):
     Return a boolean indicating if the user has a token registered
     for the given certificate
     """
-    controller = CSInterface.factory(_get_user_dn(), service)
+    controller = Connector.factory(_get_user_dn(), service)
     return controller.is_registered()
 
 
@@ -50,7 +50,7 @@ def remove_token(service):
     """
     Remove the token associated with the given service
     """
-    controller = CSInterface.factory(_get_user_dn(), service)
+    controller = Connector.factory(_get_user_dn(), service)
     controller.remove_token()
     return Response([""], status=204)
 
@@ -59,7 +59,7 @@ def get_access_requested(service):
     """
     First authorization step: obtain a request token
     """
-    controller = CSInterface.factory(_get_user_dn(), service)
+    controller = Connector.factory(_get_user_dn(), service)
     return controller.get_access_requested()
 
 
@@ -67,7 +67,7 @@ def is_access_requested(service):
     """
     Returns the status of the authorization
     """
-    controller = CSInterface.factory(_get_user_dn(), service)
+    controller = Connector.factory(_get_user_dn(), service)
     return controller.is_access_requested()
 
 
@@ -75,7 +75,7 @@ def get_access_granted(service):
     """
     Third authorization step: get a valid access token
     """
-    controller = CSInterface.factory(_get_user_dn(), service)
+    controller = Connector.factory(_get_user_dn(), service)
     return controller.get_access_granted()
 
 
@@ -83,7 +83,7 @@ def get_folder_content(service):
     """
     Get the content of the given directory
     """
-    controller = CSInterface.factory(_get_user_dn(), service)
+    controller = Connector.factory(_get_user_dn(), service)
     return controller.get_folder_content()
 
 
@@ -91,5 +91,5 @@ def get_file_link(service, file_path):
     """
     Get the final HTTP url from the logical file_path inside the cloud storage
     """
-    controller = CSInterface.factory(_get_user_dn(), service)
+    controller = Connector.factory(_get_user_dn(), service)
     return controller.get_file_link(file_path)
