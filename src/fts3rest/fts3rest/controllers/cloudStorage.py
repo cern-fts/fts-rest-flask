@@ -14,7 +14,7 @@
 
 
 from flask import request, Blueprint, Response
-from .CSInterface import CSInterface
+from fts3rest.controllers.CSInterface import CSInterface
 from werkzeug.exceptions import Unauthorized
 
 """

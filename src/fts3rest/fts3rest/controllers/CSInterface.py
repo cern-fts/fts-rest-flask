@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 
-from .CSdropbox import DropboxConnector
+from fts3rest.controllers.CSdropbox import DropboxConnector
 from abc import ABC, abstractmethod
 
 
