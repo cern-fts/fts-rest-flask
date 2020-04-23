@@ -13,7 +13,6 @@
 #   limitations under the License.
 
 
-from fts3rest.controllers.CSdropbox import DropboxConnector
 from abc import ABC, abstractmethod
 
 
@@ -25,6 +24,8 @@ class Connector(ABC):
     @staticmethod
     def factory(user_dn, service):
         if service == "DROPBOX":
+            # import here to avoid circular dependecy problemss
+            from fts3rest.controllers.CSdropbox import DropboxConnector
             return DropboxConnector(user_dn, service)
 
     @abstractmethod
