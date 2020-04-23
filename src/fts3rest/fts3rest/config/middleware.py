@@ -5,7 +5,7 @@ import MySQLdb
 import os
 from io import StringIO
 import logging.config
-from fts3rest.config.routing import base
+from fts3rest.config.routing import base, cstorage
 from fts3.util.config import fts3_config_load
 from fts3rest.model import init_model
 from fts3rest.lib.helpers.connection_validator import (
@@ -95,6 +95,7 @@ def create_app(default_config_file=None, test=False):
 
     # Add routes
     base.do_connect(app)
+    cstorage.do_connect(app)
 
     # Add DB
     _load_db(app)
