@@ -21,7 +21,6 @@ def do_connect(app):
     Cloud Storage
     """
     bp = cloudStorage.cstorage_blueprint
-    app.register_blueprint(bp)
 
     bp.add_url_rule(
         "/cs/registered/<service>",
@@ -64,3 +63,5 @@ def do_connect(app):
         view_func=cloudStorage.get_file_link,
         methods=["GET"],
     )
+
+    app.register_blueprint(bp)

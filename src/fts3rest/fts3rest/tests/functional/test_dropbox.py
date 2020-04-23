@@ -42,7 +42,9 @@ class TestDropbox(TestController):
     def setUp(self):
         super(TestDropbox, self).setUp()
         # Monkey-patch the controller as to be us who answer :)
-
+        Session.query(CloudStorageUser).delete()
+        Session.query(CloudStorage).delete()
+        Session.commit()
         # Inject a Dropbox app
         cs = CloudStorage(
             storage_name="DROPBOX",
