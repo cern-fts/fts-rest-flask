@@ -1,5 +1,4 @@
-#   Copyright notice:
-#   Copyright CERN, 2014.
+#   Copyright 2014-2020 CERN
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -13,64 +12,45 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# Interface class for all cloud storages (Dropbox, ownCloud, etc)
-#
-# Usage: (example of class creation and method call)
-#    var conClass = CSInterface(userDN, serviceName).getInstance()
-#    conClass.is_registered()
-#
-# Andres Abad Rodriguez <andres.abad.rodriguez@cern.ch>
-#
 
 from .CSdropbox import DropboxConnector
+from abc import ABC, abstractmethod
 
-# import importlib
 
-
-class CSInterface(object):
+class CSInterface(ABC):
     def __init__(self, user_dn, service):
-        # try:
-        # Dynamic load of the class required for this External Storage
-        # module = __import__("CS" + service.strip().lower())
-
-        # mName = service.strip().lower().title() + "Connector"
-        # module = importlib.import_module("CS" + service.strip().lower() + "." + mName)
-
-        #    mName = service.strip().lower().title() + "Connector"
-        #    mod = __import__("CS" + service.strip().lower(), fromlist=[mName])
-        #    module = mod.mName
-        # except Exception, e:
-        #    raise e
-
-        # try:
-        #    class_ = getattr(module, service)
-        # new instance of the class
-        #   self.CSClass = class_(self.userDN, self.service)
-
-        # except Exception, e:
-        #    raise e
-        self.user_dn = user_dn
+        self.user_dn = user_dn.strip()
         self.service = service.strip().upper()
-        if self.service == "DROPBOX":
-            self.__class__ = DropboxConnector
 
+    @staticmethod
+    def factory(user_dn, service):
+        if service == "DROPBOX":
+            return DropboxConnector(user_dn, service)
+
+    @abstractmethod
     def is_registered(self):
         raise NotImplementedError
 
+    @abstractmethod
     def remove_token(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_access_requested(self):
         raise NotImplementedError
 
+    @abstractmethod
     def is_access_requested(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_access_granted(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_folder_content(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_file_link(self, file_path):
         raise NotImplementedError

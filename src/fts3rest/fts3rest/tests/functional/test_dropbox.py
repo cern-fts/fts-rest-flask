@@ -1,5 +1,4 @@
-import json
-import unittest.mock as mock
+from unittest.mock import patch
 
 from fts3rest.model.meta import Session
 from fts3rest.tests import TestController
@@ -43,7 +42,7 @@ class TestDropbox(TestController):
     def setUp(self):
         super(TestDropbox, self).setUp()
         # Monkey-patch the controller as to be us who answer :)
-        DropboxConnector._make_call = _mocked_dropbox_make_call
+        patch.object(DropboxConnector, "_make_call", new=_mocked_dropbox_make_call)
         # Inject a Dropbox app
         cs = CloudStorage(
             storage_name="DROPBOX",
@@ -53,7 +52,6 @@ class TestDropbox(TestController):
         )
         Session.merge(cs)
         Session.commit()
-
         self.setup_gridsite_environment()
 
     def tearDown(self):

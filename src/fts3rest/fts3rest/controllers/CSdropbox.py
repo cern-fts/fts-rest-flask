@@ -23,17 +23,13 @@ from urllib.error import HTTPError
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.model.meta import Session
 from fts3.model import CloudStorage, CloudStorageUser
-
+from .CSInterface import CSInterface
 
 dropboxEndpoint = "https://www.dropbox.com"
 dropboxApiEndpoint = "https://api.dropbox.com"
 
 
-class DropboxConnector:
-    def __init__(self, user_dn, service):
-        self.service = service.strip().upper()
-        self.user_dn = user_dn.strip()
-
+class DropboxConnector(CSInterface):
     @jsonify
     def is_registered(self):
         info = self._get_dropbox_user_info()
