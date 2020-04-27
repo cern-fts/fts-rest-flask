@@ -6,3 +6,5 @@ bandit
 radon
 pytest
 coverage
+selenium
+pyvirtualdisplay

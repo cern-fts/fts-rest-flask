@@ -38,6 +38,7 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 - gfal2-python3
 # Installation requirements for development
 To create a development venv: use --system-packages in order to use gfal2-python3
+- yum install java-11-openjdk-devel (for selenium)
 
 # How to run development server
 ```
