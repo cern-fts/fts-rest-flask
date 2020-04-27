@@ -6,3 +6,4 @@ bandit
 radon
 pytest
 coverage
+jsonschema
