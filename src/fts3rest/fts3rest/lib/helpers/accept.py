@@ -28,8 +28,7 @@ def accept(html_template):
     Depending on the Accept headers returns a different representation of the data
     returned by the decorated method
     """
-    # We give a higher server quality to json, so */* matches it best
-    offers = [("text/html", 1), ("application/json", 1.1)]
+    offers = [("text/html", 1.1), ("application/json", 1)]
     # todo: maybe we have to lstrip "/" from template name if it doesnt work
     def accept_inner(func):
         @functools.wraps(func)
