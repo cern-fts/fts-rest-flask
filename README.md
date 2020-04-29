@@ -35,15 +35,15 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 
 # Installation requirements
 Because we need mod_wsgi built for Python 3.6, we need to use httpd24-httpd
-selinux?
 - yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
 - gfal2-python3
 - yum-config-manager --enable centos-sclo-rh
-- yum install  rh-python36-mod_wsgi
+- yum install rh-python36-mod_wsgi
 # Installation requirements for development
 To create a development venv: use --system-packages in order to use gfal2-python3
 
 # How to run development server
+Flask:
 ```
 export PYTHONPATH=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest 
 export FLASK_APP=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3restwsgi.py
@@ -51,6 +51,13 @@ export FLASK_ENV=development
 flask run 
 curl  http://127.0.0.1:5000/hello
 ```
+httpd24:
+```
+cp httpd_fts.conf /opt/rh/httpd24/root/etc/httpd/conf.d/
+systemctl start httpd24-httpd.service
+curl http://localhost:80/hello
+```
+
 # Connect to local database
 ```
 
