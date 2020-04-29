@@ -53,15 +53,18 @@ curl  http://127.0.0.1:5000/hello
 ```
 httpd24:
 ```
-cp httpd_fts.conf /opt/rh/httpd24/root/etc/httpd/conf.d/
+cp /home/ftsflask/fts-rest-flask/src/fts3rest/httpd_fts.conf /opt/rh/httpd24/root/etc/httpd/conf.d/
 systemctl start httpd24-httpd.service
 curl http://localhost:80/hello
 ```
 
 # Connect to local database
+To access the config page:
 ```
+INSERT INTO t_authz_dn VALUES ('yourdn');
 
 ```
+
 # Run tests 
 ```
 source venv/bin/activate
