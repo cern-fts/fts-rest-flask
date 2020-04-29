@@ -27,7 +27,7 @@ def accept(html_template):
         def wrapper(*args, **kwargs):
             data = func(*args, **kwargs)
             return render_template(
-                html_template.lstrip("/"),
+                html_template,
                 **{
                     "data": data,
                     "config": app.config,
