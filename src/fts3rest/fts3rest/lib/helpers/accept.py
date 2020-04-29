@@ -22,13 +22,12 @@ from flask import current_app as app
 
 
 def accept(html_template):
-    # todo: maybe we have to lstrip "/" from template name if it doesnt work
     def accept_inner(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             data = func(*args, **kwargs)
             return render_template(
-                html_template,
+                html_template.lstrip(),
                 **{
                     "data": data,
                     "config": app.config,
