@@ -34,8 +34,12 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 - `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
 
 # Installation requirements
-- yum install mod_wsgi python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
+Because we need mod_wsgi built for Python 3.6, we need to use httpd24-httpd
+selinux?
+- yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
 - gfal2-python3
+- yum-config-manager --enable centos-sclo-rh
+- yum install  rh-python36-mod_wsgi
 # Installation requirements for development
 To create a development venv: use --system-packages in order to use gfal2-python3
 
