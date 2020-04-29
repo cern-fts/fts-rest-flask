@@ -54,7 +54,7 @@ curl  http://127.0.0.1:5000/hello
 httpd24:
 ```
 cp /home/ftsflask/fts-rest-flask/src/fts3rest/httpd_fts.conf /etc/httpd/conf.d/
-systemctl start httpd24-httpd.service
+systemctl start httpd
 curl http://localhost:80/hello
 ```
 
