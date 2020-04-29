@@ -79,7 +79,7 @@ def validate_type(Type, key, value):
 
 
 @authorize(CONFIG)
-@accept(html_template="/config/index.html")
+@accept(html_template="index.html")
 def index():
     """
     Configuration entry point. Only makes sense with html

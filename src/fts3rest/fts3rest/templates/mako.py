@@ -3,7 +3,7 @@ from mako.lookup import TemplateLookup
 import tempfile
 
 mylookup = TemplateLookup(
-    directories=["/templates"], module_directory=tempfile.mkdtemp()
+    directories=["/templates", "/templates/config"], module_directory=tempfile.mkdtemp()
 )
 
 # todo: are static files found?
