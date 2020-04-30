@@ -30,7 +30,7 @@ from fts3rest.model.meta import Session
 from fts3rest.lib.helpers.voms import VomsClient, VomsException
 from fts3rest.lib.middleware.fts3auth.authorization import require_certificate
 from fts3rest.lib.JobBuilder_utils import get_base_id, get_vo_id
-from fts3rest.mako import render_template
+from fts3rest.templates.mako import render_template
 from werkzeug.exceptions import NotFound, BadRequest, Forbidden, FailedDependency
 from fts3rest.lib.helpers.jsonify import jsonify
 

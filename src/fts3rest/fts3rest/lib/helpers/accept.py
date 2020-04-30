@@ -14,7 +14,7 @@
 
 import functools
 from flask import request
-from fts3rest.mako import render_template
+from fts3rest.templates.mako import render_template
 import logging
 
 log = logging.getLogger(__name__)
