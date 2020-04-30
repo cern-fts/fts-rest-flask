@@ -34,7 +34,9 @@ def accept(html_template):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                best_match = request.accept_mimetypes.best_match(offers)
+                best_match = request.accept_mimetypes.best_match(
+                    offers, default="application/json"
+                )
             except Exception:
                 best_match = "application/json"
             log.debug("best_match {}".format(best_match))
