@@ -79,7 +79,9 @@ def create_app(default_config_file=None, test=False):
     :param test: True if testing. FTS3TESTCONFIG will be used instead of FTS3CONFIG
     :return: the app
     """
-    app = Flask(__name__)
+    current_dir = os.path.abspath(os.path.dirname(__file__))
+    static_dir = os.path.join(current_dir, "..", "static")
+    app = Flask(__name__, static_folder=static_dir)
 
     if test:
         config_file = os.environ.get("FTS3TESTCONFIG", default_config_file)
