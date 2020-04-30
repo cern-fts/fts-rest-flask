@@ -81,7 +81,7 @@ def create_app(default_config_file=None, test=False):
     """
     current_dir = os.path.abspath(os.path.dirname(__file__))
     static_dir = os.path.join(current_dir, "..", "static")
-    app = Flask(__name__, static_folder=static_dir)
+    app = Flask(__name__, static_folder=static_dir, static_url_path="")
 
     if test:
         config_file = os.environ.get("FTS3TESTCONFIG", default_config_file)
