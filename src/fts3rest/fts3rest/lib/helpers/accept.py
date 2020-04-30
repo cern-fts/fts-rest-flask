@@ -28,7 +28,7 @@ def accept(html_template):
     Depending on the Accept headers returns a different representation of the data
     returned by the decorated method
     """
-    offers = [("text/html", 1.1), ("application/json", 1)]
+    offers = ["text/html", "application/json"]
 
     def accept_inner(func):
         @functools.wraps(func)
