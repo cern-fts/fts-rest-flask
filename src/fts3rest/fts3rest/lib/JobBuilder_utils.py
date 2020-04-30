@@ -45,7 +45,7 @@ def get_base_id():
 
 def get_vo_id(vo_name):
     log.debug("VO name: " + vo_name)
-    return uuid.uuid5(BASE_ID, vo_name.encode("utf-8"))
+    return uuid.uuid5(BASE_ID, vo_name)
 
 
 def get_storage_element(uri):

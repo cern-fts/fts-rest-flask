@@ -11,11 +11,11 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
 from werkzeug.exceptions import NotAcceptable
 from fts3rest.lib.helpers.jsonify import to_json
 import functools
 from flask import request, Response
+
 from fts3rest.templates.mako import render_template
 import logging
 
@@ -28,9 +28,8 @@ def accept(html_template):
     Depending on the Accept headers returns a different representation of the data
     returned by the decorated method
     """
-    # We give a higher server quality to json, so */* matches it best
-    offers = [("text/html", 1), ("application/json", 1.1)]
-    # todo: maybe we have to lstrip "/" from template name if it doesnt work
+    offers = ["text/html", "application/json"]
+
     def accept_inner(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
