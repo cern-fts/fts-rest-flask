@@ -44,32 +44,3 @@ setup(
     install_requires=["M2Crypto", "requests"],  # Optional
     scripts=glob(path.join(here, "src", "cli", "fts-*")),
 )
-
-
-# python2 setup
-# setup(
-#     name='fts3-rest',
-#     version='3.10.0',
-#     description='FTS3 Python Libraries',
-#     long_description='FTS3 Python Libraries',
-#     author='FTS3 Developers',
-#     author_email='fts-devel@cern.ch',
-#     url='http://fts.web.cern.ch/',
-#     download_url='https://gitlab.cern.ch/fts/fts-rest',
-#     license='Apache 2',
-#     packages=['fts3', 'fts3.cli', 'fts3.model', 'fts3.rest', 'fts3.rest.client', 'fts3.rest.client.easy'],
-#     package_dir={'fts3': os.path.join(base_dir, 'src', 'fts3')},
-#     scripts=glob(os.path.join(base_dir, 'src', 'cli', 'fts-*')),
-#     keywords='fts3, grid, rest api, data management clients',
-#     platforms=['GNU/Linux'],
-#     classifiers=[
-#         "Intended Audience :: Developers",
-#         "Topic :: Software Development :: Libraries :: Python Modules",
-#         "License :: OSI Approved :: Apache Software License",
-#         "Development Status :: 5 - Production/Stable",
-#         "Operating System :: Unix",
-#         "Programming Language :: Python"
-#     ],
-#
-#     install_requires=['M2Crypto>=0.16', 'pycurl%s' % pycurl_ver, 'requests']
-# )
