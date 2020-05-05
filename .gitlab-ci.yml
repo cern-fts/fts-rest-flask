@@ -13,7 +13,7 @@ stages:
   - static_code_analysis
   - tests
   - security
-  - schedule
+  - build
 
 black:
   # Check that every file has been formatted with black
@@ -114,12 +114,12 @@ bandit:
   script:
   - bandit -r src/
 
-bandit_schedule:
-  # Find potential security issues in file. 
-  # It's allowed to fail as it may detect false positives.
-  allow_failure: true
-  stage: schedule
-  only:
-    - schedules
+wheel:
+  stage: build
   script:
-  - bandit -r src/
+  - python3 setup.py bdist_wheel
+
+sdist:
+  stage: build
+  script:
+  - python3 setup.py sdist
