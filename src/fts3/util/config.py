@@ -14,7 +14,6 @@
 #   limitations under the License.
 
 from configparser import ConfigParser, NoOptionError
-from io import StringIO
 from urllib.parse import quote_plus
 import os
 import logging
@@ -24,21 +23,14 @@ log = logging.getLogger(__name__)
 
 def fts3_config_load(path="/etc/fts3/fts3config"):
     """
-    Read the configuration from the FTS3 configuration file and
-    pass it to the Pylons configuration
+    Read the configuration from the FTS3 configuration file
     """
     log.debug("entered fts3_config_load")
     fts3cfg = {}
 
-    # Dirty workaround: ConfigParser doesn't like files without
-    # headers, so fake one (since FTS3 config file doesn't have a
-    # default one)
-    content = "[fts3]\n" + open(path).read()
-    io = StringIO(content)
-
     parser = ConfigParser()
     parser.optionxform = str
-    parser.read_file(io)
+    parser.read_file(path)
 
     # Map all options
     for name, value in parser.items("fts3"):

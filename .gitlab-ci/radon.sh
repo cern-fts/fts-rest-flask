@@ -21,7 +21,7 @@ WARN () {
     echo -e "${YELLOW}$1${NC}";
 }
 
-radon_output="$(radon cc --min E --show-complexity /src)"
+radon_output="$(radon cc --min E --show-complexity ./src)"
 if [ $? -ne 0 ]
 then 
     FAIL "radon exited with an error"
@@ -34,7 +34,7 @@ then
     exit 1
 fi
 
-radon_output="$(radon mi --min B /src)"
+radon_output="$(radon mi --min B ./src)"
 if [ $? -ne 0 ]
 then 
     FAIL "radon exited with an error"

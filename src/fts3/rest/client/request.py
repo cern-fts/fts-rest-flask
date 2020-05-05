@@ -43,8 +43,6 @@ class Request:
         self.connectTimeout = connectTimeout
         self.timeout = timeout
 
-        self.session = requests.Session()
-
     def _handle_error(self, url, code, response_body=None):
         # Try parsing the response, maybe we can get the error message
         message = None
@@ -100,7 +98,7 @@ class Request:
 
             auth = HTTPBasicAuth(user, passw)
 
-        response = self.session.request(
+        response = requests.request(
             method=method,
             url=str(url),
             data=body,
@@ -110,8 +108,6 @@ class Request:
             cert=(self.ucert, self.ukey),
             auth=auth,
         )
-
-        # log.debug(response.text)
 
         self._handle_error(url, response.status_code, response.text)
 

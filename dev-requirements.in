@@ -4,7 +4,7 @@ black
 pylint
 bandit
 radon
+pytest
+coverage
 setuptools
 wheel
-#pytest
-#coverage

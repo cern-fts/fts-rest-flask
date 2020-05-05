@@ -4,6 +4,10 @@ the [evaluation](https://its.cern.ch/jira/browse/FTS-1496).
 
 The development is happening at fts-flask.cern.ch, with the local user ftsflask 
 
+# Git workflow
+- `Master` cannot be pushed to directly.
+- Create a new branch for each ticket and merge it to master.
+
 # Gitlab CI
 The current pipeline runs for every push in every branch:
 - black: fails if the code hasn't been formatted with black
@@ -22,13 +26,52 @@ Developers should add the `pre-commit` hook to their local repository. This scri
 - Runs radon and bandit only on the changed files.
 The hook can be skipped, in case bandit detects false positives, with the commit option `--no-verify`.
 
-# Dependencies
+# Python dependencies
 This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies:
 - `requirements.in`: list of dependencies for the production app
 - `dev-requirements.in`: extra list of packages used for development (e.g. static code analysis)
 - `pipcompile.sh`: run it in the development server in order to generate `requirements.txt`
 - `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
 
+# Installation requirements
+Because we need mod_wsgi built for Python 3.6, we need to use httpd24-httpd
+- yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
+- gfal2-python3
+- yum-config-manager --enable centos-sclo-rh
+- yum install rh-python36-mod_wsgi
+# Installation requirements for development
+To create a development venv: use --system-packages in order to use gfal2-python3
+
+# How to run development server
+Flask:
+```
+export PYTHONPATH=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest 
+export FLASK_APP=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3restwsgi.py
+export FLASK_ENV=development
+flask run 
+curl  http://127.0.0.1:5000/hello
+```
+httpd24:
+```
+cp /home/ftsflask/fts-rest-flask/src/fts3rest/httpd_fts.conf /etc/httpd/conf.d/
+systemctl start httpd
+curl http://localhost:80/hello
+```
+
+# Connect to local database
+To access the config page:
+```
+INSERT INTO t_authz_dn VALUES ('yourdn');
+
+```
+
+# Run tests 
+```
+source venv/bin/activate
+export PYTHONPATH=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest 
+export FTS3TESTCONFIG=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3rest/tests/fts3testconfig
+python3 -m pytest -x src/fts3rest/fts3rest/tests/functional/test_job_submission.py 
+```
 # Migration status
 Starting with the client, as it requires small changes only. Will not migrate pycurlrequest.py, as it is not used
  anymore. 
