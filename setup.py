@@ -8,7 +8,7 @@ python3-devel openssl-devel swig gcc-c++
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/
 # https://github.com/pypa/sampleproject
 
-from setuptools import setup, find_namespace_packages
+from setuptools import setup
 from os import path
 from glob import glob
 
