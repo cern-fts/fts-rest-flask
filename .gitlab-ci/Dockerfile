@@ -23,8 +23,8 @@ COPY --chown=ci pipcompile.sh pipsyncdev.sh dev-requirements.in requirements.in 
 # Prepare virtual environments
 ENV VENV_36 /home/ci/venv_36
 
-RUN python3.6 -m venv $VENV_36 && $VENV_36/bin/activate && \
+RUN python3.6 -m venv $VENV_36 && source $VENV_36/bin/activate && \
     pip install --upgrade pip && pip install pip-tools && \
-    . ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
+    source ./pipcompile.sh && source ./pipsyncdev.sh && deactivate
 
 ENV PATH="$VENV_36/bin:$PATH"
