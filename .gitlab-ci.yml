@@ -8,12 +8,17 @@
 
 image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 
-
 stages:
   - static_code_analysis
   - tests
   - security
   - build
+
+variables:
+  MYSQL_DATABASE: ftsflask
+  MYSQL_ROOT_PASSWORD: asdf
+  PYTHONPATH: ./src:./src/fts3rest
+  FTS3TESTCONFIG: /src/fts3rest/fts3rest/tests/fts3testconfig_ci
 
 black:
   # Check that every file has been formatted with black
@@ -56,9 +61,6 @@ radon:
   - source .gitlab-ci/radon.sh
 
 
-variables:
-  MYSQL_DATABASE: ftsflask
-  MYSQL_ROOT_PASSWORD: asdf
 
 functional_tests36:
   stage: tests
@@ -68,8 +70,6 @@ functional_tests36:
   script:
   - python --version
   - source .gitlab-ci/db.sh
-  - export PYTHONPATH=./src:./src/fts3rest
-  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
@@ -84,8 +84,6 @@ functional_tests37:
   - python --version
   - source $VENV_37/bin/activate
   - source .gitlab-ci/db.sh
-  - export PYTHONPATH=./src:./src/fts3rest
-  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
@@ -100,8 +98,6 @@ functional_tests38:
   - python --version
   - source $VENV_38/bin/activate
   - source .gitlab-ci/db.sh
-  - export PYTHONPATH=./src:./src/fts3rest
-  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
