@@ -17,8 +17,8 @@ stages:
 variables:
   MYSQL_DATABASE: ftsflask
   MYSQL_ROOT_PASSWORD: asdf
-  PYTHONPATH: ./src:./src/fts3rest
-  FTS3TESTCONFIG: /src/fts3rest/fts3rest/tests/fts3testconfig_ci
+  PYTHONPATH: /home/ci/fts-rest-flask/src:/home/ci/fts-rest-flask/src/fts3rest
+  FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig_ci
 
 black:
   # Check that every file has been formatted with black
@@ -30,9 +30,8 @@ pylint36:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
-  - unset PYTHONPATH
   - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy --init-hook='import sys; sys.path.extend(["src", "src/fts3rest"])'
+  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy --init-hook='import sys; sys.path.extend(["/home/ci/fts-rest-flask/src","/home/ci/fts-rest-flask/src/fts3rest"])'
 
 pylint37:
   # Check that every file doesn't have syntax errors
