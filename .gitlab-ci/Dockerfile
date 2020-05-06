@@ -20,7 +20,7 @@ ENV PY37 3.7.7
 ENV PY38 3.8.2
 
 # install pyenv, following instructions from https://github.com/pyenv/pyenv
-RUN git clone --depth 1 --branch master https://github.com/pyenv/pyenv.git ~/.pyenv && \
+RUN git clone --depth 1 --branch v1.2.17 https://github.com/pyenv/pyenv.git ~/.pyenv && \
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc && \
 echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc && \
 echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bashrc && \
