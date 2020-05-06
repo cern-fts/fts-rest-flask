@@ -23,7 +23,7 @@ pylint36:
   stage: static_code_analysis
   script:
   - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy --init-hook='import sys; sys.path.extend(["./src", "./src/fts3rest"])'
+  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy --init-hook='import sys; sys.path = ["src", "src/fts3rest"]'
 
 
 radon:
