@@ -25,7 +25,6 @@ def fts3_config_load(path="/etc/fts3/fts3config"):
     """
     Read the configuration from the FTS3 configuration file
     """
-    log.debug("entered fts3_config_load")
     fts3cfg = {}
 
     parser = ConfigParser()

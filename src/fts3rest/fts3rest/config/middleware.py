@@ -1,25 +1,25 @@
-from flask import Flask, jsonify
-from werkzeug.exceptions import NotFound
-from sqlalchemy import engine_from_config, event
-import MySQLdb
-import os
 from io import StringIO
+import json
 import logging.config
-from fts3rest.config.routing import base, cstorage
+import os
+
+import MySQLdb
+from flask import Flask
+from sqlalchemy import engine_from_config, event
+from werkzeug.exceptions import HTTPException
+
 from fts3.util.config import fts3_config_load
-from fts3rest.model import init_model
+from fts3rest.config.routing import base, cstorage
+from fts3rest.lib.IAMTokenRefresher import IAMTokenRefresher
 from fts3rest.lib.helpers.connection_validator import (
     connection_validator,
     connection_set_sqlmode,
 )
 from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddleware
-from fts3rest.lib.middleware.error_as_json import ErrorAsJson
 from fts3rest.lib.middleware.timeout import TimeoutHandler
-from fts3rest.model.meta import Session
 from fts3rest.lib.openidconnect import oidc_manager
-from fts3rest.lib.IAMTokenRefresher import IAMTokenRefresher
-from werkzeug.exceptions import HTTPException
-import json
+from fts3rest.model import init_model
+from fts3rest.model.meta import Session
 
 
 def _load_configuration(config_file):
@@ -93,6 +93,7 @@ def create_app(default_config_file=None, test=False):
         raise ValueError("The configuration file has not been specified")
 
     fts3cfg = _load_configuration(config_file)
+    log = logging.getLogger(__name__)
 
     # Add configuration
     app.config.update(fts3cfg)
@@ -127,5 +128,7 @@ def create_app(default_config_file=None, test=False):
     if "fts3.Providers" in app.config:
         oidc_manager.setup(app.config)
         IAMTokenRefresher("fts_token_refresh_daemon", app.config).start()
+    else:
+        log.info("OpenID Connect support disabled. Providers not found in config")
 
     return app
