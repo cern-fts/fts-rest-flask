@@ -30,9 +30,9 @@ pylint36:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
-  - printenv PYTHONPATH
+  - unset PYTHONPATH
   - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy --init-hook='import sys; sys.path.append("src"); sys.path.append("src/fts3rest")'
+  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy --init-hook='import sys; sys.path.extend(["src", "src/fts3rest"])'
 
 pylint37:
   # Check that every file doesn't have syntax errors
