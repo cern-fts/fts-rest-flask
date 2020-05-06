@@ -22,7 +22,7 @@ pylint36:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
-  - pwd
+  - source /home/ci/venv_36/bin/activate
   - python --version
   - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy --init-hook='import sys; sys.path.extend(["src", "src/fts3rest"])'
 
