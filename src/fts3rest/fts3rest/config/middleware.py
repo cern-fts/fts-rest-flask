@@ -16,6 +16,8 @@ from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddlewa
 from fts3rest.lib.middleware.error_as_json import ErrorAsJson
 from fts3rest.lib.middleware.timeout import TimeoutHandler
 from fts3rest.model.meta import Session
+from fts3rest.lib.openidconnect import oidc_manager
+from fts3rest.lib.IAMTokenRefresher import IAMTokenRefresher
 from werkzeug.exceptions import HTTPException
 import json
 
@@ -109,7 +111,6 @@ def create_app(default_config_file=None, test=False):
     app.wsgi_app = TimeoutHandler(app.wsgi_app, fts3cfg)
 
     # Convert errors to JSON
-    # app.wsgi_app = ErrorAsJson(app.wsgi_app)
     @app.errorhandler(HTTPException)
     def handle_exception(e):
         """Return JSON instead of HTML for HTTP errors."""
@@ -122,10 +123,9 @@ def create_app(default_config_file=None, test=False):
         response.content_type = "application/json"
         return response
 
-    # @app.errorhandler(NotFound)
-    # def handle_invalid_usage(error):
-    #     response = jsonify(error=error.code, name=error.name)
-    #     response.status_code = error.code
-    #     return response
+    # Start OIDC clients
+    if "fts3.Providers" in app.config:
+        oidc_manager.setup(app.config)
+        IAMTokenRefresher("fts_token_refresh_daemon", app.config).start()
 
     return app

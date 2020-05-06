@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from configparser import ConfigParser, NoOptionError
+from configparser import ConfigParser, NoOptionError, NoSectionError
 from urllib.parse import quote_plus
 import os
 import logging
@@ -100,18 +100,29 @@ def fts3_config_load(path="/etc/fts3/fts3config"):
             fts3cfg["fts3.Roles"][role.lower()][operation.lower()] = level.lower()
 
     # Initialize providers
-    log.debug("initialize providers config in load environment")
     fts3cfg["fts3.Providers"] = {}
-    for option in parser.options("providers"):
-        if "_" not in option:
-            provider_name = option
-            provider_url = parser.get("providers", provider_name)
-            if not provider_url.endswith("/"):
-                provider_url += "/"
-            fts3cfg["fts3.Providers"][provider_url] = {}
-            client_id = parser.get("providers", option + "_ClientId")
-            fts3cfg["fts3.Providers"][provider_url]["client_id"] = client_id
-            client_secret = parser.get("providers", option + "_ClientSecret")
-            fts3cfg["fts3.Providers"][provider_url]["client_secret"] = client_secret
+    try:
+        for option in parser.options("providers"):
+            if "_" not in option:
+                provider_name = option
+                provider_url = parser.get("providers", provider_name)
+                if not provider_url.endswith("/"):
+                    provider_url += "/"
+                fts3cfg["fts3.Providers"][provider_url] = {}
+                client_id = parser.get("providers", option + "_ClientId")
+                fts3cfg["fts3.Providers"][provider_url]["client_id"] = client_id
+                client_secret = parser.get("providers", option + "_ClientSecret")
+                fts3cfg["fts3.Providers"][provider_url]["client_secret"] = client_secret
+        fts3cfg["fts3.ValidateAccessTokenOffline"] = parser.getboolean(
+            "fts3", "ValidateAccessTokenOffline", fallback=True
+        )
+        fts3cfg["JWKCacheSeconds"] = parser.getint(
+            "fts3", "JWKCacheSeconds", fallback=86400
+        )
+        fts3cfg["TokenRefreshDaemonIntervalInSeconds"] = parser.getint(
+            "fts3", "TokenRefreshDaemonIntervalInSeconds", fallback=600
+        )
+    except NoSectionError:
+        pass
 
     return fts3cfg
