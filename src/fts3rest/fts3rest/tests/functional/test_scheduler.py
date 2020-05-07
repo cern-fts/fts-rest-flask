@@ -5,7 +5,7 @@ import logging
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
 from fts3rest.lib.scheduler.Cache import ThreadLocalCache
-from fts3.model import Job, File, OptimizerEvolution, ActivityShare
+from fts3rest.model import Job, File, OptimizerEvolution, ActivityShare
 import random
 
 log = logging.getLogger(__name__)

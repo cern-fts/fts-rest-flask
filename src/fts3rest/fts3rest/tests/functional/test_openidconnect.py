@@ -1,4 +1,4 @@
-from fts3.model import Credential
+from fts3rest.model import Credential
 from fts3rest.lib.openidconnect import OIDCmanager
 from fts3rest.tests import TestController
 

@@ -18,15 +18,11 @@ Optimizer logging tables
 
 from werkzeug.exceptions import BadRequest
 
-
-import json
-import logging
 from flask import request, current_app as app
 from fts3rest.model.meta import Session
 from fts3rest.lib.helpers.misc import get_input_as_dict
-from fts3.model import OptimizerEvolution, Optimizer
+from fts3rest.model import OptimizerEvolution, Optimizer
 from datetime import datetime
-from fts3rest.lib.http_exceptions import *
 from fts3rest.lib.helpers.jsonify import jsonify
 
 

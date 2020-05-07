@@ -9,7 +9,7 @@ from unittest import TestCase
 from M2Crypto import ASN1, X509, RSA, EVP
 from M2Crypto.ASN1 import UTC
 
-from fts3.model import *
+from fts3rest.model import *
 from fts3rest.config.middleware import create_app
 from fts3rest.lib.middleware.fts3auth.credentials import UserCredentials
 from fts3rest.model.meta import Session

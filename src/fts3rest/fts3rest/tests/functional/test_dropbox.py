@@ -3,7 +3,7 @@ from unittest.mock import patch
 from fts3rest.model.meta import Session
 from fts3rest.tests import TestController
 from fts3rest.controllers.CSdropbox import DropboxConnector
-from fts3.model import CloudStorage, CloudStorageUser
+from fts3rest.model import CloudStorage, CloudStorageUser
 
 
 def _oauth_header_dict(raw_header):

@@ -5,7 +5,7 @@ import time
 from fts3rest.controllers.delegation import _generate_proxy_request
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
-from fts3.model import Credential, CredentialCache
+from fts3rest.model import Credential, CredentialCache
 
 
 class TestDelegation(TestController):

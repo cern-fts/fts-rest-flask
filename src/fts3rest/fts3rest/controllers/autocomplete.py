@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 
-from fts3.model import Credential, LinkConfig, Job
+from fts3rest.model import Credential, LinkConfig, Job
 
 from fts3rest.model.meta import Session
 from flask import request

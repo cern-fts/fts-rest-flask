@@ -22,7 +22,7 @@ from threading import Thread, current_thread
 
 from fts3rest.model.meta import Session
 from fts3rest.lib.openidconnect import oidc_manager
-from fts3.model import Credential, Host
+from fts3rest.model import Credential, Host
 
 from sqlalchemy.exc import SQLAlchemyError
 

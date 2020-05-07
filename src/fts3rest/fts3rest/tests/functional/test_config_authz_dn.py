@@ -1,6 +1,6 @@
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
-from fts3.model import ConfigAudit, AuthorizationByDn
+from fts3rest.model import ConfigAudit, AuthorizationByDn
 
 
 class TestConfigAuthz(TestController):

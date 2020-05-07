@@ -18,11 +18,11 @@ from werkzeug.exceptions import NotFound, BadRequest, Forbidden
 from flask import request
 import urllib
 from urllib.parse import urlparse, urlencode
-from urllib.request import urlopen, Request
+from urllib.request import urlopen
 from urllib.error import HTTPError
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.model.meta import Session
-from fts3.model import CloudStorage, CloudStorageUser
+from fts3rest.model import CloudStorage, CloudStorageUser
 from fts3rest.controllers.CSInterface import Connector
 
 dropboxEndpoint = "https://www.dropbox.com"

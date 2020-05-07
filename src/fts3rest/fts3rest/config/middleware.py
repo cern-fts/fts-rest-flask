@@ -18,8 +18,7 @@ from fts3rest.lib.helpers.connection_validator import (
 from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddleware
 from fts3rest.lib.middleware.timeout import TimeoutHandler
 from fts3rest.lib.openidconnect import oidc_manager
-from fts3rest.model import init_model
-from fts3rest.model.meta import Session
+from fts3rest.model.meta import init_model, Session
 
 
 def _load_configuration(config_file):

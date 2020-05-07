@@ -16,7 +16,7 @@
 from werkzeug.exceptions import NotFound, Forbidden
 from fts3rest.lib.helpers.jsonify import jsonify
 
-from fts3.model import ArchivedJob
+from fts3rest.model import ArchivedJob
 from fts3rest.model.meta import Session
 from fts3rest.lib.middleware.fts3auth.authorization import authorized
 from fts3rest.lib.middleware.fts3auth.constants import *
