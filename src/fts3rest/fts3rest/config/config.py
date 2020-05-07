@@ -115,10 +115,10 @@ def fts3_config_load(path="/etc/fts3/fts3config", test=False):
         fts3cfg["fts3.ValidateAccessTokenOffline"] = parser.getboolean(
             "fts3", "ValidateAccessTokenOffline", fallback=True
         )
-        fts3cfg["JWKCacheSeconds"] = parser.getint(
+        fts3cfg["fts3.JWKCacheSeconds"] = parser.getint(
             "fts3", "JWKCacheSeconds", fallback=86400
         )
-        fts3cfg["TokenRefreshDaemonIntervalInSeconds"] = parser.getint(
+        fts3cfg["fts3.TokenRefreshDaemonIntervalInSeconds"] = parser.getint(
             "fts3", "TokenRefreshDaemonIntervalInSeconds", fallback=600
         )
     except NoSectionError:
