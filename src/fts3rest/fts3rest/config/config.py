@@ -21,7 +21,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def fts3_config_load(path="/etc/fts3/fts3config"):
+def fts3_config_load(path="/etc/fts3/fts3config", test=False):
     """
     Read the configuration from the FTS3 configuration file
     """
@@ -123,5 +123,13 @@ def fts3_config_load(path="/etc/fts3/fts3config"):
         )
     except NoSectionError:
         pass
-
+    if test:
+        provider_url = "https://iam.extreme-datacloud.eu/"
+        fts3cfg["fts3.Providers"][provider_url] = {}
+        fts3cfg["fts3.Providers"][provider_url]["client_id"] = os.environ[
+            "xdc_ClientId"
+        ]
+        fts3cfg["fts3.Providers"][provider_url]["client_secret"] = os.environ[
+            "xdc_ClientSecret"
+        ]
     return fts3cfg

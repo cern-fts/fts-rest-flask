@@ -21,7 +21,7 @@ from fts3rest.lib.openidconnect import oidc_manager
 from fts3rest.model.meta import init_model, Session
 
 
-def _load_configuration(config_file):
+def _load_configuration(config_file, test):
     # ConfigParser doesn't handle files without headers.
     # If the configuration file doesn't start with [fts3],
     # add it for backwards compatibility, as before migrating to Flask
@@ -42,7 +42,7 @@ def _load_configuration(config_file):
     # Load configuration
     logging.config.fileConfig(content)
     content.seek(0)
-    fts3cfg = fts3_config_load(content)
+    fts3cfg = fts3_config_load(content, test)
     content.close()
     return fts3cfg
 
@@ -91,7 +91,7 @@ def create_app(default_config_file=None, test=False):
     if not config_file:
         raise ValueError("The configuration file has not been specified")
 
-    fts3cfg = _load_configuration(config_file)
+    fts3cfg = _load_configuration(config_file, test)
     log = logging.getLogger(__name__)
 
     # Add configuration
