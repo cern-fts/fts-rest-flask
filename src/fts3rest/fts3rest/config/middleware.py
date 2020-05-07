@@ -8,7 +8,7 @@ from flask import Flask
 from sqlalchemy import engine_from_config, event
 from werkzeug.exceptions import HTTPException
 
-from fts3.util.config import fts3_config_load
+from fts3rest.config.config import fts3_config_load
 from fts3rest.config.routing import base, cstorage
 from fts3rest.lib.IAMTokenRefresher import IAMTokenRefresher
 from fts3rest.lib.helpers.connection_validator import (
