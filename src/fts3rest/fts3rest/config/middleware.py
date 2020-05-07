@@ -126,7 +126,8 @@ def create_app(default_config_file=None, test=False):
     # Start OIDC clients
     if "fts3.Providers" in app.config:
         oidc_manager.setup(app.config)
-        IAMTokenRefresher("fts_token_refresh_daemon", app.config).start()
+        if not test:
+            IAMTokenRefresher("fts_token_refresh_daemon", app.config).start()
     else:
         log.info("OpenID Connect support disabled. Providers not found in config")
 
