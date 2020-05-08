@@ -1,7 +1,7 @@
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
 from fts3rest.lib.middleware.fts3auth.credentials import UserCredentials
-from fts3.model import ArchivedJob, ArchivedFile
+from fts3rest.model import ArchivedJob, ArchivedFile
 
 
 class TestArchive(TestController):

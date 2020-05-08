@@ -19,7 +19,7 @@ from numbers import Number
 from flask import request
 from werkzeug.exceptions import BadRequest
 
-from fts3.model import *
+from fts3rest.model import *
 from fts3rest.lib.helpers.accept import accept
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import CONFIG

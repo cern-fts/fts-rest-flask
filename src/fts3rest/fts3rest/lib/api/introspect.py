@@ -24,8 +24,8 @@ import logging
 import imp
 import itertools
 import os
-import fts3.model
-from fts3.model.base import Flag, TernaryFlag, Json
+import fts3rest.model
+from fts3rest.model.base import Flag, TernaryFlag, Json
 from fts3rest.config import routing
 from sqlalchemy import types
 from sqlalchemy.orm import Mapper
@@ -86,7 +86,7 @@ def get_model_fields(model_name, model_list):
     Get a description of the fields of the model 'model_name'
     Injects into model_list the additional types that may be needed
     """
-    model = getattr(fts3.model, model_name, None)
+    model = getattr(fts3rest.model, model_name, None)
     if not model:
         return dict()
     fields = dict()

@@ -22,9 +22,9 @@ from sqlalchemy.orm import noload
 
 import logging
 
-from fts3.model import Job, File, JobActiveStates, FileActiveStates
-from fts3.model import DataManagement, DataManagementActiveStates
-from fts3.model import Credential, FileRetryLog
+from fts3rest.model import Job, File, JobActiveStates, FileActiveStates
+from fts3rest.model import DataManagement, DataManagementActiveStates
+from fts3rest.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
 
 from fts3rest.lib.http_exceptions import *

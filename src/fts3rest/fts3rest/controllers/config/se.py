@@ -19,7 +19,7 @@ from flask import Response
 from flask import request
 from werkzeug.exceptions import BadRequest
 
-from fts3.model import *
+from fts3rest.model import *
 from fts3rest.controllers.config import audit_configuration
 from fts3rest.lib.helpers.accept import accept
 from fts3rest.lib.helpers.jsonify import jsonify

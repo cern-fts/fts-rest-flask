@@ -19,10 +19,13 @@ import logging
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from fts3.model.base import Base  # The declarative Base
-
 # SQLAlchemy session manager. Updated by model.init_model()
 Session = scoped_session(sessionmaker())
 
 # Log the version
 logging.getLogger(__name__).info("Using SQLAlchemy %s" % sqlalchemy.__version__)
+
+
+def init_model(engine):
+    """Call me before using any of the tables or classes in the model"""
+    Session.configure(bind=engine)

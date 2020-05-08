@@ -27,7 +27,7 @@ class OIDCmanager:
     def setup(self, config):
         self.config = config
         self._configure_clients(config["fts3.Providers"])
-        self._set_keys_cache_time(int(config["fts3.JWKCacheSeconds"]))
+        self._set_keys_cache_time(config["fts3.JWKCacheSeconds"])
         self._retrieve_clients_keys()
 
     def _configure_clients(self, providers_config):

@@ -33,7 +33,7 @@ from urllib.parse import urlparse, unquote_plus
 
 import json
 
-from fts3.model import Credential
+from fts3rest.model import Credential
 from fts3rest.model.meta import Session
 from fts3rest.lib.http_exceptions import HTTPAuthenticationTimeout
 from fts3rest.lib.gfal2_wrapper import Gfal2Wrapper, Gfal2Error

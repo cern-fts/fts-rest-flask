@@ -16,14 +16,13 @@
 import glob
 
 from flask.views import View
-from fts3.model import SchemaVersion
+from fts3rest.model import SchemaVersion
 
 
 from fts3rest.model.meta import Session
 
 
 from fts3rest.lib.api.submit_schema import SubmitSchema
-from fts3rest.lib.api.introspect import introspect
 from werkzeug.exceptions import NotFound
 from fts3rest.lib.helpers.jsonify import jsonify
 

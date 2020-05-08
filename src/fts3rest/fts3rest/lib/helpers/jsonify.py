@@ -14,8 +14,7 @@
 #   limitations under the License.
 
 from datetime import datetime
-from fts3.model.base import Base
-from sqlalchemy.orm.query import Query
+from fts3rest.model.base import Base
 import json
 import logging
 import types

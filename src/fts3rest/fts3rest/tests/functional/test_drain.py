@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
-from fts3.model import ConfigAudit, Host
+from fts3rest.model import ConfigAudit, Host
 
 
 class TestDrain(TestController):

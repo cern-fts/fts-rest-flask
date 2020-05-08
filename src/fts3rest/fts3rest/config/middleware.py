@@ -1,26 +1,27 @@
-from flask import Flask, jsonify
-from werkzeug.exceptions import NotFound
-from sqlalchemy import engine_from_config, event
-import MySQLdb
-import os
 from io import StringIO
+import json
 import logging.config
+import os
+
+import MySQLdb
+from flask import Flask
+from sqlalchemy import engine_from_config, event
+from werkzeug.exceptions import HTTPException
+
+from fts3rest.config.config import fts3_config_load
 from fts3rest.config.routing import base, cstorage
-from fts3.util.config import fts3_config_load
-from fts3rest.model import init_model
+from fts3rest.lib.IAMTokenRefresher import IAMTokenRefresher
 from fts3rest.lib.helpers.connection_validator import (
     connection_validator,
     connection_set_sqlmode,
 )
 from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddleware
-from fts3rest.lib.middleware.error_as_json import ErrorAsJson
 from fts3rest.lib.middleware.timeout import TimeoutHandler
-from fts3rest.model.meta import Session
-from werkzeug.exceptions import HTTPException
-import json
+from fts3rest.lib.openidconnect import oidc_manager
+from fts3rest.model.meta import init_model, Session
 
 
-def _load_configuration(config_file):
+def _load_configuration(config_file, test):
     # ConfigParser doesn't handle files without headers.
     # If the configuration file doesn't start with [fts3],
     # add it for backwards compatibility, as before migrating to Flask
@@ -41,7 +42,7 @@ def _load_configuration(config_file):
     # Load configuration
     logging.config.fileConfig(content)
     content.seek(0)
-    fts3cfg = fts3_config_load(content)
+    fts3cfg = fts3_config_load(content, test)
     content.close()
     return fts3cfg
 
@@ -90,7 +91,8 @@ def create_app(default_config_file=None, test=False):
     if not config_file:
         raise ValueError("The configuration file has not been specified")
 
-    fts3cfg = _load_configuration(config_file)
+    fts3cfg = _load_configuration(config_file, test)
+    log = logging.getLogger(__name__)
 
     # Add configuration
     app.config.update(fts3cfg)
@@ -109,7 +111,6 @@ def create_app(default_config_file=None, test=False):
     app.wsgi_app = TimeoutHandler(app.wsgi_app, fts3cfg)
 
     # Convert errors to JSON
-    # app.wsgi_app = ErrorAsJson(app.wsgi_app)
     @app.errorhandler(HTTPException)
     def handle_exception(e):
         """Return JSON instead of HTML for HTTP errors."""
@@ -122,10 +123,12 @@ def create_app(default_config_file=None, test=False):
         response.content_type = "application/json"
         return response
 
-    # @app.errorhandler(NotFound)
-    # def handle_invalid_usage(error):
-    #     response = jsonify(error=error.code, name=error.name)
-    #     response.status_code = error.code
-    #     return response
+    # Start OIDC clients
+    if "fts3.Providers" not in app.config or not app.config["fts3.Providers"]:
+        oidc_manager.setup(app.config)
+        if not test:
+            IAMTokenRefresher("fts_token_refresh_daemon", app.config).start()
+    else:
+        log.info("OpenID Connect support disabled. Providers not found in config")
 
     return app

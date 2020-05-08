@@ -25,7 +25,7 @@ import flask
 from flask import Response
 from flask import current_app as app
 from flask.views import View
-from fts3.model import CredentialCache, Credential
+from fts3rest.model import CredentialCache, Credential
 from fts3rest.model.meta import Session
 from fts3rest.lib.helpers.voms import VomsClient, VomsException
 from fts3rest.lib.middleware.fts3auth.authorization import require_certificate

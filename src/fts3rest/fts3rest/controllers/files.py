@@ -16,15 +16,13 @@ from werkzeug.exceptions import Forbidden
 from datetime import datetime, timedelta
 from flask import request
 from urllib.parse import urlparse
-import json
 import logging
 
-from fts3.model import File
+from fts3rest.model import File
 from fts3rest.model.meta import Session
 from fts3rest.lib.JobBuilder_utils import get_storage_element
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import *
-from fts3rest.lib.http_exceptions import *
 from fts3rest.lib.helpers.jsonify import jsonify
 
 log = logging.getLogger(__name__)

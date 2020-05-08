@@ -18,7 +18,7 @@ import hashlib
 import logging
 import re
 
-from fts3.model import AuthorizationByDn
+from fts3rest.model import AuthorizationByDn
 from fts3rest.model.meta import Session
 from .methods import Authenticator
 

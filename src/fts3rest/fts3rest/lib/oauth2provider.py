@@ -28,8 +28,8 @@ from fts3rest.lib.openidconnect import oidc_manager
 from jwcrypto.jwk import JWK
 from flask import request
 
-from fts3.model.credentials import Credential, CredentialCache
-from fts3.model.oauth2 import OAuth2Application, OAuth2Code, OAuth2Token
+from fts3rest.model import Credential, CredentialCache
+from fts3rest.model.oauth2 import OAuth2Application, OAuth2Code, OAuth2Token
 
 log = logging.getLogger(__name__)
 
