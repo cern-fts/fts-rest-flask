@@ -124,7 +124,7 @@ def create_app(default_config_file=None, test=False):
         return response
 
     # Start OIDC clients
-    if "fts3.Providers" in app.config:
+    if "fts3.Providers" not in app.config or not app.config["fts3.Providers"]:
         oidc_manager.setup(app.config)
         if not test:
             IAMTokenRefresher("fts_token_refresh_daemon", app.config).start()

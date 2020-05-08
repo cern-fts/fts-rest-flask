@@ -18,7 +18,7 @@ class TestOpenidconnect(TestController):
         self.config = self.flask_app.config
         self.issuer = "https://iam.extreme-datacloud.eu/"
         if "client_id" not in self.config["fts3.Providers"][self.issuer]:
-            raise unittest.SkipTest("Missing OIDC client configurationd data")
+            raise unittest.SkipTest("Missing OIDC client configuration data")
 
     def test_configure_clients(self):
         self.oidc_manager._configure_clients(self.config["fts3.Providers"])
