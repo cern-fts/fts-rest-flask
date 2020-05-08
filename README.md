@@ -15,7 +15,8 @@ The current pipeline runs for every push in every branch:
  the beginning of the relevant file. Runs for every supported Python3 version
 - radon: fails if the code complexity is too high
 - functional tests: Run for every supported Python3 version
-- bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives
+- bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives.
+To ignore a false positive, append "# nosec" to the offending line
 - build: sdist and wheel
 
 Merge requests will proceed only if the pipeline succeeds.

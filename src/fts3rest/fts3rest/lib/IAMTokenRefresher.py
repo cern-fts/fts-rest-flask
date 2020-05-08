@@ -71,11 +71,11 @@ class IAMTokenRefresher(Thread):
         """
         log.debug("CREATE THREAD ID: {}".format(current_thread().ident))
         # Initial sleep in case all threads started at the same time
-        time.sleep(random.randint(0, 60))
+        time.sleep(random.randint(0, 60))  # nosec
         # The interval at which the thread will check if there is another active thread.
         # It is arbitrary: I chose 2 times the refresh interval, plus a random offset to avoid multiple threads
         # checking at the same time (although DB access is transactional)
-        db_check_interval = 3 * self.refresh_interval + random.randint(0, 120)
+        db_check_interval = 3 * self.refresh_interval + random.randint(0, 120)  # nosec
         while True:
             # Check that no other fts-token-refresh-daemon is running
             refresher_threads = (
