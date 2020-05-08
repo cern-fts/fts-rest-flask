@@ -1,9 +1,9 @@
 import json
 import logging
 
-from fts3.model import File
-from fts3.model import OptimizerEvolution
-from fts3.model import ActivityShare
+from fts3rest.model import File
+from fts3rest.model import OptimizerEvolution
+from fts3rest.model import ActivityShare
 
 from sqlalchemy import func
 

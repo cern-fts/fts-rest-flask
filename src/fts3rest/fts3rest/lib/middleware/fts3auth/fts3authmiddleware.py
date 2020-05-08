@@ -16,7 +16,7 @@
 import logging
 
 from fts3rest.model.meta import Session
-from fts3.model import BannedDN
+from fts3rest.model import BannedDN
 from .credentials import UserCredentials, InvalidCredentials
 from sqlalchemy.exc import DatabaseError
 from urllib.parse import urlparse

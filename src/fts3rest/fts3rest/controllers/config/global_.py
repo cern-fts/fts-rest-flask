@@ -17,7 +17,7 @@ import logging
 from flask import request, Response
 from werkzeug.exceptions import BadRequest
 
-from fts3.model import *
+from fts3rest.model import *
 from fts3rest.controllers.config import audit_configuration, validate_type
 from fts3rest.lib.helpers.accept import accept
 from fts3rest.lib.helpers.jsonify import jsonify, to_json

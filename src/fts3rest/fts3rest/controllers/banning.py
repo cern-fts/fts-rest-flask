@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from werkzeug.exceptions import NotFound, BadRequest, Conflict
+from werkzeug.exceptions import BadRequest, Conflict
 from fts3rest.controllers.config import audit_configuration
 from flask import request, Response
 import json
@@ -19,9 +19,15 @@ import logging
 from datetime import datetime
 from sqlalchemy import distinct, func, and_
 
-from fts3.model import BannedDN, BannedSE, Job, File, JobActiveStates, FileActiveStates
+from fts3rest.model import (
+    BannedDN,
+    BannedSE,
+    Job,
+    File,
+    JobActiveStates,
+    FileActiveStates,
+)
 from fts3rest.model.meta import Session
-from fts3rest.lib.http_exceptions import *
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import *
 from fts3rest.lib.helpers.jsonify import jsonify

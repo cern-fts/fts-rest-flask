@@ -2,7 +2,7 @@ import json
 
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
-from fts3.model import (
+from fts3rest.model import (
     Job,
     File,
     JobActiveStates,

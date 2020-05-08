@@ -1,18 +1,18 @@
+from datetime import timedelta
 import os
 import shutil
+import subprocess
 import time
-
-from datetime import datetime, timedelta
+import unittest
 from unittest import TestCase
+
 from M2Crypto import ASN1, X509, RSA, EVP
 from M2Crypto.ASN1 import UTC
 
-
+from fts3rest.model import *
+from fts3rest.config.middleware import create_app
 from fts3rest.lib.middleware.fts3auth.credentials import UserCredentials
 from fts3rest.model.meta import Session
-from fts3.model import Credential, CredentialCache, DataManagement
-from fts3.model import *
-from fts3rest.config.middleware import create_app
 from .ftstestclient import FTSTestClient, TestResponse
 
 
@@ -198,3 +198,15 @@ class TestController(TestCase):
                 pass
 
         self.flask_app.do_teardown_appcontext()
+
+    def _get_xdc_access_token(self):
+        command = (
+            "eval `oidc-agent` && oidc-add xdctest --pw-cmd=echo && oidc-token xdctest"
+        )
+        try:
+            output = subprocess.check_output(command, shell=True)
+        except subprocess.CalledProcessError as ex:
+            raise unittest.SkipTest("Failed to get access token") from ex
+        output = str(output).strip()
+        token = output.split("\n")[2]  # The 3rd line is the token
+        return token

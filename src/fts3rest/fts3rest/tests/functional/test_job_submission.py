@@ -4,9 +4,8 @@ import time
 
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
-from fts3.model import File, Job
+from fts3rest.model import Job
 import random
-import unittest
 from math import ceil
 
 

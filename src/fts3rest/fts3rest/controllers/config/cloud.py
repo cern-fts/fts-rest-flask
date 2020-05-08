@@ -17,7 +17,7 @@ import logging
 from flask import request, Response
 from werkzeug.exceptions import BadRequest, NotFound
 
-from fts3.model import *
+from fts3rest.model import *
 from fts3rest.lib.helpers.accept import accept
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.misc import get_input_as_dict

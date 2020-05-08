@@ -15,7 +15,7 @@
 
 import logging
 
-from fts3.model import *
+from fts3rest.model import *
 from fts3rest.lib.helpers.accept import accept
 from fts3rest.lib.middleware.fts3auth.authorization import authorize
 from fts3rest.lib.middleware.fts3auth.constants import *

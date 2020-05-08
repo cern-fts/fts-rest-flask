@@ -1,19 +1,16 @@
-# The jobs run for every file in src/, even if they haven't been changed.
-# Unfortunately Gitlab CI doesn't have any way to know the commit before the push.
-# I used to do this to select only the files that had been changed:
-# FILES=$(git diff --name-only --diff-filter=ACMR $CI_COMMIT_SHA~1 -- "*.py")
-# if [ -z "$FILES" ]; then exit 0; fi
-# The problem was that a push with multiple commits might pass the last commit even 
-# if the previous failed.
-
 image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
-
 
 stages:
   - static_code_analysis
   - tests
   - security
   - build
+
+variables:
+  MYSQL_DATABASE: ftsflask
+  MYSQL_ROOT_PASSWORD: asdf
+  PYTHONPATH: ./src:./src/fts3rest
+  FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig_ci
 
 black:
   # Check that every file has been formatted with black
@@ -26,39 +23,31 @@ pylint36:
   stage: static_code_analysis
   script:
   - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
+  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
 
 pylint37:
-  # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
   - source ~/.bashrc
   - pyenv global $PY37
   - source $VENV_37/bin/activate
   - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
+  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
 
 pylint38:
-  # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
   - source ~/.bashrc
   - pyenv global $PY38
   - source $VENV_38/bin/activate
   - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --init-hook='import sys; sys.path.append("src/fts3rest")' --ignored-modules=sqlalchemy
-
+  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
 
 radon:
   # Check metrics for every file
   stage: static_code_analysis
   script:
   - source .gitlab-ci/radon.sh
-
-
-variables:
-  MYSQL_DATABASE: ftsflask
-  MYSQL_ROOT_PASSWORD: asdf
 
 functional_tests36:
   stage: tests
@@ -68,8 +57,6 @@ functional_tests36:
   script:
   - python --version
   - source .gitlab-ci/db.sh
-  - export PYTHONPATH=./src:./src/fts3rest
-  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
@@ -84,8 +71,6 @@ functional_tests37:
   - python --version
   - source $VENV_37/bin/activate
   - source .gitlab-ci/db.sh
-  - export PYTHONPATH=./src:./src/fts3rest
-  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
@@ -100,11 +85,8 @@ functional_tests38:
   - python --version
   - source $VENV_38/bin/activate
   - source .gitlab-ci/db.sh
-  - export PYTHONPATH=./src:./src/fts3rest
-  - export FTS3TESTCONFIG=./src/fts3rest/fts3rest/tests/fts3testconfig_ci
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
-
 
 bandit:
   # Find potential security issues in file. 

@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timedelta
 
-from fts3.model import FileRetryLog, Job, File
+from fts3rest.model import FileRetryLog, Job, File
 from fts3rest.model.meta import Session
 from fts3rest.lib.middleware.fts3auth.credentials import UserCredentials
 from fts3rest.lib.middleware.fts3auth import constants

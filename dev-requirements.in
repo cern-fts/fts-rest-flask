@@ -1,7 +1,7 @@
 -c requirements.txt
 pip-tools
 black
-pylint
+pylint==2.4.4 # 2.5 has a bug and fails as of 02/05/20
 bandit
 radon
 pytest
