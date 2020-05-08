@@ -194,7 +194,7 @@ class TestController(TestCase):
         if "fts3.MessagingDirectory" in self.flask_app.config:
             try:
                 shutil.rmtree(self.flask_app.config["fts3.MessagingDirectory"])
-            except Exception:
+            except Exception:  # nosec
                 pass
 
         self.flask_app.do_teardown_appcontext()

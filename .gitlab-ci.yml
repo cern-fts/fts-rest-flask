@@ -94,7 +94,7 @@ bandit:
   allow_failure: true
   stage: security
   script:
-  - bandit -r src/
+  - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
 
 wheel:
   stage: build
