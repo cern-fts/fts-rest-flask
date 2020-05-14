@@ -132,4 +132,6 @@ def fts3_config_load(path="/etc/fts3/fts3config", test=False):
         fts3cfg["fts3.Providers"][provider_url]["client_secret"] = os.environ[
             "xdc_ClientSecret"
         ]
+    else:
+        fts3cfg["fts3.Providers"] = {}
     return fts3cfg

@@ -64,7 +64,7 @@ ai-bs --foreman-hostgroup fts/flask --cc7 --foreman-environment ftsclean \
 ssh root@fts-flask-02
 su ftsflask
 cd
-
+git clone https://gitlab.cern.ch/fts/fts-rest-flask.git
 
 ```
 To create a development venv: use --system-packages in order to use gfal2-python3
