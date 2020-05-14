@@ -16,7 +16,7 @@ The current pipeline runs for every push in every branch:
 - radon: fails if the code complexity is too high
 - functional tests: Run for every supported Python3 version
 - bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives.
-To ignore a false positive, append "# nosec" to the offending line
+To ignore a false positive, append `# nosec"` to the offending line
 - build: sdist and wheel
 
 Merge requests will proceed only if the pipeline succeeds.
@@ -25,7 +25,7 @@ In case of emergency the pipeline can be [skipped](https://docs.gitlab.com/ee/ci
 
 The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the .gitlab-ci directory and the 
 image is in the container registry for this project. The image contains the Python tools preinstalled so the CI runs faster.
-To build and push the image, cd to .gitlab-ci and run .docker_push.sh
+To build and push the image, cd to .gitlab-ci and run .docker_push.sh. This should be done when new dependencies are added.
 
 Developers should add the `pre-commit` hook to their local repository. This scripts does this for every commit:
 - Runs black to format the changed files.
@@ -45,13 +45,28 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 - `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
 
 # Installation requirements
-Because we need mod_wsgi built for Python 3.6, we need to use httpd24-httpd
+Because we need mod_wsgi built for Python 3.6, we need to use rh-python36-mod_wsgi
 - yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
 - gfal2-python3
 - yum-config-manager --enable centos-sclo-rh
 - yum install rh-python36-mod_wsgi
 
-# Installation requirements for development
+# Create a development server
+```bash
+ssh garciacc@aiadm.cern.ch
+unset OS_PROJECT_ID;
+unset OS_TENANT_ID;
+unset OS_TENANT_NAME;
+export OS_PROJECT_NAME="IT FTS development";
+ai-bs --foreman-hostgroup fts/flask --cc7 --foreman-environment ftsclean \
+      --landb-responsible fts-devel --nova-flavor m2.large \
+      fts-flask-02
+ssh root@fts-flask-02
+su ftsflask
+cd
+
+
+```
 To create a development venv: use --system-packages in order to use gfal2-python3
 
 # How to run development server
