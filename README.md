@@ -16,7 +16,7 @@ The current pipeline runs for every push in every branch:
 - radon: fails if the code complexity is too high
 - functional tests: Run for every supported Python3 version
 - bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives.
-To ignore a false positive, append "# nosec" to the offending line
+To ignore a false positive, append `# nosec"` to the offending line
 - build: sdist and wheel
 
 Merge requests will proceed only if the pipeline succeeds.
@@ -25,7 +25,7 @@ In case of emergency the pipeline can be [skipped](https://docs.gitlab.com/ee/ci
 
 The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the .gitlab-ci directory and the 
 image is in the container registry for this project. The image contains the Python tools preinstalled so the CI runs faster.
-To build and push the image, cd to .gitlab-ci and run .docker_push.sh
+To build and push the image, cd to .gitlab-ci and run .docker_push.sh. This should be done when new dependencies are added.
 
 Developers should add the `pre-commit` hook to their local repository. This scripts does this for every commit:
 - Runs black to format the changed files.
@@ -45,14 +45,73 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 - `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
 
 # Installation requirements
-Because we need mod_wsgi built for Python 3.6, we need to use httpd24-httpd
+Because we need mod_wsgi built for Python 3.6, we need to use rh-python36-mod_wsgi
 - yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
 - gfal2-python3
 - yum-config-manager --enable centos-sclo-rh
 - yum install rh-python36-mod_wsgi
 
-# Installation requirements for development
-To create a development venv: use --system-packages in order to use gfal2-python3
+# Create a development server
+```bash
+# Create VM
+ssh garciacc@aiadm.cern.ch
+unset OS_PROJECT_ID;
+unset OS_TENANT_ID;
+unset OS_TENANT_NAME;
+export OS_PROJECT_NAME="IT FTS development";
+ai-bs --foreman-hostgroup fts/flask --cc7 --foreman-environment ftsclean \
+      --landb-responsible fts-devel --nova-flavor m2.large \
+      fts-flask-02
+           
+# Install dependencies
+ssh root@fts-flask-02
+yum install centos-release-scl-rh
+yum-config-manager --enable centos-sclo-rh
+yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel \
+mysql-devel gfal2-python3 gfal2-plugin-mock rh-python36-mod_wsgi \
+git mariadb mariadb-server gridsite -y
+
+# Prepare DB and log directories
+systemctl start mariadb    
+mkdir /var/run/mariadb             
+chown mysql:mysql  /var/run/mariadb
+mkdir /var/log/fts3rest
+chown ftsflask /var/log/fts3rest
+
+# Prepare application and Python dependencies
+su ftsflask
+cd
+git clone https://gitlab.cern.ch/fts/fts-rest-flask.git
+cd fts-rest-flask                 
+# use --system-site-packages in order to use gfal2-python3      
+python3 -m venv venv --system--site-packages
+source venv/bin/activate
+pip install --upgrade pip
+pip install pip-tools
+. ./pipcompile.sh 
+. ./pipsyncdev.sh
+                                            
+# Load DB
+cd ..
+curl -O https://gitlab.cern.ch/fts/fts3/-/raw/fts-oidc-integration/src/db/schema/mysql/fts-schema-6.0.0.sql
+mysql_secure_installation # put a password for root
+echo "CREATE DATABASE ftsflask;" | mysql --user=root --password
+mysql --user=root --password ftsflask < fts-schema-6.0.0.sql
+echo "CREATE USER ftsflask;" | mysql --user=root --password
+echo "GRANT ALL PRIVILEGES ON ftsflask.* TO 'ftsflask'@'localhost' IDENTIFIED BY 'anotherpassword';" | mysql --user=root --password
+cd fts-rest-flask
+. runtests.sh
+
+# Prepare server
+exit
+cp fts-rest-flask/src/fts3rest/httpd_fts.conf /etc/httpd/conf.d/
+setenforce 0
+chmod o+rx -R /home/ftsflask/
+systemctl restart httpd
+
+
+```
+To create a development venv: 
 
 # How to run development server
 Flask:
