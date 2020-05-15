@@ -1,6 +1,7 @@
 from fts3rest.lib.oauth2provider import FTS3OAuth2ResourceProvider
 from fts3rest.lib.openidconnect import OIDCmanager
 from fts3rest.tests import TestController
+import unittest
 
 
 class TestFTS3OAuth2ResourceProvider(TestController):
@@ -13,8 +14,10 @@ class TestFTS3OAuth2ResourceProvider(TestController):
 
     def setUp(self):
         super().setUp()
-        self.oidc_manager = OIDCmanager()
         config = self.flask_app.config
+        if not config["fts3.Providers"]:
+            raise unittest.SkipTest("Missing OIDC client configuration data")
+        self.oidc_manager = OIDCmanager()
         self.issuer = "https://iam.extreme-datacloud.eu/"
         self.oidc_manager.setup(config)
         self.oauth2_resource_provider = FTS3OAuth2ResourceProvider(dict(), config)
