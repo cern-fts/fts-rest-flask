@@ -53,6 +53,7 @@ Because we need mod_wsgi built for Python 3.6, we need to use rh-python36-mod_ws
 
 # Create a development server
 ```bash
+# Create VM
 ssh garciacc@aiadm.cern.ch
 unset OS_PROJECT_ID;
 unset OS_TENANT_ID;
@@ -61,13 +62,56 @@ export OS_PROJECT_NAME="IT FTS development";
 ai-bs --foreman-hostgroup fts/flask --cc7 --foreman-environment ftsclean \
       --landb-responsible fts-devel --nova-flavor m2.large \
       fts-flask-02
+           
+# Install dependencies
 ssh root@fts-flask-02
+yum install centos-release-scl-rh
+yum-config-manager --enable centos-sclo-rh
+yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel \
+mysql-devel gfal2-python3 gfal2-plugin-mock rh-python36-mod_wsgi \
+git mariadb mariadb-server gridsite -y
+
+# Prepare DB and log directories
+systemctl start mariadb    
+mkdir /var/run/mariadb             
+chown mysql:mysql  /var/run/mariadb
+mkdir /var/log/fts3rest
+chown ftsflask /var/log/fts3rest
+
+# Prepare application and Python dependencies
 su ftsflask
 cd
 git clone https://gitlab.cern.ch/fts/fts-rest-flask.git
+cd fts-rest-flask                 
+# use --system-site-packages in order to use gfal2-python3      
+python3 -m venv venv --system--site-packages
+source venv/bin/activate
+pip install --upgrade pip
+pip install pip-tools
+. ./pipcompile.sh 
+. ./pipsyncdev.sh
+                                            
+# Load DB
+cd ..
+curl -O https://gitlab.cern.ch/fts/fts3/-/raw/fts-oidc-integration/src/db/schema/mysql/fts-schema-6.0.0.sql
+mysql_secure_installation # put a password for root
+echo "CREATE DATABASE ftsflask;" | mysql --user=root --password
+mysql --user=root --password ftsflask < fts-schema-6.0.0.sql
+echo "CREATE USER ftsflask;" | mysql --user=root --password
+echo "GRANT ALL PRIVILEGES ON ftsflask.* TO 'ftsflask'@'localhost' IDENTIFIED BY 'anotherpassword';" | mysql --user=root --password
+cd fts-rest-flask
+. runtests.sh
+
+# Prepare server
+exit
+cp fts-rest-flask/src/fts3rest/httpd_fts.conf /etc/httpd/conf.d/
+setenforce 0
+chmod o+rx -R /home/ftsflask/
+systemctl restart httpd
+
 
 ```
-To create a development venv: use --system-packages in order to use gfal2-python3
+To create a development venv: 
 
 # How to run development server
 Flask:
