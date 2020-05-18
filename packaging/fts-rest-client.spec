@@ -9,10 +9,6 @@ Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3
 Requires:       python3
-Requires:       python3-devel
-Requires:       openssl-devel
-Requires:       swig
-Requires:       gcc-c++
 Requires:       python36-m2crypto
 Requires:       python36-requests
 

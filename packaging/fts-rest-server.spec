@@ -10,9 +10,6 @@ Source0:        %{name}-%{version}.tar.gz
 BuildRequires:  python3
 Requires:       python3
 Requires:       python3-devel # from mysqlclient
-Requires:       openssl-devel # from m2crypto
-Requires:       swig # from m2crypto
-Requires:       gcc-c++ # from m2crypto
 Requires:       mysql-devel # from mysqlclient
 Requires:       python36-m2crypto
 Requires:       python36-requests

@@ -7,3 +7,4 @@ cp fts-rest-client.spec ~/rpmbuild/SPECS
 cd
 tar -czf fts-rest-client-0.1.tar.gz fts-rest-client-0.1
 mv fts-rest-client-0.1.tar.gz rpmbuild/SOURCES/
+cd ~/rpmbuild/
