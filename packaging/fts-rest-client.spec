@@ -9,19 +9,17 @@ Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3
 Requires:       python3
-Requires:       python3-pip
 Requires:       python3-devel
 Requires:       openssl-devel
 Requires:       swig
 Requires:       gcc-c++
+Requires:       python36-m2crypto
+Requires:       python36-requests
 
 BuildArch:      noarch
 
 %description
 File Transfer Service (FTS) -- Python3 Client and CLI
-
-%pre
-pip3 install --upgrade M2Crypto requests
 
 %prep
 %setup -q
