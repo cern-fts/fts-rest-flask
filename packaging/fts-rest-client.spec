@@ -9,6 +9,10 @@ Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3
 Requires:       python3
+Requires:       python3-devel
+Requires:       openssl-devel
+Requires:       swig
+Requires:       gcc-c++
 
 BuildArch:      noarch
 
@@ -26,7 +30,6 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 
 %files
 %license LICENSE
-%dir %{python3_sitelib}/fts3/
 %{python3_sitelib}/fts3/
 %{_bindir}/fts-rest-*
 
