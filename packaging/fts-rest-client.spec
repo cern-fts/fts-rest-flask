@@ -27,7 +27,6 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 
 %install
 %py3_install
-rm
 
 %files
 %license LICENSE
