@@ -16,6 +16,8 @@ Requires:       gcc-c++
 
 BuildArch:      noarch
 
+%description
+File Transfer Service (FTS) -- Python3 Client and CLI
 
 %prep
 %setup -q
