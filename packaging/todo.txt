@@ -1,0 +1,5 @@
+- Create a spec file for fts-rest-server and fts-rest-client
+- The fts-rest-server will call pip to install dependencies
+- Check https://docs.fedoraproject.org/en-US/packaging-guidelines/Python/
+- Program files go in /usr/lib/python3.6/site-packages
+- Where does the WSGI file go? /usr/libexec ?
