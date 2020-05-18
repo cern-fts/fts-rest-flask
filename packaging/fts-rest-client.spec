@@ -27,10 +27,12 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 
 %install
 %py3_install
+rm
 
 %files
 %license LICENSE
 %{python3_sitelib}/fts3/
+%{python3_sitelib}/fts*-*.egg-info/
 %{_bindir}/fts-rest-*
 
 %changelog
