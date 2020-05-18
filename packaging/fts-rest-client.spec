@@ -21,7 +21,7 @@ BuildArch:      noarch
 File Transfer Service (FTS) -- Python3 Client and CLI
 
 %pre
-pip install --upgrade M2Crypto requests
+pip3 install --upgrade M2Crypto requests
 
 %prep
 %setup -q
