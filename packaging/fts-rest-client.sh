@@ -1,8 +1,8 @@
 PREPDIR=~/fts-rest-client-0.1
-mkdir -p $PREPDIR
+mkdir -p $PREPDIR/src
 cp ../LICENSE $PREPDIR
 cp ../setup.py $PREPDIR
-cp -r ../src/cli ../src/fts3 $PREPDIR
+cp -r ../src/cli ../src/fts3 $PREPDIR/src
 cp fts-rest-client.spec ~/rpmbuild/SPECS
 cd
 tar -czf fts-rest-client-0.1.tar.gz fts-rest-client-0.1
