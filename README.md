@@ -52,6 +52,10 @@ yum install rh-python36-mod_wsgi
 ```
 All other requirements are specified in the spec files.
 
+# Build packages
+Check .gitlab-c.yml to see how the packages are built
+
+
 # Create a development server
 ```bash
 # Create VM
@@ -132,7 +136,7 @@ export FLASK_ENV=development
 flask run 
 curl  http://127.0.0.1:5000/hello
 ```
-httpd24:
+httpd:
 ```
 cp /home/ftsflask/fts-rest-flask/src/fts3rest/httpd_fts.conf /etc/httpd/conf.d/
 systemctl start httpd
@@ -147,8 +151,5 @@ INSERT INTO t_authz_dn VALUES ('yourdn');
 
 # Run tests 
 ```
-source venv/bin/activate
-export PYTHONPATH=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest 
-export FTS3TESTCONFIG=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3rest/tests/fts3testconfig
-python3 -m pytest src/fts3rest/fts3rest/tests/ -x 
+source runtests.sh
 ```
