@@ -20,12 +20,13 @@ Requires:       python36-requests
 Requires:       python36-flask
 Requires:       python36-sqlalchemy
 Requires:       python36-dateutil
-Requires:       python3-devel # from mysqlclient
-Requires:       mysql-devel # from mysqlclient
-###### The packages below are not found in community repos and will
-###### have to be packaged by us
+# from mysqlclient:
+Requires:       python3-devel
+Requires:       mysql-devel
+# The packages below are not found in community repos and will have to be packaged by us
 Requires:       python36-mako
-Requires:       python36-dirq ###### does it work with Python3?
+ # does dirq work with Python3?
+Requires:       python36-dirq
 Requires:       python36-mysqlclient
 Requires:       python36-PyJWT
 Requires:       python36-jwcrypto
