@@ -56,7 +56,7 @@ mkdir -p %{buildroot}/%{_var}/log/fts3rest
 %license LICENSE
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
 %{python3_sitelib}/fts3rest/
-
+%{_libexecdir}/fts3rest
 
 %changelog
 * Tue May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
