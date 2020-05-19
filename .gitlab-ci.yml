@@ -106,7 +106,8 @@ client_rpm:
   stage: build
   script:
     - rpmdev-setuptree
-    - source packaging/fts-rest-client.sh
+    - cd packaging
+    - source fts-rest-client.sh
     - rpmbuild -bs fts-rest-client.spec
     - rpmbuild -bb fts-rest-client.spec
 
@@ -114,7 +115,8 @@ server_rpm:
   stage: build
   script:
     - rpmdev-setuptree
-    - source packaging/fts-rest-server.sh
+    - cd packaging
+    - source fts-rest-server.sh
     - rpmbuild -bs fts-rest-server.spec
     - rpmbuild -bb fts-rest-server.spec
 

@@ -46,10 +46,11 @@ This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage d
 
 # Installation requirements
 Because we need mod_wsgi built for Python 3.6, we need to use rh-python36-mod_wsgi
-- yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel mysql-devel
-- gfal2-python3
-- yum-config-manager --enable centos-sclo-rh
-- yum install rh-python36-mod_wsgi
+```
+yum-config-manager --enable centos-sclo-rh
+yum install rh-python36-mod_wsgi
+```
+All other requirements are specified in the spec files.
 
 # Create a development server
 ```bash
@@ -111,7 +112,16 @@ systemctl restart httpd
 
 
 ```
-To create a development venv: 
+
+# Create a development environment
+- clone the repository and cd into it
+- create a venv and activate it
+- run `pip install --upgrade pip`
+- run `pip install pip-tools`
+- run `source pipcompile.sh`
+- run `source pipsyncdev.sh`
+- run `source precommit_install.sh`
+
 
 # How to run development server
 Flask:
