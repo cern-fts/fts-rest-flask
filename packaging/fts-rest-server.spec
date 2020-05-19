@@ -57,5 +57,5 @@ mkdir -p %{buildroot}/%{_var}/log/fts3rest
 
 
 %changelog
-* Mon May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
+* Tue May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
 - First server package release
