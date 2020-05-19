@@ -44,8 +44,10 @@ File Transfer Service (FTS) -- Python3 HTTP API Server
 python3 -m compileall fts3rest/fts3rest
 
 %install
-cp -r fts3rest/fts3rest %{buildroot}%{python3_sitelib}
+mkdir -p %{buildroot}%{python3_sitelib}
 mkdir -p %{buildroot}%{_libexecdir}/fts3rest
+mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
+cp -r fts3rest/fts3rest %{buildroot}%{python3_sitelib}
 cp fts3rest/fts3restwsgi.py %{buildroot}%{_libexecdir}/fts3rest
 cp fts3rest/httpd_fts.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/fts3rest.conf
 mkdir -p %{buildroot}/%{_var}/log/fts3rest
