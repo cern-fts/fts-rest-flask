@@ -6,7 +6,8 @@ yum clean all
 RUN yum install gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel tk-devel libffi-devel -y && \
 yum clean all
 # install rpmbuild dependencies
-RUN yum install gcc rpm-build rpm-devel rpmlint make coreutils diffutils patch rpmdevtools -y
+RUN yum install gcc rpm-build rpm-devel rpmlint make coreutils diffutils patch rpmdevtools -y && \
+yum clean all
 
 RUN useradd --create-home ci
 
