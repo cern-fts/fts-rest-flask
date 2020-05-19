@@ -96,12 +96,26 @@ bandit:
   script:
   - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
 
-wheel:
+client_wheel_sdist:
   stage: build
   script:
   - python3 setup.py bdist_wheel
+  - python3 setup.py sdist
 
-sdist:
+client_rpm:
   stage: build
   script:
-  - python3 setup.py sdist
+    - rpmdev-setuptree
+    - source .gitlab-ci/fts-rest-client.sh
+    - rpmbuild -bs fts-rest-client.spec
+    - rpmbuild -bb fts-rest-client.spec
+
+server_rpm:
+  stage: build
+  script:
+    - rpmdev-setuptree
+    - source .gitlab-ci/fts-rest-server.sh
+    - rpmbuild -bs fts-rest-server.spec
+    - rpmbuild -bb fts-rest-server.spec
+
+

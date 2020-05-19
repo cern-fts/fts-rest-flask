@@ -9,19 +9,27 @@ Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3
 Requires:       python3
-Requires:       python3-devel # from mysqlclient
-Requires:       mysql-devel # from mysqlclient
+Requires:       httpd
+Requires:       httpd-devel
+Requires:       rh-python36-mod_wsgi
+Requires:       gridsite
+Requires:       gfal2-python3
+Requires:       gfal2-plugin-mock
 Requires:       python36-m2crypto
 Requires:       python36-requests
 Requires:       python36-flask
 Requires:       python36-sqlalchemy
 Requires:       python36-dateutil
-Requires:       python-mako ###### does it work with Python3?
-Requires:       python-dirq ###### does it work with Python3?
-Requires:       mysqlclient ###### not in repos
-Requires:       PyJWT ###### not in repos
-Requires:       jwcrypto ###### not in repos
-Requires:       oic ###### not in repos
+Requires:       python3-devel # from mysqlclient
+Requires:       mysql-devel # from mysqlclient
+###### The packages below are not found in community repos and will
+###### have to be packaged by us
+Requires:       python36-mako
+Requires:       python36-dirq ###### does it work with Python3?
+Requires:       python36-mysqlclient
+Requires:       python36-PyJWT
+Requires:       python36-jwcrypto
+Requires:       python36-oic
 
 BuildArch:      noarch
 
@@ -32,17 +40,21 @@ File Transfer Service (FTS) -- Python3 HTTP API Server
 %setup -q
 
 %build
-%py3_build
+python3 -m compileall fts3rest/fts3rest
 
 %install
-%py3_install
+cp -r fts3rest/fts3rest %{buildroot}/%{python3_sitelib}
+mkdir -p %{buildroot}/%{_libexecdir}/fts3rest
+cp fts3rest/fts3restwsgi.py %{buildroot}/%{_libexecdir}/fts3rest
+cp fts3rest/httpd_fts.conf %{buildroot}/%{_sysconfdir}/httpd/conf.d/fts3rest.conf
+mkdir -p %{buildroot}/%{_var}/log/fts3rest
 
 %files
 %license LICENSE
-%{python3_sitelib}/fts3/
-%{python3_sitelib}/fts*-*.egg-info/
-%{_bindir}/fts-rest-*
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
+%{python3_sitelib}/fts3rest/
+
 
 %changelog
-* Mon May 18 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
+* Mon May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
 - First server package release
