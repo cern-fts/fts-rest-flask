@@ -123,15 +123,16 @@ def fts3_config_load(path="/etc/fts3/fts3config", test=False):
         )
     except NoSectionError:
         pass
-    if test and "xdc_ClientId" in os.environ:  # for open id tests
-        provider_url = "https://iam.extreme-datacloud.eu/"
-        fts3cfg["fts3.Providers"][provider_url] = {}
-        fts3cfg["fts3.Providers"][provider_url]["client_id"] = os.environ[
-            "xdc_ClientId"
-        ]
-        fts3cfg["fts3.Providers"][provider_url]["client_secret"] = os.environ[
-            "xdc_ClientSecret"
-        ]
-    else:
-        fts3cfg["fts3.Providers"] = {}
+    if test:
+        if "xdc_ClientId" in os.environ:  # for open id tests
+            provider_url = "https://iam.extreme-datacloud.eu/"
+            fts3cfg["fts3.Providers"][provider_url] = {}
+            fts3cfg["fts3.Providers"][provider_url]["client_id"] = os.environ[
+                "xdc_ClientId"
+            ]
+            fts3cfg["fts3.Providers"][provider_url]["client_secret"] = os.environ[
+                "xdc_ClientSecret"
+            ]
+        else:
+            fts3cfg["fts3.Providers"] = {}
     return fts3cfg
