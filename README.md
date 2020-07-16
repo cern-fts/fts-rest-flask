@@ -53,7 +53,7 @@ yum install rh-python36-mod_wsgi
 All other requirements are specified in the spec files.
 
 # Build packages
-Check .gitlab-c.yml to see how the packages are built
+Check .gitlab-ci.yml to see how the packages are built
 
 
 # Create a development server

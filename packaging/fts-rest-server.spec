@@ -20,17 +20,30 @@ Requires:       python36-requests
 Requires:       python36-flask
 Requires:       python36-sqlalchemy
 Requires:       python36-dateutil
+Requires:       python36-jwt
+
 # from mysqlclient:
 Requires:       python3-devel
 Requires:       mysql-devel
-# The packages below are not found in community repos and will have to be packaged by us
-Requires:       python36-mako
- # does dirq work with Python3?
-Requires:       python36-dirq
-Requires:       python36-mysqlclient
-Requires:       python36-PyJWT
-Requires:       python36-jwcrypto
-Requires:       python36-oic
+# from jwcrypto
+Requires:       python36-cryptography
+# from oic
+Requires:       python36-defusedxml
+Requires:       python36-pycryptodomex
+# from mako
+Requires:       python36-markupsafe
+
+### The packages below are not found in community repos and will have to be packaged by us
+# from oic (pyjwkest: six, future?
+Requires:       pyjwkest
+Requires:       Beaker
+Requires:       typing_extensions
+
+Requires:       Mako
+Requires:       mysqlclient
+Requires:       jwcrypto
+Requires:       oic
+Requires:       dirq
 
 BuildArch:      noarch
 
@@ -46,15 +59,18 @@ python3 -m compileall fts3rest/fts3rest
 %install
 mkdir -p %{buildroot}%{python3_sitelib}
 mkdir -p %{buildroot}%{_libexecdir}/fts3rest
-mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
-cp -r fts3rest/fts3rest %{buildroot}%{python3_sitelib}
-cp fts3rest/fts3restwsgi.py %{buildroot}%{_libexecdir}/fts3rest
-cp fts3rest/httpd_fts.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/fts3rest.conf
+mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d
+mkdir -p %{buildroot}%{_sysconfdir}/fts3
 mkdir -p %{buildroot}/%{_var}/log/fts3rest
+cp -r fts3rest/fts3rest %{buildroot}%{python3_sitelib}
+cp fts3rest/fts3rest.wsgi %{buildroot}%{_libexecdir}/fts3rest
+cp fts3rest/fts3rest.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/fts3rest.conf
+cp fts3rest/fts3config %{buildroot}%{_sysconfdir}/fts3
 
 %files
 %license LICENSE
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
+%config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{python3_sitelib}/fts3rest/
 %{_libexecdir}/fts3rest
 

@@ -26,7 +26,7 @@ class Request:
         ukey,
         capath=None,
         passwd=None,
-        verify=False,
+        verify=True,
         access_token=None,
         connectTimeout=30,
         timeout=30,
@@ -36,6 +36,7 @@ class Request:
         self.passwd = passwd
         self.access_token = access_token
         self.verify = verify
+        self.capath = capath
         # Disable the warnings
         if not verify:
             urllib3.disable_warnings()
@@ -98,6 +99,9 @@ class Request:
 
             auth = HTTPBasicAuth(user, passw)
 
+        if self.verify and self.capath:
+            self.verify = self.capath
+
         response = requests.request(
             method=method,
             url=str(url),
@@ -108,6 +112,11 @@ class Request:
             cert=(self.ucert, self.ukey),
             auth=auth,
         )
+        """
+        verify: (optional) Either a boolean, in which case it controls whether we verify
+            the server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use. Defaults to ``True``.
+        """
 
         self._handle_error(url, response.status_code, response.text)
 
