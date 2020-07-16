@@ -123,7 +123,8 @@ systemctl restart httpd
 - run `pip install --upgrade pip`
 - run `pip install pip-tools`
 - run `source pipcompile.sh`
-- run `source pipsyncdev.sh`
+- run `source pipsyncdev.sh`. If these steps fail, it's because you are missing some system dependencies. 
+Check the beginning of .gitlab-ci/Dockerfile to see what you need to install.
 - run `source precommit_install.sh`
 
 
