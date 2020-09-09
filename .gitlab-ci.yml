@@ -5,6 +5,7 @@ stages:
   - tests
   - security
   - build
+  - deploy
 
 variables:
   MYSQL_DATABASE: ftsflask
@@ -101,6 +102,11 @@ client_wheel_sdist:
   script:
   - python3 setup.py bdist_wheel
   - python3 setup.py sdist
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - cc7_artifacts/
+
 
 client_rpm:
   stage: build
@@ -110,6 +116,11 @@ client_rpm:
     - source fts-rest-client.sh
     - rpmbuild -bs fts-rest-client.spec
     - rpmbuild -bb fts-rest-client.spec
+  artifacts:
+    when: on_success
+    paths:
+      - rpmbuild/RPMS/noarch/fts-rest-client-*.el7.noarch.rpm
+
 
 server_rpm:
   stage: build
@@ -119,5 +130,24 @@ server_rpm:
     - source fts-rest-server.sh
     - rpmbuild -bs fts-rest-server.spec
     - rpmbuild -bb fts-rest-server.spec
+  artifacts:
+    when: on_success
+    paths:
+      - rpmbuild/RPMS/noarch/fts-rest-server-*.el7.noarch.rpm
+
+deploy_rpm:
+  stage: deploy
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  variables:
+    FTS_REPO: "/eos/workspace/f/fts/repo/www/repos/testing/el7/x86_64/"
+  script:
+    - kinit gdrepo <<<$GDREPO_PASSWORD
+    - mv fts-rest-server-*.el7.noarch.rpm $FTS_REPO
+    - mv fts-rest-client-*.el7.noarch.rpm $FTS_REPO
+    - createrepo --update $FTS_REPO
+  when: manual
+  dependencies:
+    - client_rpm
+    - server_rpm
 
 
