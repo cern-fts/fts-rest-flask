@@ -74,6 +74,23 @@ cp fts3rest/fts3config %{buildroot}%{_sysconfdir}/fts3
 %{python3_sitelib}/fts3rest/
 %{_libexecdir}/fts3rest
 
+# Install, set SELinux
+%post
+if [ "$1" -eq "1" ] ; then
+semanage port -a -t http_port_t -p tcp 8446
+setsebool -P httpd_can_network_connect on
+semanage fcontext -a -t httpd_log_t "/var/log/fts3rest(/.*)?"
+restorecon -R /var/log/fts3rest
+fi
+
+# Uninstall, undo SELinux
+%preun
+if [ "$1" -eq "0" ] ; then
+semanage port -d -t http_port_t -p tcp 8446
+setsebool -P httpd_can_network_connect off
+fi
+## Note: if SELinux rules need to be changed after first release, they should be set in an upgrade scriplet
+
 %changelog
 * Tue May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
 - First server package release
