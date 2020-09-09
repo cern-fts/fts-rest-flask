@@ -119,7 +119,7 @@ client_rpm:
   artifacts:
     when: on_success
     paths:
-      - rpmbuild/RPMS/noarch/fts-rest-client-*.el7.noarch.rpm
+      - /home/ci/rpmbuild/RPMS/noarch/fts-rest-client-*.el7.noarch.rpm
 
 
 server_rpm:
@@ -133,7 +133,7 @@ server_rpm:
   artifacts:
     when: on_success
     paths:
-      - rpmbuild/RPMS/noarch/fts-rest-server-*.el7.noarch.rpm
+      - /home/ci/rpmbuild/RPMS/noarch/fts-rest-server-*.el7.noarch.rpm
 
 deploy_rpm:
   stage: deploy
