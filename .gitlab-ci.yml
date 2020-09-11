@@ -131,8 +131,8 @@ server_rpm:
     - rpmbuild -bs fts-rest-server.spec
     - rpmbuild -bb fts-rest-server.spec
     - ls /home/ci/rpmbuild/RPMS/noarch/
-    - ls /home/ci/fts-rest-flask
-    - mv /home/ci/rpmbuild/RPMS/noarch/* /home/ci/fts-rest-flask
+    - ls /builds/fts/fts-rest-flask/
+    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/
   artifacts:
     when: on_success
     untracked: true
