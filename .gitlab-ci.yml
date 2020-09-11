@@ -130,10 +130,11 @@ server_rpm:
     - source fts-rest-server.sh
     - rpmbuild -bs fts-rest-server.spec
     - rpmbuild -bb fts-rest-server.spec
-    - ls /home/ci/rpmbuild/RPMS/noarch/
+    - mv "/home/ci/rpmbuild/RPMS/noarch/*.rpm" /home/ci/fts-rest-flask
   artifacts:
     when: on_success
     untracked: true
+    
 
 deploy_rpm:
   stage: deploy
