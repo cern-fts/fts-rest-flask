@@ -130,6 +130,7 @@ server_rpm:
     - source fts-rest-server.sh
     - rpmbuild -bs fts-rest-server.spec
     - rpmbuild -bb fts-rest-server.spec
+    - ls /home/ci/rpmbuild/RPMS/noarch/
   artifacts:
     when: on_success
     paths:
@@ -145,7 +146,6 @@ deploy_rpm:
     - mv fts-rest-server-*.el7.noarch.rpm $FTS_REPO
     - mv fts-rest-client-*.el7.noarch.rpm $FTS_REPO
     - createrepo --update $FTS_REPO
-  when: manual
   dependencies:
     - client_rpm
     - server_rpm
