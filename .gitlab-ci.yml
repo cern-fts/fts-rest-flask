@@ -133,8 +133,7 @@ server_rpm:
     - ls /home/ci/rpmbuild/RPMS/noarch/
   artifacts:
     when: on_success
-    paths:
-      - /home/ci/rpmbuild/RPMS/noarch/
+    untracked: true
 
 deploy_rpm:
   stage: deploy
