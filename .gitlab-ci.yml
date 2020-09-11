@@ -142,8 +142,7 @@ deploy_rpm:
   variables:
     FTS_REPO: "/eos/workspace/f/fts/repo/www/repos/testing/el7/x86_64/"
   script:
-    - yum install --nogpg -y sudo sssd-client createrepo
-    - printenv GDREPO_PASSWORD
+    - yum install --nogpg -y sssd-client createrepo
     - kinit gdrepo <<<$GDREPO_PASSWORD
     - mv fts-rest-server-*.el7.noarch.rpm $FTS_REPO
     - mv fts-rest-client-*.el7.noarch.rpm $FTS_REPO
