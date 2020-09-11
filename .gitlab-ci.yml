@@ -143,7 +143,7 @@ deploy_rpm:
   variables:
     FTS_REPO: "/eos/workspace/f/fts/repo/www/repos/testing/el7/x86_64/"
   script:
-    - yum install --nogpg -y sssd-client createrepo
+    - yum install -y openssh-clients
     - kinit gdrepo <<<$GDREPO_PASSWORD
     - ls -la
     - scp artifacts/*.rpm gdrepo@lxplus.cern.ch:$FTS_REPO
