@@ -144,6 +144,7 @@ deploy_rpm:
   script:
     - yum install --nogpg -y sssd-client createrepo
     - kinit gdrepo <<<$GDREPO_PASSWORD
+    - ls -la
     - mv *.rpm $FTS_REPO
     - createrepo --update $FTS_REPO
   dependencies:
