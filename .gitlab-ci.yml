@@ -130,9 +130,8 @@ server_rpm:
     - source fts-rest-server.sh
     - rpmbuild -bs fts-rest-server.spec
     - rpmbuild -bb fts-rest-server.spec
-    - ls /home/ci/rpmbuild/RPMS/noarch/
-    - ls /builds/fts/fts-rest-flask/
-    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/
+    - mkdir /builds/fts/fts-rest-flask/artifacts
+    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
   artifacts:
     when: on_success
     untracked: true
@@ -147,8 +146,8 @@ deploy_rpm:
     - yum install --nogpg -y sssd-client createrepo
     - kinit gdrepo <<<$GDREPO_PASSWORD
     - ls -la
-    - mv *.rpm $FTS_REPO
-    - createrepo --update $FTS_REPO
+    - scp artifacts/*.rpm gdrepo@lxplus.cern.ch:$FTS_REPO
+    - ssh gdrepo@lxplus "createrepo --update ${FTS_REPO}"
   dependencies:
     - client_rpm
     - server_rpm
