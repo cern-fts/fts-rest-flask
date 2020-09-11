@@ -134,7 +134,7 @@ server_rpm:
   artifacts:
     when: on_success
     paths:
-      - /home/ci/rpmbuild/RPMS/noarch/*
+      - /home/ci/rpmbuild/RPMS/noarch/
 
 deploy_rpm:
   stage: deploy
