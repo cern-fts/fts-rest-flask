@@ -108,20 +108,20 @@ variables:
 #      - cc7_artifacts/
 #
 #
-#client_rpm:
-#  stage: build
-#  script:
-#    - rpmdev-setuptree
-#    - cd packaging
-#    - source fts-rest-client.sh
-#    - rpmbuild -bs fts-rest-client.spec
-#    - rpmbuild -bb fts-rest-client.spec
-#    - mkdir /builds/fts/fts-rest-flask/artifacts
-#    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
-#  artifacts:
-#    when: on_success
-#    untracked: true
-#
+client_rpm:
+  stage: build
+  script:
+    - rpmdev-setuptree
+    - cd packaging
+    - source fts-rest-client.sh
+    - rpmbuild -bs fts-rest-client.spec
+    - rpmbuild -bb fts-rest-client.spec
+    - mkdir /builds/fts/fts-rest-flask/artifacts
+    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
+  artifacts:
+    when: on_success
+    untracked: true
+
 
 server_rpm:
   stage: build
