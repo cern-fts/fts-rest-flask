@@ -5,6 +5,7 @@ stages:
   - tests
   - security
   - build
+  - deploy
 
 variables:
   MYSQL_DATABASE: ftsflask
@@ -89,7 +90,7 @@ functional_tests38:
   - coverage report
 
 bandit:
-  # Find potential security issues in file. 
+  # Find potential security issues in file.
   # It's allowed to fail as it may detect false positives.
   allow_failure: true
   stage: security
@@ -101,6 +102,11 @@ client_wheel_sdist:
   script:
   - python3 setup.py bdist_wheel
   - python3 setup.py sdist
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - cc7_artifacts/
+
 
 client_rpm:
   stage: build
@@ -110,6 +116,12 @@ client_rpm:
     - source fts-rest-client.sh
     - rpmbuild -bs fts-rest-client.spec
     - rpmbuild -bb fts-rest-client.spec
+    - mkdir /builds/fts/fts-rest-flask/artifacts
+    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
+  artifacts:
+    when: on_success
+    untracked: true
+
 
 server_rpm:
   stage: build
@@ -119,5 +131,28 @@ server_rpm:
     - source fts-rest-server.sh
     - rpmbuild -bs fts-rest-server.spec
     - rpmbuild -bb fts-rest-server.spec
+    - mkdir /builds/fts/fts-rest-flask/artifacts
+    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
+  artifacts:
+    when: on_success
+    untracked: true
+
+
+deploy_rpm:
+  stage: deploy
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  variables:
+    FTS_REPO: "/eos/workspace/f/fts/repo/www/repos/testing/el7/x86_64/"
+    SSH_OPTIONS: -o StrictHostKeyChecking=no -o GSSAPIAuthentication=yes -o GSSAPITrustDNS=yes -o GSSAPIDelegateCredentials=yes
+  script:
+    - yum install -y openssh-clients
+    - kinit gdrepo <<<$GDREPO_PASSWORD
+    - ls -la
+    - scp ${SSH_OPTIONS} artifacts/*.rpm gdrepo@lxplus.cern.ch:$FTS_REPO
+    - ssh ${SSH_OPTIONS} gdrepo@lxplus "createrepo --update ${FTS_REPO}"
+  dependencies:
+    - client_rpm
+    - server_rpm
+  when: manual
 
 
