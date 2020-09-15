@@ -61,7 +61,7 @@ mkdir -p %{buildroot}%{python3_sitelib}
 mkdir -p %{buildroot}%{_libexecdir}/fts3rest
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d
 mkdir -p %{buildroot}%{_sysconfdir}/fts3
-mkdir -p %{buildroot}%/var/log/fts3rest
+mkdir -p %{buildroot}%{_var}/log/fts3rest
 cp -r fts3rest/fts3rest %{buildroot}%{python3_sitelib}
 cp fts3rest/fts3rest.wsgi %{buildroot}%{_libexecdir}/fts3rest
 cp fts3rest/fts3rest.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/fts3rest.conf
@@ -72,6 +72,7 @@ cp fts3rest/fts3config %{buildroot}%{_sysconfdir}/fts3
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{python3_sitelib}/fts3rest/
+%{_var}/log/fts3rest
 %{_libexecdir}/fts3rest
 
 # Install, set SELinux
