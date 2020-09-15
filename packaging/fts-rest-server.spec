@@ -72,7 +72,7 @@ cp fts3rest/fts3config %{buildroot}%{_sysconfdir}/fts3
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{python3_sitelib}/fts3rest/
-%attr(0755,fts3,fts3) {_var}/log/fts3rest
+%attr(0755,fts3,fts3) /var/log/fts3rest
 %{_libexecdir}/fts3rest
 
 # Install, set SELinux
