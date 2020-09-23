@@ -130,7 +130,7 @@ class Delegator(object):
 
     def _get_remaining_life(self, delegation_id):
         r = self.get_info(delegation_id)
-        if r is None:
+        if not r:
             return None
         else:
             expiration_time = datetime.strptime(
