@@ -153,6 +153,5 @@ deploy_rpm:
   dependencies:
     - client_rpm
     - server_rpm
-  when: manual
 
 
