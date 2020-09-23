@@ -97,17 +97,17 @@ variables:
 #  script:
 #  - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
 #
-#client_wheel_sdist:
-#  stage: build
-#  script:
-#  - python3 setup.py bdist_wheel
-#  - python3 setup.py sdist
-#  artifacts:
-#    expire_in: 1 day
-#    paths:
-#      - cc7_artifacts/
-#
-#
+client_wheel_sdist:
+  stage: build
+  script:
+  - python3 setup.py bdist_wheel
+  - python3 setup.py sdist
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - cc7_artifacts/
+
+
 client_rpm:
   stage: build
   script:
