@@ -21,7 +21,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def fts3_config_load(path="/etc/fts3/fts3config", test=False):
+def fts3_config_load(path="/etc/fts3/ftsrestconfig", test=False):
     """
     Read the configuration from the FTS3 configuration file
     """

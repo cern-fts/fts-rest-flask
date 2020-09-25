@@ -103,9 +103,8 @@ client_wheel_sdist:
   - python3 setup.py bdist_wheel
   - python3 setup.py sdist
   artifacts:
-    expire_in: 1 day
-    paths:
-      - cc7_artifacts/
+    when: on_success
+    untracked: true
 
 
 client_rpm:
@@ -153,6 +152,5 @@ deploy_rpm:
   dependencies:
     - client_rpm
     - server_rpm
-  when: manual
 
 
