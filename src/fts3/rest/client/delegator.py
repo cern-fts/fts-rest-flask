@@ -130,7 +130,7 @@ class Delegator(object):
 
     def _get_remaining_life(self, delegation_id):
         r = self.get_info(delegation_id)
-        if r is None:
+        if not r:
             return None
         else:
             expiration_time = datetime.strptime(
@@ -220,11 +220,11 @@ class Delegator(object):
             m2.x509_name_set_by_nid(
                 proxy_subject._ptr(),
                 X509.X509_Name.nid["commonName"],
-                str(int(time.time())),
+                str(int(time.time())).encode("utf-8"),
             )
         else:
             m2.x509_name_set_by_nid(
-                proxy_subject._ptr(), X509.X509_Name.nid["commonName"], "proxy"
+                proxy_subject._ptr(), X509.X509_Name.nid["commonName"], b"proxy"
             )
 
         proxy.set_subject(proxy_subject)
