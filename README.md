@@ -17,7 +17,8 @@ The current pipeline runs for every push in every branch:
 - functional tests: Run for every supported Python3 version
 - bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives.
 To ignore a false positive, append `# nosec"` to the offending line
-- build: sdist and wheel
+- build: RPM for the client and server, plus sdist and wheel for the client
+- deploy: upload client and server RPM to the FTS testing repository
 
 Merge requests will proceed only if the pipeline succeeds.
 
