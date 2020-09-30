@@ -14,7 +14,10 @@ class TestConfigSe(TestController):
         Session.commit()
         self.host_config = {
             "operations": {
-                "atlas": {"delete": 22, "staging": 32,},
+                "atlas": {
+                    "delete": 22,
+                    "staging": 32,
+                },
                 "dteam": {"delete": 10, "staging": 11},
             },
             "se_info": {
@@ -93,7 +96,10 @@ class TestConfigSe(TestController):
         config = {
             "test.cern.ch": {
                 "operations": {
-                    "atlas": {"delete": 1, "staging": 2,},
+                    "atlas": {
+                        "delete": 1,
+                        "staging": 2,
+                    },
                     "dteam": {"delete": 3, "staging": 4},
                 },
                 "se_info": {

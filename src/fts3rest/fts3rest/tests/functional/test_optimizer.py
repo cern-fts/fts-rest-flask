@@ -51,7 +51,10 @@ class TestOptimizer(TestController):
 
         self.app.post_json(
             "/optimizer/current",
-            params={"destination": "only-dest", "nostreams": 16,},
+            params={
+                "destination": "only-dest",
+                "nostreams": 16,
+            },
             status=400,
         )
         self.app.post_json(
