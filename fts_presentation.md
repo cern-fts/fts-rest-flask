@@ -168,6 +168,8 @@ It only works with MySQL 5. MySQL 8 doesn't work because of the outdated version
 SQLAlchemy models: they are the same, some had to be updated to match the DB schema because they had been oudated for a long time. 
 - We don't need Flask-SQLAlchemy: https://its.cern.ch/jira/browse/FTS-1538, https://its.cern.ch/jira/browse/FTS-1548
 
+mysql -h dbod-ga022 -P 5503 -u admin -p
+
 ## Git workflow
 - `Master` cannot be pushed to directly.
 - Create a new branch for each ticket and merge it to master through a merge request.
@@ -216,13 +218,31 @@ https://gitlab.cern.ch/fts/fts-rest-flask/-/blob/master/README.md
 
 Already integrated in this document
 
+## Changes in directories and files
+- I've removed __init__.py files that were unnecessary
+- fts3/model has been moved to fts3rest/fts3rest/model, as it only concerns the server code and there was no reason for it to be there
+- fts3/util/config.py has been moved to fts3rest/fts3rest/config for the same reasons
+- fts3/rest/client/pycurlRequest.py has been removed. We now only support python-requests
+- fts3rest/fts3rest/config/routing/oauth2.py has been removed, as the endpoints were not used
+- fts3rest/fts3rest/config/environment.py has been combined with middleware.py
+- controller classes are now view functions
+- when a controller class had __init__ code and was subclassed, it has been converted to a view class. See for example fts3rest/fts3rest/controllers/delegation.py
+- removed these file for being Pylons specific:
+    - fts3rest/fts3rest/lib/middleware/request_logger.py
+    - fts3rest/fts3rest/lib/app_globals.py
+    - fts3rest/fts3rest/lib/base.py
+- fts3rest/fts3rest/lib/JobBuilder.py has been divided in 2 files because the cyclomatic complexity was extremely high.
+- fts3rest.lib.base has been replaced by fts3rest.model.meta, which contains Session
+- fts3rest/fts3rest/public has been renamed to static
+
+
 ## Miscellany
 - ErrorasJson middleware converted to error handler
 - Mako templates migrated by compiling them with the library
 
 - See https://its.cern.ch/jira/browse/FTS-1536 for the migration of controllers.
 - Migrated Pylon's webob exceptions to Flask's werkzeug exceptions
-- As Controllers won't be used anymore, fts3rest.lib.base will be removed and replaced by fts3rest.model.meta, which contains Session
+
 
 ## Documentation
 - https://its.cern.ch/jira/browse/FTS-1554 controllers/api.py: This contains code for the api documentation and is not trivial to migrate. Only some has been migrated in order to pass test_options.py. We'll need to find a way to migrate documentation. It should be written in the code and then converted to markdown or html with a tool. See also https://its.cern.ch/jira/browse/FTS-1618. The endpoints are documented with decorators that have not been migrated.
@@ -280,8 +300,10 @@ Check .gitlab-ci.yml to see how the packages are built
 ## Problems
 - One problem is that the development environment and the CI image run the code in a virtual environment with the latest dependencies, while the RPM uses outdated dependencies form the repositories.This means that some bug caused due to old dependencies won't be caught until production.
 - Some new commits might have not been migrated to Python3
-- Authentication for WebFTS doesn't work
+- Authentication for WebFTS doesn't work. fts3rest/lib/middleware/fts3auth/methods/http.py. This cannot be migrated because m2ext is a 9 year old obsolete package. Apparently it's used by WebFTS
 
 ## Todo:
 - Check if client config file is read, or included in the rpm
 - Relevant: https://its.cern.ch/jira/browse/FTS-1532
+- Where is src/fts3rest/fts3rest/lib/heartbeat.py?
+- what is fts3config?
