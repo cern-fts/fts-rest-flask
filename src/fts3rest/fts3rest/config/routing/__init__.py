@@ -15,13 +15,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-"""Routes configuration
-
-The more specific and detailed routes should be defined first so they
-may take precedent over the more generic routes. For more information
-refer to the routes manual at http://routes.groovie.org/docs/
-"""
-
 import pkgutil
 import sys
 
