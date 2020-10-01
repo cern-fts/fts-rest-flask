@@ -171,33 +171,36 @@ source runtests.sh
 ## CI
 I took the oportunity to start using Gitlab CI instead of Jenkins. With the new CI, we have static code analysis, functional testing, bulding and deployment.
 
-I created a Docker image containing multiple Python3 versions and the necessary tools for CI so they don't have to be installed before every pipeline run, thus saving time. The Dockerfile is in the .gitlab-ci directory and the image is in the container registry for the project. To build and push the image, cd to .gitlab-ci and run .docker_push.sh. This should be done when new dependencies are added or they need to be updated. One time the pipeline stopped working because black was failing. It turned out that the local and CI versions of black were different; this was fixed by recreating the CI image.
+### Docker image for CI
+I created a Docker image containing the necessary tools for CI so they don't have to be installed before every pipeline run, thus saving time. The Dockerfile is in the .gitlab-ci directory and the image is in the container registry for the project. 
 
-Run tests in CI with every Python version supported: in reality we only support the CentOS version, so Python3.6. However it's good to have that because the logs show things that will be removed in future versions, and things that may break. I considered Tox, but it didn't seem necessary and added complexity. Final solution: the docker image has all major python 3 version installed with pyenv. Before each stage in CI, the version is set accordingly.
+To build and push the image, cd to .gitlab-ci and run .docker_push.sh. This should be done when new dependencies are added or they need to be updated. For example, one time the pipeline stopped working because black was failing. It turned out that the local and CI versions of black were different; this was fixed by recreating the CI image, which updated the CI tools.
 
-Bandit runs in CI, some false positives, it should be checked regularly, it always fails.
+### Multiple Python 3 versions
 
-The current pipeline runs for every push in every branch:
+In the image I have installed Python 3.6, 3.7 and 3.8 so Pylint and the functional tests run with every Python3 version that is currently supported. In FTS we only support the CentOS 7 version: Python3.6. However it's good to have that because the logs show things that will be removed in future versions and things that may break. 
+
+To manage multiple Python versions I considered Tox, but it didn't seem necessary and added complexity. In the end I installed every version with pyenv. Before each stage in a pipeline, the version to use is set accordingly.
+
+### Pipeline stages
+
+The current pipeline runs for every push in every branch. These are the stages:
 - black: fails if the code hasn't been formatted with black
-- pylint: fails if the code has syntax errors. If you are sure that pylint is mistaken, add `# pylint: skip-file` at
- the beginning of the relevant file. Runs for every supported Python3 version
-- radon: fails if the code complexity is too high
-- functional tests: Run for every supported Python3 version. We now have test coverage which we didn't have before.
-- bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives.
-To ignore a false positive, append `# nosec"` to the offending line
-- build: RPM for the client and server, plus sdist and wheel for the client
-- deploy: upload client and server RPM to the FTS testing repository
+- pylint: fails if the code has syntax errors. If it fails and you are sure that pylint is mistaken, add `# pylint: skip-file` at  the beginning of the relevant file. Runs for every supported Python3 version.
+- radon: fails if the code complexity is too high.
+- functional tests: Run for every supported Python3 version and calculate code coverage, which we didn't have before.
+- bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives. The logs should be checked regularly to see if there are issues to fix. To ignore a false positive, append `# nosec"` to the offending line.
+- build: RPM for the client and server, plus sdist and wheel for the client.
+- deploy: upload client and server RPM to the FTS testing repository.
 
 Merge requests will proceed only if the pipeline succeeds.
 
 In case of emergency the pipeline can be [skipped](https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs).
 
-
-I created a prehook commit that everyone should install that does a subset of CI in order to catch errors early.
-
+### pre-commit hook
 Developers should add the `pre-commit` hook to their local repository. This scripts does this for every commit:
 - Runs black to format the changed files.
-- Runs pylint only on the changed files for speed. As pylint works better when it is run on all the project, some rules have been disabled.
+- Runs pylint only on the changed files (for speed). As pylint works better when it is run on all the project, some rules have been disabled.
 - Runs radon and bandit only on the changed files.
 The hook can be skipped, in case bandit detects false positives, with the commit option `--no-verify`.
 
@@ -214,9 +217,7 @@ Already integrated in this document
 - fts3/rest/client/pycurlRequest.py has been removed. We now only support python-requests
 - fts3rest/fts3rest/config/routing/oauth2.py has been removed, as the endpoints were not used
 - fts3rest/fts3rest/config/environment.py has been combined with middleware.py
-- controller classes are now view functions
-- when a controller class had __init__ code and was subclassed, it has been converted to a view class. See for example fts3rest/fts3rest/controllers/delegation.py
-- removed these file for being Pylons specific:
+- removed these files for being Pylons specific:
     - fts3rest/fts3rest/lib/middleware/request_logger.py
     - fts3rest/fts3rest/lib/app_globals.py
     - fts3rest/fts3rest/lib/base.py
@@ -227,14 +228,13 @@ Already integrated in this document
 
 ## Miscellany
 - ErrorasJson middleware converted to error handler
-- Mako templates migrated by compiling them with the library. The most important difference between Pylons and Flask is that Pylons uses Mako templates and Flask uses Jinja templates (HTML templates). Fortunately I was able to configure Mako's engine in Flask and so I didn't have to translate the templates.
-
-- See https://its.cern.ch/jira/browse/FTS-1536 for the migration of controllers.
+- Mako templates migrated by compiling them with the library. The most important difference between Pylons and Flask is that Pylons uses Mako templates and Flask uses Jinja2 templates (we are talking about HTML templates). Fortunately I was able to configure Mako's engine in Flask and so I didn't have to translate the templates.
+- Pylon's controller classes are now Flask's view functions. When a controller class had __init__ code and was subclassed, it was been converted to a view class. See for example fts3rest/fts3rest/controllers/delegation.py
 - Migrated Pylon's webob exceptions to Flask's werkzeug exceptions
+- Renamed fts3config to ftsrestconfig. The problem is fts3config is installed by fts-server, which means that every time the configuration options for fts-rest need a change, the fts-server package has to be updated. This is unnecessary coupling, so now fts-rest has its own independent configuration file.
 
-
-## Documentation
-- https://its.cern.ch/jira/browse/FTS-1554 controllers/api.py: This contains code for the api documentation and is not trivial to migrate. Only some has been migrated in order to pass test_options.py. We'll need to find a way to migrate documentation. It should be written in the code and then converted to markdown or html with a tool. See also https://its.cern.ch/jira/browse/FTS-1618. The endpoints are documented with decorators that have not been migrated.
+## API Documentation
+The file controllers/api.py contains code for the api documentation and is not trivial to migrate. We'll need to find a way to migrate documentation. It should be written in the code and then converted to markdown or html with a publickly available tool. Currently the endpoints are documented with decorators that have not been migrated. See also https://its.cern.ch/jira/browse/FTS-1618 and https://its.cern.ch/jira/browse/FTS-1554. 
 
 
 ## Testing
@@ -247,7 +247,7 @@ Openid tests don't run in CI because the container would need a client registere
 
 
 ## Packaging and deployment
-- We have a python package that can be build with setup.py (dist and bdist). It should be uploaded to PyPI.
+- We have a python package that can be build with setup.py (sdist and wheel). Eventually it should be uploaded to PyPI.
 
 - Some dependencies are not found in EPEL or any other community repositories so we have to package them and upload them to our repo. There's an easy way to generate an RPM from setup.py. I think these packages are listed in the spec.
 
@@ -264,7 +264,7 @@ Openid tests don't run in CI because the container would need a client registere
 This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies:
 - `requirements.in`: list of dependencies for the production app
 - `dev-requirements.in`: extra list of packages used for development (e.g. static code analysis)
-- `pipcompile.sh`: run it in the development server in order to generate `requirements.txt`
+- `pipcompile.sh`: run it in the development venv in order to generate `requirements.txt`
 - `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
 
 ### Installation requirements
@@ -278,21 +278,18 @@ All other requirements are specified in the spec files.
 ### Build packages
 Check .gitlab-ci.yml to see how the packages are built
 
-## Probable causes if bugs appear:
-- Python2 str is Python3 bytes
-- Python2 filter/map return list, Python3 return generator
-
-## Important changes
-- In addition I renamed fts3config to ftsrestconfig. The problem is fts3 and ftsrest are too tightly coupled, and it's a problem.
-
-
 ## Problems
 - One problem is that the development environment and the CI image run the code in a virtual environment with the latest dependencies, while the RPM uses outdated dependencies form the repositories.This means that some bug caused due to old dependencies won't be caught until production.
 - Some new commits might have not been migrated to Python3
 - Authentication for WebFTS doesn't work. fts3rest/lib/middleware/fts3auth/methods/http.py. This cannot be migrated because m2ext is a 9 year old obsolete package. Apparently it's used by WebFTS
+
+## Probable causes if bugs appear:
+- Python2 str is Python3 bytes
+- Python2 filter/map return list, Python3 return generator
 
 ## Todo:
 - Check if client config file is read, or included in the rpm
 - Relevant: https://its.cern.ch/jira/browse/FTS-1532
 - Where is src/fts3rest/fts3rest/lib/heartbeat.py?
 - what is fts3config?
+- number of dependencies before and now
