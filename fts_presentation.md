@@ -1,19 +1,19 @@
 fts-rest migration to Flask and Python3
 ===
 Carles Garcia Cabot
+
 02/10/2020
 
 ---
 
 Source: https://gitlab.cern.ch/fts/fts-rest-flask
+
 JIRA Epic: https://its.cern.ch/jira/browse/FTS-1501
 
 ---
 
 ## About the migration
-The migration of [fts-rest](https://gitlab.cern.ch:8443/fts/fts-rest) started after the decisions made in the [evaluation](https://its.cern.ch/jira/browse/FTS-1496).
-
----
+The migration of [fts-rest](https://gitlab.cern.ch:8443/fts/fts-rest) started after the decisions made in the [evaluation](https://its.cern.ch/jira/browse/FTS-1496) (some of which have changed).
 
 The evaluation considered four Python 3 Web Frameworks for the migration:
 - Django
@@ -21,21 +21,18 @@ The evaluation considered four Python 3 Web Frameworks for the migration:
 - Pyramid 
 - FastAPI
 
----
-
 Of those I reached the conclusion that Flask was the best option:
 - Many users, active ecosystem. From Jetbrain's The State of Developer Ecosystem 2020:
  ![](https://codimd.web.cern.ch/uploads/upload_33952b0b8fb57e7c542567d11281814f.png)
 - Its simplicity means that a significant amount of the current code can be reused. 
-- We don't need any third-party plugins. For example, for authorization and authentication we can reuse our custom code. We don't need Flask-login. Pylon's Controllers will be converted to Flasks Blueprints, and the 'before' decorator will run the authorization code for each endpoint.
-- The most important difference between Pylons and Flask is that Pylons uses Mako templates and Flask uses Jinja templates (HTML templates). Fortunately I was able to configure Mako's engine in Flask and so I didn't have to translate the templates.
+- We don't need any third-party plugins. For example, for authorization and authentication we can reuse our custom code, we don't need Flask-login. 
 
 ## General points
-- This is a migration, so the goal has been to copy the structure and code as much as possible to avoid breaking things, even if the quality of some parts could have been improved.
+- This is a migration, so the goal has been to copy the structure and code as much as possible to avoid breaking things, even if some parts could have been improved.
 
 - We will support CentOS 7 Python 3.6 (good enough as .7 and .8 don't bring anything crucial. 3.6 EOL is end of 2021)
 
-- I updated all Copyright issues that hadn't been updated. At some point I should added NOTICE, it's not necessary to have a notice in every file.
+- I updated all Copyright issues that hadn't been updated. At some point I added NOTICE, it's not necessary to have a notice in every file.
 
 ## History
 You can see an approximate history of the development in the list of tickets in the JIRA Epic. Briefly:
@@ -61,9 +58,9 @@ You can see an approximate history of the development in the list of tickets in 
 - fts-flask-02: for development, server runs from virtual environment in /home with local DB. local user ftsflask
 - fts-flask-03: pre-production environment, runs from RPM with DBOD ftsflask5. local user fts3
 
-- You can already make successful tranfers with https://fts-flask-03.cern.ch:8446. I suggest you use the new client in the testing repository, you can install it with yum install fts-rest-client or alternatively install the wheel in a venv (you can get the wheel here (https://gitlab.cern.ch/fts/fts-rest-flask/-/jobs/10128577/artifacts/file/dist/fts_client_py3-1-py3-none-any.whl). The server contains fts-rest-server and fts-server connected to DBOD ftsflask5. The installation was done manually, as if done via puppet it fails when including the fts module, as it tries to install fts-rest (python2) and many other things.
+You can already make successful tranfers with https://fts-flask-03.cern.ch:8446. I suggest you use the new client in the testing repository, you can install it with yum install fts-rest-client or alternatively install the wheel in a venv (you can get the [wheel here](https://gitlab.cern.ch/fts/fts-rest-flask/-/jobs/10128577/artifacts/file/dist/fts_client_py3-1-py3-none-any.whl). The server contains fts-rest-server and fts-server connected to DBOD ftsflask5. The installation was done manually, as if done via puppet it fails when including the fts module, as it tries to install fts-rest (python2) and many other things.
 
-- When I installed fts-server manually it failed because missing libzmq.so.5. I solved it by installing yum install zeromq-devel which is not a dependency currently
+Note: When I installed fts-server manually it failed because missing libzmq.so.5. I solved it by installing yum install zeromq-devel which is not a dependency currently.
 
 ### Create a development server
 ```bash
@@ -123,7 +120,7 @@ setenforce 0
 chmod o+rx -R /home/ftsflask/
 systemctl restart httpd
 ```
-### Create a development environment
+### Create a development environment (e.g. in your PC)
 - clone the repository and cd into it
 - create a venv and activate it
 - run `pip install --upgrade pip`
@@ -132,7 +129,6 @@ systemctl restart httpd
 - run `source pipsyncdev.sh`. If these steps fail, it's because you are missing some system dependencies. 
 Check the beginning of .gitlab-ci/Dockerfile to see what you need to install.
 - run `source precommit_install.sh`
-
 
 ### How to run development server
 Flask:
@@ -163,26 +159,19 @@ source runtests.sh
 ---
 
 ## DB
-It only works with MySQL 5. MySQL 8 doesn't work because of the outdated version of SQLAlchemy in CentOS 7.
-
-SQLAlchemy models: they are the same, some had to be updated to match the DB schema because they had been oudated for a long time. 
+- It only works with MySQL 5. MySQL 8 doesn't work because of the outdated version of SQLAlchemy in CentOS 7.
+- SQLAlchemy models: they are the same, some had to be updated to match the DB schema because they had been oudated for a long time. 
 - We don't need Flask-SQLAlchemy: https://its.cern.ch/jira/browse/FTS-1538, https://its.cern.ch/jira/browse/FTS-1548
-
-mysql -h dbod-ga022 -P 5503 -u admin -p
+- Connect to ftsflask5: `mysql -h dbod-ga022 -P 5503 -u admin -p`
 
 ## Git workflow
 - `Master` cannot be pushed to directly.
 - Create a new branch for each ticket and merge it to master through a merge request.
 
-
 ## CI
 I took the oportunity to start using Gitlab CI instead of Jenkins. With the new CI, we have static code analysis, functional testing, bulding and deployment.
 
-To run the pipelines efficiently, I created Docker image containing git, python and the necessary tools for CI without having to install them in every run. Upload the image to the registry in the repository.
-
-I created a prehook commit that everyone should install that does a subset of CI in order to catch errors early.
-
-We now have test coverage which we didn't have before.
+I created a Docker image containing multiple Python3 versions and the necessary tools for CI so they don't have to be installed before every pipeline run, thus saving time. The Dockerfile is in the .gitlab-ci directory and the image is in the container registry for the project. To build and push the image, cd to .gitlab-ci and run .docker_push.sh. This should be done when new dependencies are added or they need to be updated. One time the pipeline stopped working because black was failing. It turned out that the local and CI versions of black were different; this was fixed by recreating the CI image.
 
 Run tests in CI with every Python version supported: in reality we only support the CentOS version, so Python3.6. However it's good to have that because the logs show things that will be removed in future versions, and things that may break. I considered Tox, but it didn't seem necessary and added complexity. Final solution: the docker image has all major python 3 version installed with pyenv. Before each stage in CI, the version is set accordingly.
 
@@ -193,7 +182,7 @@ The current pipeline runs for every push in every branch:
 - pylint: fails if the code has syntax errors. If you are sure that pylint is mistaken, add `# pylint: skip-file` at
  the beginning of the relevant file. Runs for every supported Python3 version
 - radon: fails if the code complexity is too high
-- functional tests: Run for every supported Python3 version
+- functional tests: Run for every supported Python3 version. We now have test coverage which we didn't have before.
 - bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives.
 To ignore a false positive, append `# nosec"` to the offending line
 - build: RPM for the client and server, plus sdist and wheel for the client
@@ -203,15 +192,15 @@ Merge requests will proceed only if the pipeline succeeds.
 
 In case of emergency the pipeline can be [skipped](https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs).
 
-The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the .gitlab-ci directory and the 
-image is in the container registry for this project. The image contains the Python tools preinstalled so the CI runs faster.
-To build and push the image, cd to .gitlab-ci and run .docker_push.sh. This should be done when new dependencies are added.
+
+I created a prehook commit that everyone should install that does a subset of CI in order to catch errors early.
 
 Developers should add the `pre-commit` hook to their local repository. This scripts does this for every commit:
 - Runs black to format the changed files.
 - Runs pylint only on the changed files for speed. As pylint works better when it is run on all the project, some rules have been disabled.
 - Runs radon and bandit only on the changed files.
 The hook can be skipped, in case bandit detects false positives, with the commit option `--no-verify`.
+
 
 ## README
 https://gitlab.cern.ch/fts/fts-rest-flask/-/blob/master/README.md
@@ -238,7 +227,7 @@ Already integrated in this document
 
 ## Miscellany
 - ErrorasJson middleware converted to error handler
-- Mako templates migrated by compiling them with the library
+- Mako templates migrated by compiling them with the library. The most important difference between Pylons and Flask is that Pylons uses Mako templates and Flask uses Jinja templates (HTML templates). Fortunately I was able to configure Mako's engine in Flask and so I didn't have to translate the templates.
 
 - See https://its.cern.ch/jira/browse/FTS-1536 for the migration of controllers.
 - Migrated Pylon's webob exceptions to Flask's werkzeug exceptions
