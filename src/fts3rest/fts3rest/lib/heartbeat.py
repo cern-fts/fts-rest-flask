@@ -28,7 +28,10 @@ class Heartbeat(Thread):
         """
         Thread logic
         """
-        host = Host(hostname=socket.getfqdn(), service_name=self.tag,)
+        host = Host(
+            hostname=socket.getfqdn(),
+            service_name=self.tag,
+        )
 
         while self.interval:
             host.beat = datetime.utcnow()

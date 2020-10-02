@@ -290,7 +290,6 @@ Check .gitlab-ci.yml to see how the packages are built
 - Python2 filter/map return list, Python3 return generator
 
 ## Todo:
-- Where is src/fts3rest/fts3rest/lib/heartbeat.py?
 - number of dependencies before and now
 
 
