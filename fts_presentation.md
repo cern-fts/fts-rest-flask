@@ -291,7 +291,6 @@ Check .gitlab-ci.yml to see how the packages are built
 
 ## Todo:
 - Where is src/fts3rest/fts3rest/lib/heartbeat.py?
-- what is fts3config?
 - number of dependencies before and now
 
 
