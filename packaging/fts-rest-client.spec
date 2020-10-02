@@ -24,9 +24,11 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 %py3_build
 
 %install
-%py3_install
+ls -l
 mkdir -p %{buildroot}%{_sysconfdir}/fts3
 cp cli/fts3client.cfg %{buildroot}%{_sysconfdir}/fts3
+%py3_install
+
 
 %files
 %license LICENSE
