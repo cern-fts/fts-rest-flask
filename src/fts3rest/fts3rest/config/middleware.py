@@ -128,7 +128,8 @@ def create_app(default_config_file=None, test=False):
         return response
 
     # Heartbeat thread
-    Heartbeat("fts_rest", int(app.config.get("fts3.HeartBeatInterval", 60))).start()
+    if not test:
+        Heartbeat("fts_rest", int(app.config.get("fts3.HeartBeatInterval", 60))).start()
 
     # Start OIDC clients
     if "fts3.Providers" in app.config and app.config["fts3.Providers"]:

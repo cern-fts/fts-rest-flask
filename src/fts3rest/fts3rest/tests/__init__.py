@@ -188,7 +188,6 @@ class TestController(TestCase):
         Session.query(ServerConfig).delete()
         Session.query(OptimizerEvolution).delete()
         Session.query(ActivityShare).delete()
-        Session.query(Host).delete()
         Session.commit()
 
         # Delete messages

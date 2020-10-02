@@ -57,7 +57,7 @@ class TestDrain(TestController):
         """
         response = self.app.get_json(url="/config", status=200).json
 
-        self.assertEqual(5, len(response))
+        self.assertEqual(4, len(response))
 
         hosts = [e["hostname"] for e in response]
         self.assertIn("host1.cern.ch", hosts)
