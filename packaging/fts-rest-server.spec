@@ -34,7 +34,7 @@ Requires:       python36-pycryptodomex
 Requires:       python36-markupsafe
 
 ### The packages below are not found in community repos and will have to be packaged by us
-# from oic (pyjwkest: six, future?
+# from oic (pyjwkest may require six, future...)
 Requires:       pyjwkest
 Requires:       Beaker
 Requires:       typing_extensions
