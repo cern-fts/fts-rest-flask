@@ -224,10 +224,11 @@ Already integrated in this document
 - fts3rest/fts3rest/lib/JobBuilder.py has been divided in 2 files because the cyclomatic complexity was extremely high.
 - fts3rest.lib.base has been replaced by fts3rest.model.meta, which contains Session
 - fts3rest/fts3rest/public has been renamed to static
+- fts3rest/fts3rest/lib/middleware/error_as_json.py removed as not needed anymore
 
 
 ## Miscellany
-- ErrorasJson middleware converted to error handler
+- ErrorasJson middleware converted to a Flask's error handler (in middleware.py)
 - Mako templates migrated by compiling them with the library. The most important difference between Pylons and Flask is that Pylons uses Mako templates and Flask uses Jinja2 templates (we are talking about HTML templates). Fortunately I was able to configure Mako's engine in Flask and so I didn't have to translate the templates.
 - Pylon's controller classes are now Flask's view functions. When a controller class had __init__ code and was subclassed, it was been converted to a view class. See for example fts3rest/fts3rest/controllers/delegation.py
 - Migrated Pylon's webob exceptions to Flask's werkzeug exceptions
