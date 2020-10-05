@@ -42,7 +42,7 @@ You can see an approximate history of the development in the list of tickets in 
 - Migrated DB models
 - Migrated client
 - Created build script for client
-- Migrated exceptions
+- Migrated HTTP exceptions
 - Migrated routing
 - Migrated controllers
 - Migrated the test client + CI
@@ -58,7 +58,7 @@ You can see an approximate history of the development in the list of tickets in 
 - fts-flask-02: for development, server runs from virtual environment in /home with local DB. local user ftsflask
 - fts-flask-03: pre-production environment, runs from RPM with DBOD ftsflask5. local user fts3
 
-You can already make successful tranfers with https://fts-flask-03.cern.ch:8446. I suggest you use the new client in the testing repository, you can install it with yum install fts-rest-client or alternatively install the wheel in a venv (you can get the [wheel here](https://gitlab.cern.ch/fts/fts-rest-flask/-/jobs/10128577/artifacts/file/dist/fts_client_py3-1-py3-none-any.whl). The server contains fts-rest-server and fts-server connected to DBOD ftsflask5. The installation was done manually, as if done via puppet it fails when including the fts module, as it tries to install fts-rest (python2) and many other things.
+You can already make successful tranfers with https://fts-flask-03.cern.ch:8446. I suggest you use the new client in the testing repository, you can install it with `yum install fts-rest-client` or alternatively install the wheel in a venv (you can get the [wheel here](https://gitlab.cern.ch/fts/fts-rest-flask/-/jobs/10128577/artifacts/file/dist/fts_client_py3-1-py3-none-any.whl). This server contains fts-rest-server and fts-server connected to DBOD ftsflask5. The installation was done manually, as if done via puppet it fails when including the fts module, as it tries to install fts-rest (python2) and many other things.
 
 Note: When I installed fts-server manually it failed because missing libzmq.so.5. I solved it by installing yum install zeromq-devel which is not a dependency currently.
 
@@ -147,9 +147,9 @@ curl http://localhost:80/hello
 ```
 
 ### Connect to local database
-To access the config page:
+To access the admin config web page:
 ```
-INSERT INTO t_authz_dn VALUES ('yourdn');
+INSERT INTO t_authz_dn VALUES ('yourdn', 'config');
 ```
 
 ### Run tests 
@@ -208,7 +208,7 @@ The hook can be skipped, in case bandit detects false positives, with the commit
 ## README
 https://gitlab.cern.ch/fts/fts-rest-flask/-/blob/master/README.md
 
-Already integrated in this document
+Already integrated in this document. But it need to be updated.
 
 ## Changes in directories and files
 - I've removed __init__.py files that were unnecessary
@@ -239,13 +239,10 @@ The file controllers/api.py contains code for the api documentation and is not t
 
 
 ## Testing
-- TestController. Tests migration, Flask test client wrapper
-- Selenium tests are in a bad state, so no migrated: https://its.cern.ch/jira/browse/FTS-1613
+- In fts-rest, each functional test module was a class that subclassed TestController. This superclass set up a Pylon's WebTest client. However, Flask has it's own test client. In order to be able to reuse all the existing functional tests without changes, I created a test client that subclasses the Flask test client but has the same interface as the Pylon's test client. It adapts the request methods so they can be used with old functional tests created for Pylon's WebTest.
+- Selenium tests are in a bad state, so not migrated: https://its.cern.ch/jira/browse/FTS-1613
 - Same with unit tests: https://its.cern.ch/jira/browse/FTS-1614
-
-Openid tests don't run in CI because the container would need a client registered and this is 
- difficult to set up. To run these tests in a development environment, the environment variables 'xdc_ClientId' and 'xdc_ClientSecret' must be set.
-
+- OpenID tests don't run in CI because the container would need a client registered and this is difficult to set up. To run these tests in a development environment, the environment variables 'xdc_ClientId' and 'xdc_ClientSecret' must be set.
 
 ## Packaging and deployment
 - We have a python package that can be build with setup.py (sdist and wheel). Eventually it should be uploaded to PyPI.
