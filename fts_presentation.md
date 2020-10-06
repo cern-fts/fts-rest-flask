@@ -25,6 +25,7 @@ Of those I reached the conclusion that Flask was the best option:
 - Many users, active ecosystem. From Jetbrain's The State of Developer Ecosystem 2020:
  ![](https://codimd.web.cern.ch/uploads/upload_33952b0b8fb57e7c542567d11281814f.png)
 - Its simplicity means that a significant amount of the current code can be reused. 
+- SQLAlchemy works well with Flask
 - We don't need any third-party plugins. For example, for authorization and authentication we can reuse our custom code, we don't need Flask-login. 
 
 ## General points
@@ -294,4 +295,5 @@ Check .gitlab-ci.yml to see how the packages are built
 - Put fts-flask-03 (or a new server) behind an alias so it runs with real traffic
 - Decide version number
 - Update Gitlab README
-
+- Add sqlalchemy version which supports mysql8
+- add how to develop with rpms
