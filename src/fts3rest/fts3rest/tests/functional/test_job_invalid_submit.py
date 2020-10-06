@@ -43,7 +43,14 @@ class TestJobInvalidSubmits(TestController):
         self.setup_gridsite_environment()
         self.push_delegation()
 
-        job = {"files": [{"sources": ["/etc/passwd"], "destinations": ["/srv/pub"],}]}
+        job = {
+            "files": [
+                {
+                    "sources": ["/etc/passwd"],
+                    "destinations": ["/srv/pub"],
+                }
+            ]
+        }
 
         error = self.app.post(
             url="/jobs",

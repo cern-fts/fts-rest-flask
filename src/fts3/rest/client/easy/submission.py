@@ -78,7 +78,10 @@ def new_transfer(
     Returns:
         An initialized transfer
     """
-    transfer = dict(sources=[source], destinations=[destination],)
+    transfer = dict(
+        sources=[source],
+        destinations=[destination],
+    )
     if checksum:
         transfer["checksum"] = checksum
     if filesize:

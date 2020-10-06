@@ -916,7 +916,9 @@ class TestJobSubmission(TestController):
                     "destinations": [dest_surl],
                 }
             ],
-            "params": {"priority": 5,},
+            "params": {
+                "priority": 5,
+            },
         }
         job_id = self.app.post(
             url="/jobs",

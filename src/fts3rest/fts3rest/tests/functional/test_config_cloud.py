@@ -94,7 +94,11 @@ class TestConfigCloud(TestController):
         self.test_add_s3()
         self.app.post_json(
             url="/config/cloud_storage/S3:host",
-            params={"vo_name": "testvo", "access_key": "1234", "secret_key": "abcd",},
+            params={
+                "vo_name": "testvo",
+                "access_key": "1234",
+                "secret_key": "abcd",
+            },
             status=201,
         )
         user = Session.query(CloudStorageUser).get(("", "S3:host", "testvo"))
@@ -111,7 +115,11 @@ class TestConfigCloud(TestController):
         """
         self.app.post_json(
             url="/config/cloud_storage/S3:host",
-            params={"vo_name": "dteam", "access_key": "1234", "secret_key": "abcd",},
+            params={
+                "vo_name": "dteam",
+                "access_key": "1234",
+                "secret_key": "abcd",
+            },
             status=404,
         )
 
