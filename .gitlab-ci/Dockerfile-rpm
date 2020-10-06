@@ -1,0 +1,26 @@
+FROM centos:7
+
+RUN yum-config-manager --enable centos-sclo-rh && \
+    yum-config-manager --add-repo http://fts-repo.web.cern.ch/fts-repo/testing/el7/x86_64/ && \
+    yum install epel-release && \
+    yum install centos-release-scl && \
+    yum install fts-rest-server && \
+    yum install fts-rest-client && \
+    yum clean all
+
+RUN yum install python3 git python3-devel openssl-devel swig gcc gcc-c++ make mysql-devel mariadb -y && \
+yum clean all
+
+# install rpmbuild dependencies
+RUN yum install gcc rpm-build rpm-devel rpmlint make coreutils diffutils patch rpmdevtools -y && \
+yum clean all
+
+RUN useradd --create-home ci
+
+# create directory for logs
+RUN mkdir /var/log/fts3rest
+RUN chown ci /var/log/fts3rest
+
+WORKDIR /home/ci
+USER ci
+
