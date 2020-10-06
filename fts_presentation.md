@@ -296,4 +296,4 @@ Check .gitlab-ci.yml to see how the packages are built
 - Decide version number
 - Update Gitlab README
 - Add sqlalchemy version which supports mysql8
-- add how to develop with rpms
+- Add CI image with rpms
