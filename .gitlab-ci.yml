@@ -96,6 +96,7 @@ bandit:
   stage: security
   script:
   - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
+  needs: []
 
 client_wheel_sdist:
   stage: build

@@ -15,6 +15,7 @@ from fts3rest.lib.helpers.connection_validator import (
     connection_validator,
     connection_set_sqlmode,
 )
+from fts3rest.lib.heartbeat import Heartbeat
 from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddleware
 from fts3rest.lib.middleware.timeout import TimeoutHandler
 from fts3rest.lib.openidconnect import oidc_manager
@@ -118,10 +119,17 @@ def create_app(default_config_file=None, test=False):
         response = e.get_response()
         # replace the body with JSON
         response.data = json.dumps(
-            {"status": f"{e.code} {e.name}", "message": e.description,}
+            {
+                "status": f"{e.code} {e.name}",
+                "message": e.description,
+            }
         )
         response.content_type = "application/json"
         return response
+
+    # Heartbeat thread
+    if not test:
+        Heartbeat("fts_rest", int(app.config.get("fts3.HeartBeatInterval", 60))).start()
 
     # Start OIDC clients
     if "fts3.Providers" in app.config and app.config["fts3.Providers"]:

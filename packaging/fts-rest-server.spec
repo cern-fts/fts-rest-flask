@@ -34,7 +34,7 @@ Requires:       python36-pycryptodomex
 Requires:       python36-markupsafe
 
 ### The packages below are not found in community repos and will have to be packaged by us
-# from oic (pyjwkest: six, future?
+# from oic (pyjwkest may require six, future...)
 Requires:       pyjwkest
 Requires:       Beaker
 Requires:       typing_extensions
@@ -56,6 +56,9 @@ File Transfer Service (FTS) -- Python3 HTTP API Server
 %build
 python3 -m compileall fts3rest/fts3rest
 
+# Check https://docs.fedoraproject.org/en-US/packaging-guidelines/Python/
+# Program files go in /usr/lib/python3.6/site-packages
+# Where does the WSGI file go? /usr/libexec
 %install
 mkdir -p %{buildroot}%{python3_sitelib}
 mkdir -p %{buildroot}%{_libexecdir}/fts3rest
