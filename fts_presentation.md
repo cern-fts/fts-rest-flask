@@ -175,6 +175,11 @@ I took the oportunity to start using Gitlab CI instead of Jenkins. With the new 
 ### Docker image for CI
 I created a Docker image containing the necessary tools for CI so they don't have to be installed before every pipeline run, thus saving time. The Dockerfile is in the .gitlab-ci directory and the image is in the container registry for the project. 
 
+There are 2 images, one tagged as 'ci' and the other as 'rpm'. The latter is used only in the functional tests 36 job
+. The goal is to run these tests with the exact same dependencies as in production. In this image the packages are
+ installed through yum instead of pip, meaning the versions are older, and some bugs might appear which we wouldn't
+  catch with the latest versions.
+
 To build and push the image, cd to .gitlab-ci and run .docker_push.sh. This should be done when new dependencies are added or they need to be updated. For example, one time the pipeline stopped working because black was failing. It turned out that the local and CI versions of black were different; this was fixed by recreating the CI image, which updated the CI tools.
 
 ### Multiple Python 3 versions
@@ -283,7 +288,9 @@ All other requirements are specified in the spec files.
 Check .gitlab-ci.yml to see how the packages are built
 
 ## Problems
-- One problem is that the development environment and the CI image run the code in a virtual environment with the latest dependencies, while the RPM uses outdated dependencies form the repositories. This means that some bug caused due to old dependencies won't be caught until production.
+- One problem is that the development environment run the code in a virtual environment with the latest dependencies
+, while the RPM uses outdated dependencies form the repositories. This means that some bug caused due to old
+ dependencies will only be caught in the CI.
 - Some new commits might have not been migrated to Python3
 - Authentication for WebFTS doesn't work. fts3rest/lib/middleware/fts3auth/methods/http.py. This cannot be migrated because m2ext is a 9 year old obsolete package. Apparently it's used by WebFTS.
 
@@ -296,4 +303,4 @@ Check .gitlab-ci.yml to see how the packages are built
 - Decide version number
 - Update Gitlab README
 - Add sqlalchemy version which supports mysql8
-- Add CI image with rpms
+
