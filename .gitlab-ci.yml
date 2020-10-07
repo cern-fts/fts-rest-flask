@@ -51,15 +51,15 @@ radon:
   - source .gitlab-ci/radon.sh
 
 functional_tests36:
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:rpm
   stage: tests
   services:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
-  - python --version
+  - python3 --version
   - source .gitlab-ci/db.sh
-  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-  - coverage report
+  - pytest-3 src/ -x
 
 functional_tests37:
   stage: tests
