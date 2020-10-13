@@ -83,6 +83,7 @@ cp fts3rest/ftsrestconfig %{buildroot}%{_sysconfdir}/fts3
 if [ "$1" -eq "1" ] ; then
 semanage port -a -t http_port_t -p tcp 8446
 setsebool -P httpd_can_network_connect on
+setsebool -P httpd_execmem on
 semanage fcontext -a -t httpd_log_t "/var/log/fts3rest(/.*)?"
 restorecon -R /var/log/fts3rest
 fi
@@ -92,9 +93,12 @@ fi
 if [ "$1" -eq "0" ] ; then
 semanage port -d -t http_port_t -p tcp 8446
 setsebool -P httpd_can_network_connect off
+setsebool -P httpd_execmem off
 fi
 ## Note: if SELinux rules need to be changed after first release, they should be set in an upgrade scriplet
 
 %changelog
+* Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-2
+- Set SELinux httpd_execmem on
 * Tue May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
 - First server package release

@@ -27,7 +27,7 @@ def fts3_config_load(path="/etc/fts3/ftsrestconfig", test=False):
     """
     fts3cfg = {}
 
-    parser = ConfigParser()
+    parser = ConfigParser(interpolation=None)
     parser.optionxform = str
     parser.read_file(path)
 
