@@ -1,5 +1,5 @@
 Name:           fts-rest-client
-Version:        0.1
+Version:        0.2
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 Client and CLI
 
