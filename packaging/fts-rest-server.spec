@@ -98,7 +98,7 @@ fi
 ## Note: if SELinux rules need to be changed after first release, they should be set in an upgrade scriplet
 
 %changelog
-* Tue May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
-- First server package release
 * Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-2
 - Set SELinux httpd_execmem on
+* Tue May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
+- First server package release
