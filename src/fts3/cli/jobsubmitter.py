@@ -242,6 +242,13 @@ class JobSubmitter(Base):
             "--ipv6", dest="ipv6", default=False, action="store_true", help="force ipv6"
         )
         self.opt_parser.add_option(
+            "--s3alternate",
+            dest="s3alternate",
+            default=False,
+            action="store_true",
+            help="use S3 alternate URL",
+        )
+        self.opt_parser.add_option(
             "--target-qos",
             dest="target_qos",
             type="string",
@@ -338,6 +345,7 @@ class JobSubmitter(Base):
             nostreams=self.options.nostreams,
             ipv4=self.options.ipv4,
             ipv6=self.options.ipv6,
+            s3alternate=self.options.s3alternate,
             target_qos=self.options.target_qos,
         )
 
@@ -409,6 +417,7 @@ class JobSubmitter(Base):
                 nostreams=self.options.nostreams,
                 ipv4=self.options.ipv4,
                 ipv6=self.options.ipv6,
+                s3alternate=self.options.s3alternate,
             )
         )
         return None
