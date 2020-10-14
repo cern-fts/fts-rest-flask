@@ -1,10 +1,6 @@
 #!/bin/bash
 
-export OS_IDENTITY_API_VERSION=3
-export OS_PROJECT_DOMAIN_ID=default
-export OS_PROJECT_NAME="IT FTS development"
-export OS_AUTH_URL=https://keystone.cern.ch/v3
-export OS_USERNAME=$USER
+eval $(ai-rc --same-project-as fts-devel-01)
 
 openstack server list  > /dev/null 2>&1
 if [ $? != "0" ] ; then
@@ -34,5 +30,5 @@ ai-bs \
      --landb-ipv6ready \
      --cc7 \
  $hostname
- 
+
 
