@@ -37,6 +37,8 @@ cp src/cli/fts3client.cfg %{buildroot}%{_sysconfdir}/fts3
 %config(noreplace) %{_sysconfdir}/fts3/fts3client.cfg
 
 %changelog
+* Thu Oct 15 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 1.0
+- First production-grade release
 * Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.2
 - Pre-release improvements
 * Mon May 18 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
