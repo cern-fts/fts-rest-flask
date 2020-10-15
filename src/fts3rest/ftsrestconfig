@@ -2,7 +2,7 @@
 DbType=mysql
 
 #db username
-DbUserName=
+DbUserName=fts3
 
 #db password
 DbPassword=
