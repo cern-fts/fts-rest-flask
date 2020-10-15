@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        0.2
+Version:        1.0
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -98,6 +98,8 @@ fi
 ## Note: if SELinux rules need to be changed after first release, they should be set in an upgrade scriplet
 
 %changelog
+* Thu Oct 15 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 1.0
+- First production-grade release
 * Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.2
 - Pre-release improvements
 * Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-2
