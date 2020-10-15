@@ -8,9 +8,9 @@ if [ $? != "0" ] ; then
   exit
 fi
 
-export ENVIRO="ftsclean"
-
+ENVIRO="qa"
 KEYPAIR="fts3ops"
+HOSTGROUP="fts/devel/mysql/live/flask"
 
 if [ "$#" -ne 1 ]
 then
@@ -21,7 +21,7 @@ fi
 hostname=$1
 
 ai-bs \
-     --foreman-hostgroup 'fts/devel/flask' \
+     --foreman-hostgroup "${HOSTGROUP}" \
      --foreman-environment "${ENVIRO}" \
      --landb-mainuser 'FTS-3RD' \
      --landb-responsible 'FTS-3RD' \
