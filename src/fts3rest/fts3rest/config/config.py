@@ -105,6 +105,8 @@ def fts3_config_load(path="/etc/fts3/ftsrestconfig", test=False):
             if "_" not in option:
                 provider_name = option
                 provider_url = parser.get("providers", provider_name)
+                if test and not provider_url.endswith("/"):
+                    provider_url += "/"
 
                 fts3cfg["fts3.Providers"][provider_url] = {}
                 client_id = parser.get("providers", option + "_ClientId")
