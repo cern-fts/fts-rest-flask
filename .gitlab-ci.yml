@@ -114,8 +114,8 @@ client_rpm:
     - rpmdev-setuptree
     - cd packaging
     - source fts-rest-client.sh
-    - rpmbuild -bs fts-rest-client.spec
-    - rpmbuild -bb fts-rest-client.spec
+    - rpmbuild -bs --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-client.spec
+    - rpmbuild -bb --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-client.spec
     - mkdir /builds/fts/fts-rest-flask/artifacts
     - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
   artifacts:
