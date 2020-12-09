@@ -1,6 +1,6 @@
 Name:           fts-rest-server
 Version:        1.0.0
-Release:        %{_release}
+Release:        %{_release}%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
 License:        ASL 2.0
