@@ -113,8 +113,9 @@ client_rpm:
   script:
     - rpmdev-setuptree
     - cd packaging ; ./fts-rest-client.sh ; cd ~/rpmbuild/SPECS
-    - rpmbuild -bs --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-client.spec
-    - rpmbuild -bb --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-client.spec
+    - RELEASE=$(printf "%sgit%s" $(date +%y%m%d%H%M) ${CI_COMMIT_SHORT_SHA})
+    - rpmbuild -bs --define "_release ${RELEASE}" fts-rest-client.spec
+    - rpmbuild -bb --define "_release ${RELEASE}" fts-rest-client.spec
     - mkdir /builds/fts/fts-rest-flask/artifacts
     - mv ~/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
   artifacts:
@@ -127,8 +128,9 @@ server_rpm:
   script:
     - rpmdev-setuptree
     - cd packaging ; ./fts-rest-server.sh ; cd ~/rpmbuild/SPECS
-    - rpmbuild -bs --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-server.spec
-    - rpmbuild -bb --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-server.spec
+    - RELEASE=$(printf "%sgit%s" $(date +%y%m%d%H%M) ${CI_COMMIT_SHORT_SHA})
+    - rpmbuild -bs --define "_release ${RELEASE}" fts-rest-server.spec
+    - rpmbuild -bb --define "_release ${RELEASE}" fts-rest-server.spec
     - mkdir /builds/fts/fts-rest-flask/artifacts
     - mv ~/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
   artifacts:

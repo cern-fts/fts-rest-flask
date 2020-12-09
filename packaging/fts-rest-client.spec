@@ -1,6 +1,6 @@
 Name:           fts-rest-client
 Version:        1.0.0
-Release:        %{_version}
+Release:        %{_release}
 Summary:        File Transfer Service (FTS) -- Python3 Client and CLI
 
 License:        ASL 2.0
