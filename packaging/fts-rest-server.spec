@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        1.0
+Version:        1.0.0
 Release:        %{_version}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
