@@ -1,0 +1,5 @@
+prune *
+graft src
+
+include LICENSE README.md pyproject.toml setup.py setup.cfg
+global-exclude __pycache__ *.py[cod] .* *.sh  migration_docs.md pre-commit
