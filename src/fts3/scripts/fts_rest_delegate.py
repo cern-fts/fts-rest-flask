@@ -3,14 +3,17 @@ import logging
 import sys
 import traceback
 
-from fts3.cli import JobCanceller
+from fts3.cli import Delegator
 
-if __name__ == "__main__":
+def main():
     try:
-        canceller = JobCanceller()
-        canceller(sys.argv[1:])
+        delegator = Delegator()
+        delegator(sys.argv[1:])
     except Exception as e:
         logging.critical(str(e))
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
         sys.exit(1)
+
+if __name__ == "__main__":
+    main()

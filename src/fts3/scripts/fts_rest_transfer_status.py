@@ -3,14 +3,18 @@ import logging
 import sys
 import traceback
 
-from fts3.cli import WhoAmI
+from fts3.cli import JobShower
 
-if __name__ == "__main__":
+def main():
     try:
-        whoami = WhoAmI()
-        whoami(sys.argv[1:])
+        shower = JobShower()
+        shower(sys.argv[1:])
     except Exception as e:
         logging.critical(str(e))
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
         sys.exit(1)
+
+        
+if __name__ == "__main__":
+    main()

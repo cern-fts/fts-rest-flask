@@ -3,14 +3,17 @@ import logging
 import sys
 import traceback
 
-from fts3.cli import Banning
+from fts3.cli import JobLister
 
-if __name__ == "__main__":
+def main():
     try:
-        banning = Banning()
-        banning(sys.argv[1:])
+        lister = JobLister()
+        lister(sys.argv[1:])
     except Exception as e:
         logging.critical(str(e))
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
         sys.exit(1)
+        
+if __name__ == "__main__":
+    main()

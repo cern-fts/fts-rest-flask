@@ -3,14 +3,17 @@ import logging
 import sys
 import traceback
 
-from fts3.cli import JobShower
+from fts3.cli import Banning
 
-if __name__ == "__main__":
+def main():
     try:
-        shower = JobShower()
-        shower(sys.argv[1:])
+        banning = Banning()
+        banning(sys.argv[1:])
     except Exception as e:
         logging.critical(str(e))
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
         sys.exit(1)
+        
+if __name__ == "__main__":
+    main()

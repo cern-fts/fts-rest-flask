@@ -3,14 +3,18 @@ import logging
 import sys
 import traceback
 
-from fts3.cli import JobDeletionSubmitter
+from fts3.cli import JobCanceller
 
-if __name__ == "__main__":
+def main()
     try:
-        submitter = JobDeletionSubmitter()
-        submitter(sys.argv[1:])
+        canceller = JobCanceller()
+        canceller(sys.argv[1:])
     except Exception as e:
         logging.critical(str(e))
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
         sys.exit(1)
+
+        
+if __name__ == "__main__":
+    main()
