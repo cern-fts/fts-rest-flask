@@ -5,6 +5,7 @@ import traceback
 
 from fts3.cli import JobLister
 
+
 def main():
     try:
         lister = JobLister()
@@ -14,6 +15,7 @@ def main():
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
         sys.exit(1)
-        
+
+
 if __name__ == "__main__":
     main()

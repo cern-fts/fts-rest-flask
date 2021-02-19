@@ -5,6 +5,7 @@ import traceback
 
 from fts3.cli import Delegator
 
+
 def main():
     try:
         delegator = Delegator()
@@ -14,6 +15,7 @@ def main():
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

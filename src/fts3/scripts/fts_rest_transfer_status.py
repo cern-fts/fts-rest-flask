@@ -5,6 +5,7 @@ import traceback
 
 from fts3.cli import JobShower
 
+
 def main():
     try:
         shower = JobShower()
@@ -15,6 +16,6 @@ def main():
             traceback.print_exc()
         sys.exit(1)
 
-        
+
 if __name__ == "__main__":
     main()

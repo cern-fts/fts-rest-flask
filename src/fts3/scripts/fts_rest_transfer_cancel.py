@@ -5,7 +5,8 @@ import traceback
 
 from fts3.cli import JobCanceller
 
-def main()
+
+def main():
     try:
         canceller = JobCanceller()
         canceller(sys.argv[1:])
@@ -15,6 +16,6 @@ def main()
             traceback.print_exc()
         sys.exit(1)
 
-        
+
 if __name__ == "__main__":
     main()
