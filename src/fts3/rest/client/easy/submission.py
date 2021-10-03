@@ -121,6 +121,7 @@ def new_job(
     source_spacetoken=None,
     spacetoken=None,
     bring_online=None,
+    archive_timeout=None,
     copy_pin_lifetime=None,
     retry=-1,
     retry_delay=0,
@@ -147,6 +148,7 @@ def new_job(
         source_spacetoken: Source space token
         spacetoken:        Destination space token
         bring_online:      Bring online timeout
+        archive_timeout:   Archive timeout
         copy_pin_lifetime: Pin lifetime
         retry:             Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
         metadata:          Metadata to bind to the job
@@ -175,6 +177,7 @@ def new_job(
         reuse=reuse,
         spacetoken=spacetoken,
         bring_online=bring_online,
+        archive_timeout=archive_timeout,
         copy_pin_lifetime=copy_pin_lifetime,
         job_metadata=metadata,
         source_spacetoken=source_spacetoken,

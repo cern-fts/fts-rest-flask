@@ -40,6 +40,11 @@ class JobBuilder:
         for k, v in params.items():
             if v is None and k in DEFAULT_PARAMS:
                 params[k] = DEFAULT_PARAMS[k]
+
+        # Enforce JSON type for 'job_metadata'
+        if params["job_metadata"] is not None:
+            params["job_metadata"] = metadata(params["job_metadata"])
+
         return params
 
     def _build_internal_job_params(self):
@@ -353,6 +358,7 @@ class JobBuilder:
             copy_pin_lifetime=int(self.params["copy_pin_lifetime"]),
             checksum_method=self.params["verify_checksum"],
             bring_online=self.params["bring_online"],
+            archive_timeout=self.params["archive_timeout"],
             job_metadata=self.params["job_metadata"],
             internal_job_params=self._build_internal_job_params(),
             max_time_in_queue=expiration_time,
@@ -434,6 +440,7 @@ class JobBuilder:
             copy_pin_lifetime=-1,
             checksum_method=None,
             bring_online=None,
+            archive_timeout=None,
             job_metadata=self.params["job_metadata"],
             internal_job_params=None,
             max_time_in_queue=self.params["max_time_in_queue"],

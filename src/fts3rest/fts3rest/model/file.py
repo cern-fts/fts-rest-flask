@@ -26,7 +26,9 @@ FileActiveStates = [
     "SUBMITTED",
     "READY",
     "ACTIVE",
+    "ARCHIVING",
     "QOS_TRANSITION",
+    "QOS_REQUEST_SUBMITTED",
 ]
 FileTerminalStates = ["FINISHED", "FAILED", "CANCELED"]
 # NOT_USED is not terminal, nor not-terminal
@@ -62,6 +64,8 @@ class File(Base):
     checksum = Column(String(100))
     finish_time = Column(DateTime)
     start_time = Column(DateTime)
+    archive_start_time = Column(DateTime)
+    archive_finish_time = Column(DateTime)
     internal_file_params = Column(String(255))
     pid = Column(Integer)
     tx_duration = Column(Float)
@@ -109,6 +113,8 @@ class ArchivedFile(Base):
     checksum = Column(String(100))
     finish_time = Column(DateTime)
     start_time = Column(DateTime)
+    archive_start_time = Column(DateTime)
+    archive_finish_time = Column(DateTime)
     internal_file_params = Column(String(255))
     pid = Column(Integer)
     tx_duration = Column(Float)

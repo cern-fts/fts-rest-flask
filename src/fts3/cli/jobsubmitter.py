@@ -183,6 +183,12 @@ class JobSubmitter(Base):
             help="bring online timeout in seconds.",
         )
         self.opt_parser.add_option(
+            "--archive-timeout",
+            dest="archive_timeout",
+            type="long",
+            help="archive timeout in seconds.",
+        )
+        self.opt_parser.add_option(
             "--timeout",
             dest="timeout",
             type="long",
@@ -327,6 +333,7 @@ class JobSubmitter(Base):
             self._build_transfers(),
             checksum=self.checksum,
             bring_online=self.options.bring_online,
+            archive_timeout=self.options.archive_timeout,
             timeout=self.options.timeout,
             verify_checksum=checksum_mode[0],
             spacetoken=self.options.destination_token,
@@ -362,7 +369,9 @@ class JobSubmitter(Base):
                 "READY",
                 "STAGING",
                 "ACTIVE",
+                "ARCHIVING",
                 "QOS_TRANSITION",
+                "QOS_REQUEST_SUBMITTED",
             ]:
                 self.logger.info("Job in state %s" % job["job_state"])
                 time.sleep(self.options.poll_interval)

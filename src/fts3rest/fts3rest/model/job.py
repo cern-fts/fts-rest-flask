@@ -24,7 +24,9 @@ JobActiveStates = [
     "READY",
     "ACTIVE",
     "DELETE",
+    "ARCHIVING",
     "QOS_TRANSITION",
+    "QOS_REQUEST_SUBMITTED",
 ]
 JobTerminalStates = ["FINISHED", "FAILED", "FINISHEDDIRTY", "CANCELED"]
 
@@ -54,6 +56,7 @@ class Job(Base):
     copy_pin_lifetime = Column(Integer)
     verify_checksum = Column(String(1), name="checksum_method")
     bring_online = Column(Integer)
+    archive_timeout = Column(Integer)
     target_qos = Column(String(255))
     job_metadata = Column(Json(255))
     retry = Column(Integer)
@@ -97,6 +100,7 @@ class ArchivedJob(Base):
     copy_pin_lifetime = Column(Integer)
     verify_checksum = Column(String(1), name="checksum_method")
     bring_online = Column(Integer)
+    archive_timeout = Column(Integer)
     target_qos = Column(String(255))
     job_metadata = Column(Json(255))
     retry = Column(Integer)

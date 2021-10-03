@@ -22,6 +22,7 @@ BASE_ID = uuid.UUID("urn:uuid:01874efb-4735-4595-bc9c-591aef8240c9")
 
 DEFAULT_PARAMS = {
     "bring_online": -1,
+    "archive_timeout": -1,
     "verify_checksum": False,
     "copy_pin_lifetime": -1,
     "gridftp": "",
@@ -86,6 +87,13 @@ def validate_url(url):
         raise ValueError("Missing path (%s)" % url.geturl())
     if not url.hostname:
         raise ValueError("Missing host (%s)" % url.geturl())
+
+
+def metadata(data):
+    try:
+        return json.loads(data)
+    except:
+        return {"label": str(data)}
 
 
 def safe_flag(flag):
