@@ -234,7 +234,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             try:
                 if "wlcg" in credential["iss"]:
                     # Hardcoded scope and audience for wlcg tokens. To change once the wlcg standard evolves
-                    scope = "offline_access openid storage.read:/ storage.modify:/"
+                    scope = "offline_access openid storage.read:/ storage.modify:/ wlcg.groups"
                     audience = "https://wlcg.cern.ch/jwt/v1/any"
                     (
                         access_token,
