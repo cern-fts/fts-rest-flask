@@ -79,9 +79,14 @@ class TestJobListing(TestController):
         """
         self.setup_gridsite_environment()
         error = self.app.get(url="/jobs/1234x", status=404).json
+        # error_message = json.loads(error['http_message'])
 
-        self.assertEqual(error["status"], "404 Not Found")
-        self.assertEqual(error["message"], 'No job with the id "1234x" has been found')
+        # self.assertEquals(error['status'], '404 Not Found')
+        self.assertEquals(error["job_id"], "1234x")
+        self.assertEquals(error["http_status"], "404 Not Found")
+        self.assertEquals(
+            error["http_message"], 'No job with the id "1234x" has been found'
+        )
 
     def test_list_job_default(self):
         """
@@ -299,7 +304,7 @@ class TestJobListing(TestController):
 
         UserCredentials.get_granted_level_for = old_granted
 
-        self.assertEqual(error["status"], "403 Forbidden")
+        self.assertEqual(error["http_status"], "403 Forbidden")
 
     def test_get_missing_field(self):
         """
