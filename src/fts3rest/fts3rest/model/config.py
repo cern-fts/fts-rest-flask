@@ -41,6 +41,7 @@ class LinkConfig(Base):
     optimizer_mode = Column(Integer)
     tcp_buffer_size = Column(Integer)
     nostreams = Column(Integer)
+    no_delegation = Column(Flag(negative="off", positive="on"), default="off")
 
     def __str__(self):
         return "%s => %s" % (self.source, self.destination)
