@@ -46,6 +46,7 @@ DEFAULT_PARAMS = {
     "target_qos": None,
     "ipv4": False,
     "ipv6": False,
+    "buffer_size": None,
 }
 
 
@@ -273,6 +274,13 @@ class JobSubmitter(Base):
             type="string",
             help="define the target QoS for this transfer for CDMI endpoints",
         )
+        self.opt_parser.add_option(
+            "--buffer-size",
+            "--buff-size",
+            dest="buffer_size",
+            type=int,
+            help="TCP buffer size (expressed in bytes) that will be used for the given transfer job",
+        )
 
     def validate(self):
         self.checksum = None
@@ -365,6 +373,7 @@ class JobSubmitter(Base):
             ipv6=self.options.ipv6,
             s3alternate=self.options.s3alternate,
             target_qos=self.options.target_qos,
+            buffer_size=self.options.buffer_size,
         )
 
     def _do_submit(self, context):

@@ -134,6 +134,7 @@ def new_job(
     sid=None,
     s3alternate=False,
     nostreams=1,
+    buffer_size=None,
 ):
     """
     Creates a new dictionary representing a job
@@ -158,6 +159,7 @@ def new_job(
         sid:               Specific id given by the client
         s3alternate:       Use S3 alternate url schema
         nostreams:         Number of streams
+        buffer_size:       Tcp buffer size (in bytes) that will be used for the given transfer-job
 
     Returns:
         An initialized dictionary representing a job
@@ -193,6 +195,7 @@ def new_job(
         sid=sid,
         s3alternate=s3alternate,
         nostreams=nostreams,
+        buffer_size=buffer_size,
     )
     job = dict(files=transfers, delete=deletion, params=params)
     return job
