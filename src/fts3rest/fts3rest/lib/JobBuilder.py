@@ -179,6 +179,8 @@ class JobBuilder:
                 if shared_hashed_id
                 else generate_hashed_id(),
             )
+            if f["file_metadata"] != None:
+                f["file_metadata"] = metadata(f["file_metadata"])
             self.files.append(f)
 
     def _apply_selection_strategy(self):
@@ -354,6 +356,7 @@ class JobBuilder:
             priority=max(min(int(self.params["priority"]), 5), 1),
             space_token=self.params["spacetoken"],
             overwrite_flag=safe_flag(self.params["overwrite"]),
+            dst_file_report=safe_flag(self.params["dst_file_report"]),
             source_space_token=self.params["source_spacetoken"],
             copy_pin_lifetime=int(self.params["copy_pin_lifetime"]),
             checksum_method=self.params["verify_checksum"],
@@ -436,6 +439,7 @@ class JobBuilder:
             priority=3,
             space_token=self.params["spacetoken"],
             overwrite_flag="N",
+            dst_file_report="N",
             source_space_token=self.params["source_spacetoken"],
             copy_pin_lifetime=-1,
             checksum_method=None,
