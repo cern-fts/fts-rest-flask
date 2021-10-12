@@ -237,10 +237,7 @@ class JobBuilder:
 
         auto_session_reuse = app.config.get("fts3.AutoSessionReuse", "false")
         log.debug(
-            "AutoSessionReuse is "
-            + str(auto_session_reuse)
-            + " job_type is"
-            + str(job_type)
+            "AutoSessionReuse=" + str(auto_session_reuse) + " job_type=" + str(job_type)
         )
         max_reuse_files = int(app.config.get("fts3.AutoSessionReuseMaxFiles", 1000))
         max_size_small_file = int(
@@ -268,7 +265,7 @@ class JobBuilder:
                     log.debug(
                         "The number of files "
                         + str(len(self.files))
-                        + "is bigger than the auto maximum reuse files "
+                        + " is bigger than the auto maximum reuse files "
                         + str(max_reuse_files)
                     )
                 else:
@@ -308,7 +305,7 @@ class JobBuilder:
         """
 
         job_type = None
-        log.debug("job type is " + str(job_type) + " reuse" + str(self.params["reuse"]))
+        log.debug("job_type=" + str(job_type) + " reuse=" + str(self.params["reuse"]))
 
         if self.params["multihop"]:
             job_type = "H"
@@ -317,7 +314,7 @@ class JobBuilder:
                 job_type = "Y"
             else:
                 job_type = "N"
-        log.debug("job type is " + str(job_type))
+        log.debug("job_type=" + str(job_type))
         self.is_bringonline = (
             self.params["copy_pin_lifetime"] > 0 or self.params["bring_online"] > 0
         )
