@@ -58,14 +58,17 @@ def _populated_x509_name(components):
     return x509_name
 
 
-def _generate_proxy_request():
+def _generate_proxy_request(key_len=2048):
     """
     Generates a X509 proxy request.
+
+    Args:
+        key_len: Length of the RSA key in bits
 
     Returns:
         A tuple (X509 request, generated private key)
     """
-    key_pair = RSA.gen_key(1024, 65537, callback=_mute_callback)
+    key_pair = RSA.gen_key(key_len, 65537, callback=_mute_callback)
     pkey = EVP.PKey()
     pkey.assign_rsa(key_pair)
     x509_request = X509.Request()
@@ -158,6 +161,27 @@ def _build_full_proxy(x509_pem, privkey_pem):
     return x509_list[0].as_pem() + privkey_pem + x509_chain
 
 
+def _build_certificate():
+    """
+    Generates a user certificate from the environment
+
+    Returns:
+        Returns the user certificate
+    """
+    n = 0
+    full_cert = ""
+    cert = flask.request.environ.get("SSL_CLIENT_CERT", None)
+    while cert:
+        full_cert += cert
+        cert = flask.request.environ.get("SSL_CLIENT_CERT_CHAIN_%d" % n, None)
+        n += 1
+    if len(full_cert) > 0:
+        ret = full_cert
+    else:
+        ret = None
+    return ret
+
+
 class Delegation(View):
     """
     Operations to perform the delegation of credentials
@@ -205,17 +229,7 @@ class certificate(Delegation):
         """
         Returns the user certificate
         """
-        n = 0
-        full_cert = ""
-        cert = flask.request.environ.get("SSL_CLIENT_CERT", None)
-        while cert:
-            full_cert += cert
-            cert = flask.request.environ.get("SSL_CLIENT_CERT_CHAIN_%d" % n, None)
-            n += 1
-        if len(full_cert) > 0:
-            ret = full_cert
-        else:
-            ret = None
+        ret = _build_certificate()
         return Response(ret, mimetype="application/x-pem-file")
 
 
@@ -283,8 +297,31 @@ class request(Delegation):
             (user.delegation_id, user.user_dn)
         )
 
-        if credential_cache is None or credential_cache.cert_request is None:
-            (x509_request, private_key) = _generate_proxy_request()
+        user_cert = _build_certificate()
+
+        request_key_len = 2048
+        if user_cert:
+            user_key = X509.load_cert_string(user_cert)
+            request_key_len = user_key.get_pubkey().size() * 8
+
+        cached = (
+            credential_cache is not None and credential_cache.cert_request is not None
+        )
+        if cached:
+            cached_key_len = (
+                X509.load_request_string(credential_cache.cert_request)
+                .get_pubkey()
+                .size()
+                * 8
+            )
+            if cached_key_len != request_key_len:
+                cached = False
+                log.debug(
+                    "Invalidating cache due to key length missmatch between client and cached certificates"
+                )
+
+        if not cached:
+            (x509_request, private_key) = _generate_proxy_request(request_key_len)
             credential_cache = CredentialCache(
                 dlg_id=user.delegation_id,
                 dn=user.user_dn,
