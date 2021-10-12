@@ -90,6 +90,8 @@ def validate_url(url):
 
 
 def metadata(data):
+    if isinstance(data, dict):
+        return data
     try:
         return json.loads(data)
     except:
