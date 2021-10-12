@@ -276,6 +276,8 @@ def seconds_from_value(value):
             return int(value) * 60
         elif suffix == "h":
             return int(value) * 3600
+        elif suffix == "d":
+            return int(value) * 3600 * 24
         else:
             return None
     except Exception:

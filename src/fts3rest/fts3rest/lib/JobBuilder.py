@@ -337,6 +337,24 @@ class JobBuilder:
         if max_time_in_queue is not None:
             expiration_time = time.time() + max_time_in_queue
 
+        if max_time_in_queue is not None and self.params["bring_online"] > 0:
+            # Ensure that the bringonline and expiration delta is respected
+            timeout_delta = seconds_from_value(
+                app.config.get("fts3.BringOnlineAndExpirationDelta", None)
+            )
+            if timeout_delta is not None:
+                log.debug(
+                    "Will enforce BringOnlineAndExpirationDelta="
+                    + str(timeout_delta)
+                    + "s"
+                )
+                if max_time_in_queue - self.params["bring_online"] < timeout_delta:
+                    raise BadRequest(
+                        "Bringonline and Expiration timeout must be at least "
+                        + str(timeout_delta)
+                        + " seconds apart"
+                    )
+
         if self.params["overwrite"]:
             overwrite_flag = "Y"
         elif self.params["overwrite_on_retry"]:
