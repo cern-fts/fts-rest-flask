@@ -28,6 +28,7 @@ DEFAULT_PARAMS = {
     "gridftp": "",
     "job_metadata": None,
     "overwrite": False,
+    "overwrite_on_retry": False,
     "dst_file_report": False,
     "reuse": None,
     "multihop": False,

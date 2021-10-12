@@ -15,7 +15,7 @@
 from sqlalchemy import Column, DateTime, Integer, String, Enum
 from sqlalchemy.orm import relation, backref
 
-from .base import Base, Flag, Json
+from .base import Base, Flag, TernaryFlag, Json
 from .file import ArchivedFile
 
 JobActiveStates = [
@@ -51,7 +51,7 @@ class Job(Base):
     space_token = Column(String(255))
     internal_job_params = Column(String(255))
     dst_file_report = Column(Flag)
-    overwrite_flag = Column(Flag)
+    overwrite_flag = Column(TernaryFlag)
     job_finished = Column(DateTime)
     source_space_token = Column(String(255))
     copy_pin_lifetime = Column(Integer)
@@ -96,7 +96,7 @@ class ArchivedJob(Base):
     space_token = Column(String(255))
     internal_job_params = Column(String(255))
     dst_file_report = Column(Flag)
-    overwrite_flag = Column(Flag)
+    overwrite_flag = Column(TernaryFlag)
     job_finished = Column(DateTime)
     source_space_token = Column(String(255))
     copy_pin_lifetime = Column(Integer)

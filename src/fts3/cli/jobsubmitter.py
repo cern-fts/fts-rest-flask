@@ -25,6 +25,7 @@ from fts3.rest.client import Submitter, Delegator, Inquirer
 DEFAULT_PARAMS = {
     "checksum": "ADLER32",
     "overwrite": False,
+    "overwrite_on_retry": False,
     "reuse": False,
     "job_metadata": None,
     "file_metadata": None,
@@ -142,6 +143,13 @@ class JobSubmitter(Base):
             "-o",
             "--overwrite",
             dest="overwrite",
+            action="store_true",
+            help="overwrite files.",
+        )
+        self.opt_parser.add_option(
+            "-o",
+            "--overwrite--on-retry",
+            dest="overwrite_on_retry",
             action="store_true",
             help="overwrite files.",
         )
@@ -307,6 +315,10 @@ class JobSubmitter(Base):
         self._prepare_options()
         if self.params["ipv4"] and self.params["ipv6"]:
             self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
+        if self.params["overwrite"] and self.params["overwrite_on_retry"]:
+            self.opt_parser.error(
+                "overwrite and overwrite-on-retry can not be used at the same time"
+            )
 
     def _build_transfers(self):
         if self.options.bulk_file:
@@ -372,6 +384,7 @@ class JobSubmitter(Base):
             gridftp=self.options.gridftp_params,
             job_metadata=_metadata(self.options.job_metadata),
             overwrite=self.options.overwrite,
+            overwrite_on_retry=self.options.overwrite_on_retry,
             copy_pin_lifetime=self.options.pin_lifetime,
             reuse=self.options.reuse,
             retry=self.options.retry,
