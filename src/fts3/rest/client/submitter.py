@@ -43,11 +43,13 @@ class Submitter:
                 del job["params"]["checksum"]
             if "filesize" in job["params"]:
                 for f in job["files"]:
-                    f["filesize"] = job["params"]["filesize"]
+                    if "filesize" not in f:
+                        f["filesize"] = job["params"]["filesize"]
                 del job["params"]["filesize"]
             if "file_metadata" in job["params"]:
                 for f in job["files"]:
-                    f["metadata"] = job["params"]["file_metadata"]
+                    if "metadata" not in f:
+                        f["metadata"] = job["params"]["file_metadata"]
                 del job["params"]["file_metadata"]
 
         return json.dumps(job, indent=2)
