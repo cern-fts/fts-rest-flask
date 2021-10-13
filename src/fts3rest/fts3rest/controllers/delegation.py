@@ -241,12 +241,18 @@ class view(Delegation):
         """
         user = flask.request.environ["fts3.User.Credentials"]
 
+        user_agent = flask.request.environ.get("HTTP_USER_AGENT", None)
+        if not user_agent:
+            log.debug("No HTTP_USER_AGENT header found")
+
         if dlg_id != user.delegation_id:
             raise Forbidden("The requested ID and the credentials ID do not match")
 
         cred = Session.query(Credential).get((user.delegation_id, user.user_dn))
         if not cred:
             ret = None
+            if isinstance(user_agent, str) and user_agent.startswith("PycURL"):
+                return ret  # FTS-1734: Assure backwards compatibility with old clients who expect a null response
         else:
             ret = {
                 "termination_time": cred.termination_time,
