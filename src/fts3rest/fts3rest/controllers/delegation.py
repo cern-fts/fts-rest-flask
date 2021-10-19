@@ -16,6 +16,7 @@
 import json
 import logging
 import os
+import re
 import shlex
 import M2Crypto.threading
 
@@ -182,6 +183,18 @@ def _build_certificate():
     return ret
 
 
+def _adapt_response(user_agent):
+    match = re.compile("""fts-rest-client/(\d+)\.(\d+)""").search(user_agent)
+    if match:
+        major = int(match.group(1))
+        minor = int(match.group(2))
+        if major > 3:
+            return False
+        elif major == 3 and minor >= 12:
+            return False
+    return True
+
+
 class Delegation(View):
     """
     Operations to perform the delegation of credentials
@@ -242,17 +255,16 @@ class view(Delegation):
         user = flask.request.environ["fts3.User.Credentials"]
 
         user_agent = flask.request.environ.get("HTTP_USER_AGENT", None)
-        if not user_agent:
-            log.debug("No HTTP_USER_AGENT header found")
 
         if dlg_id != user.delegation_id:
             raise Forbidden("The requested ID and the credentials ID do not match")
 
         cred = Session.query(Credential).get((user.delegation_id, user.user_dn))
         if not cred:
-            ret = None
-            if isinstance(user_agent, str) and user_agent.startswith("PycURL"):
-                return ret  # FTS-1734: Assure backwards compatibility with old clients who expect a null response
+            if _adapt_response(user_agent):
+                return None  # FTS-1734: Assure backwards compatibility with old clients who expect a null response
+            else:
+                ret = None
         else:
             ret = {
                 "termination_time": cred.termination_time,
