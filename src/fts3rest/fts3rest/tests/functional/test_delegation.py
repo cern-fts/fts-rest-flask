@@ -23,9 +23,7 @@ class TestDelegation(TestController):
         delegation_id = self.app.get(
             url="/delegation/%s" % creds.delegation_id, status=200
         ).json
-        self.assertEqual(
-            delegation_id, []
-        )  # for Flask, I changed None to [], as it makes more sense
+        self.assertEqual(delegation_id, None)
 
     def test_get_termination_time(self):
         """
