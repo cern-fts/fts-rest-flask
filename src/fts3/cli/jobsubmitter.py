@@ -147,7 +147,6 @@ class JobSubmitter(Base):
             help="overwrite files.",
         )
         self.opt_parser.add_option(
-            "-o",
             "--overwrite--on-retry",
             dest="overwrite_on_retry",
             action="store_true",
