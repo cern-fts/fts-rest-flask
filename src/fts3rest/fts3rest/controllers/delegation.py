@@ -466,7 +466,7 @@ class voms(Delegation):
 
 class delegation_page(Delegation):
     @require_certificate
-    def dispatch_request(self, dlg_id):
+    def dispatch_request(self):
         """
         Render an HTML form to delegate the credentials
         """
