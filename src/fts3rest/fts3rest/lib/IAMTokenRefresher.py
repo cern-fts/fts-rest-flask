@@ -124,7 +124,10 @@ class IAMTokenRefresher(Thread):
                     for credential in credentials:
                         try:
                             credential = oidc_manager.refresh_access_token(credential)
-                            log.debug("OK refresh_access_token")
+                            log.debug(
+                                "OK refresh_access_token (exp=%s)"
+                                % str(credential.termination_time)
+                            )
                             Session.merge(credential)
                             Session.commit()
                         except Exception as ex:

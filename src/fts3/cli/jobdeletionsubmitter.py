@@ -161,9 +161,10 @@ class JobDeletionSubmitter(Base):
                 "SUBMITTED",
                 "READY",
                 "STAGING",
-                "QOS_TRANSITION",
-                "ACTIVE",
                 "DELETE",
+                "ARCHIVING",
+                "QOS_TRANSITION",
+                "QOS_REQUEST_SUBMITTED",
             ]:
                 self.logger.info("Job in state %s" % job["job_state"])
                 time.sleep(self.options.poll_interval)

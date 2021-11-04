@@ -40,6 +40,11 @@ class JobBuilder:
         for k, v in params.items():
             if v is None and k in DEFAULT_PARAMS:
                 params[k] = DEFAULT_PARAMS[k]
+
+        # Enforce JSON type for 'job_metadata'
+        if params["job_metadata"] is not None:
+            params["job_metadata"] = metadata(params["job_metadata"])
+
         return params
 
     def _build_internal_job_params(self):
@@ -174,6 +179,8 @@ class JobBuilder:
                 if shared_hashed_id
                 else generate_hashed_id(),
             )
+            if f["file_metadata"] != None:
+                f["file_metadata"] = metadata(f["file_metadata"])
             self.files.append(f)
 
     def _apply_selection_strategy(self):
@@ -230,10 +237,7 @@ class JobBuilder:
 
         auto_session_reuse = app.config.get("fts3.AutoSessionReuse", "false")
         log.debug(
-            "AutoSessionReuse is "
-            + str(auto_session_reuse)
-            + " job_type is"
-            + str(job_type)
+            "AutoSessionReuse=" + str(auto_session_reuse) + " job_type=" + str(job_type)
         )
         max_reuse_files = int(app.config.get("fts3.AutoSessionReuseMaxFiles", 1000))
         max_size_small_file = int(
@@ -261,7 +265,7 @@ class JobBuilder:
                     log.debug(
                         "The number of files "
                         + str(len(self.files))
-                        + "is bigger than the auto maximum reuse files "
+                        + " is bigger than the auto maximum reuse files "
                         + str(max_reuse_files)
                     )
                 else:
@@ -301,7 +305,7 @@ class JobBuilder:
         """
 
         job_type = None
-        log.debug("job type is " + str(job_type) + " reuse" + str(self.params["reuse"]))
+        log.debug("job_type=" + str(job_type) + " reuse=" + str(self.params["reuse"]))
 
         if self.params["multihop"]:
             job_type = "H"
@@ -310,7 +314,7 @@ class JobBuilder:
                 job_type = "Y"
             else:
                 job_type = "N"
-        log.debug("job type is " + str(job_type))
+        log.debug("job_type=" + str(job_type))
         self.is_bringonline = (
             self.params["copy_pin_lifetime"] > 0 or self.params["bring_online"] > 0
         )
@@ -333,6 +337,31 @@ class JobBuilder:
         if max_time_in_queue is not None:
             expiration_time = time.time() + max_time_in_queue
 
+        if max_time_in_queue is not None and self.params["bring_online"] > 0:
+            # Ensure that the bringonline and expiration delta is respected
+            timeout_delta = seconds_from_value(
+                app.config.get("fts3.BringOnlineAndExpirationDelta", None)
+            )
+            if timeout_delta is not None:
+                log.debug(
+                    "Will enforce BringOnlineAndExpirationDelta="
+                    + str(timeout_delta)
+                    + "s"
+                )
+                if max_time_in_queue - self.params["bring_online"] < timeout_delta:
+                    raise BadRequest(
+                        "Bringonline and Expiration timeout must be at least "
+                        + str(timeout_delta)
+                        + " seconds apart"
+                    )
+
+        if self.params["overwrite"]:
+            overwrite_flag = "Y"
+        elif self.params["overwrite_on_retry"]:
+            overwrite_flag = "R"
+        else:
+            overwrite_flag = None
+
         self.job = dict(
             job_id=self.job_id,
             job_state=job_initial_state,
@@ -348,11 +377,13 @@ class JobBuilder:
             submit_time=datetime.utcnow(),
             priority=max(min(int(self.params["priority"]), 5), 1),
             space_token=self.params["spacetoken"],
-            overwrite_flag=safe_flag(self.params["overwrite"]),
+            overwrite_flag=overwrite_flag,
+            dst_file_report=safe_flag(self.params["dst_file_report"]),
             source_space_token=self.params["source_spacetoken"],
             copy_pin_lifetime=int(self.params["copy_pin_lifetime"]),
             checksum_method=self.params["verify_checksum"],
             bring_online=self.params["bring_online"],
+            archive_timeout=self.params["archive_timeout"],
             job_metadata=self.params["job_metadata"],
             internal_job_params=self._build_internal_job_params(),
             max_time_in_queue=expiration_time,
@@ -430,10 +461,12 @@ class JobBuilder:
             priority=3,
             space_token=self.params["spacetoken"],
             overwrite_flag="N",
+            dst_file_report="N",
             source_space_token=self.params["source_spacetoken"],
             copy_pin_lifetime=-1,
             checksum_method=None,
             bring_online=None,
+            archive_timeout=None,
             job_metadata=self.params["job_metadata"],
             internal_job_params=None,
             max_time_in_queue=self.params["max_time_in_queue"],

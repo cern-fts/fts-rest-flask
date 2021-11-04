@@ -79,9 +79,14 @@ class TestJobListing(TestController):
         """
         self.setup_gridsite_environment()
         error = self.app.get(url="/jobs/1234x", status=404).json
+        # error_message = json.loads(error['http_message'])
 
-        self.assertEqual(error["status"], "404 Not Found")
-        self.assertEqual(error["message"], 'No job with the id "1234x" has been found')
+        # self.assertEquals(error['status'], '404 Not Found')
+        self.assertEquals(error["job_id"], "1234x")
+        self.assertEquals(error["http_status"], "404 Not Found")
+        self.assertEquals(
+            error["http_message"], 'No job with the id "1234x" has been found'
+        )
 
     def test_list_job_default(self):
         """
@@ -299,7 +304,7 @@ class TestJobListing(TestController):
 
         UserCredentials.get_granted_level_for = old_granted
 
-        self.assertEqual(error["status"], "403 Forbidden")
+        self.assertEqual(error["http_status"], "403 Forbidden")
 
     def test_get_missing_field(self):
         """
@@ -503,21 +508,25 @@ class TestJobListing(TestController):
         self.push_delegation()
 
         job1 = self._submit(file_metadata="a")
-        job2 = self._submit(file_metadata="5")
+        job2 = self._submit(file_metadata={"key": "value"})
         job3 = self._submit(file_metadata="?")
+        job4 = self._submit(file_metadata={"key": 5})
 
         jobs = self.app.get(
-            url="/jobs/%s?files=job_id,file_metadata" % ",".join([job1, job2, job3]),
+            url="/jobs/%s?files=job_id,file_metadata"
+            % ",".join([job1, job2, job3, job4]),
             status=200,
         ).json
 
-        self.assertEqual(3, len(jobs))
+        self.assertEqual(4, len(jobs))
         self.assertEqual(jobs[0]["job_id"], jobs[0]["files"][0]["job_id"])
-        self.assertEqual("a", jobs[0]["files"][0]["file_metadata"])
+        self.assertEqual({"label": "a"}, jobs[0]["files"][0]["file_metadata"])
         self.assertEqual(jobs[1]["job_id"], jobs[1]["files"][0]["job_id"])
-        self.assertEqual("5", jobs[1]["files"][0]["file_metadata"])
+        self.assertEqual({"key": "value"}, jobs[1]["files"][0]["file_metadata"])
         self.assertEqual(jobs[2]["job_id"], jobs[2]["files"][0]["job_id"])
-        self.assertEqual("?", jobs[2]["files"][0]["file_metadata"])
+        self.assertEqual({"label": "?"}, jobs[2]["files"][0]["file_metadata"])
+        self.assertEqual(jobs[3]["job_id"], jobs[3]["files"][0]["job_id"])
+        self.assertEqual({"key": 5}, jobs[3]["files"][0]["file_metadata"])
 
     def test_query_something_running(self):
         """

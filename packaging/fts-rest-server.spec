@@ -18,7 +18,6 @@ Requires:       gfal2-plugin-mock
 Requires:       python36-m2crypto
 Requires:       python36-requests
 Requires:       python36-flask
-Requires:       python36-sqlalchemy
 Requires:       python36-dateutil
 Requires:       python36-jwt
 
@@ -38,7 +37,8 @@ Requires:       python36-markupsafe
 Requires:       pyjwkest
 Requires:       Beaker
 Requires:       typing_extensions
-
+Requires:       SQLAlchemy >= 1.1.15
+Obsoletes:      python36-sqlalchemy
 Requires:       Mako
 Requires:       mysqlclient
 Requires:       jwcrypto

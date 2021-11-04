@@ -33,17 +33,21 @@ class OIDCmanager:
     def _configure_clients(self, providers_config):
         # log.debug('provider_info::: {}'.format(client.provider_info))
         for provider in providers_config:
-            client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
-            # Retrieve well-known configuration
-            client.provider_config(provider)
-            # Register
-            client_reg = RegistrationResponse(
-                client_id=providers_config[provider]["client_id"],
-                client_secret=providers_config[provider]["client_secret"],
-            )
-            client.store_registration_info(client_reg)
-            issuer = client.provider_info["issuer"]
-            self.clients[issuer] = client
+            try:
+                client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
+                # Retrieve well-known configuration
+                client.provider_config(provider)
+                # Register
+                client_reg = RegistrationResponse(
+                    client_id=providers_config[provider]["client_id"],
+                    client_secret=providers_config[provider]["client_secret"],
+                )
+                client.store_registration_info(client_reg)
+                issuer = client.provider_info["issuer"]
+                self.clients[issuer] = client
+            except Exception as ex:
+                log.warning("Exception registering provider: {}".format(provider))
+                log.warning(ex)
 
     def _retrieve_clients_keys(self):
         for provider in self.clients:
@@ -57,20 +61,25 @@ class OIDCmanager:
             for keybundle in keybundles:
                 keybundle.cache_time = cache_time
 
-    def get_provider_key(self, issuer, kid):
+    def filter_provider_keys(self, issuer, kid=None, alg=None):
         """
-        Get a Provider Key by ID
+        Return Provider Keys after applying Key ID and Algorithm filter.
+        If no filters match, return the full set.
         :param issuer: provider
         :param kid: Key ID
-        :return: key
-        :raise ValueError: if key not found
+        :param alg: Algorithm
+        :return: keys
+        :raise ValueError: client could not be retrieved
         """
-        client = self.clients[issuer]
-        keys = client.keyjar.get_issuer_keys(issuer)  # List of Keys (from pyjwkest)
-        for key in keys:
-            if key.kid == kid:
-                return key
-        raise ValueError("Key with kid {} not found".format(kid))
+        client = self.clients.get(issuer)
+        if client is None:
+            raise ValueError("Could not retrieve client for issuer={}".format(issuer))
+        # List of Keys (from pyjwkest)
+        keys = client.keyjar.get_issuer_keys(issuer)
+        filtered_keys = [key for key in keys if key.kid == kid or key.alg == alg]
+        if len(filtered_keys) is 0:
+            return keys
+        return filtered_keys
 
     def introspect(self, issuer, access_token):
         """
@@ -117,11 +126,10 @@ class OIDCmanager:
                 method="POST",
                 authn_method="client_secret_basic",
             )
-            log.debug("after do any")
             response = response.json()
             log.debug("response: {}".format(response))
             refresh_token = response["refresh_token"]
-            log.debug("REFRESH TOKEN IS {}".format(refresh_token))
+            log.debug("refresh_token_response::: {}".format(refresh_token))
         except Exception as ex:
             log.warning("Exception raised when requesting refresh token")
             log.warning(ex)
