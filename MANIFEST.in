@@ -1,0 +1,6 @@
+prune *
+graft src/fts3
+graft src/cli
+
+include LICENSE README.md pyproject.toml setup.py setup.cfg
+global-exclude __pycache__ *.py[cod] .* *.sh  migration_docs.md pre-commit

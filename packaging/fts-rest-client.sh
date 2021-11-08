@@ -17,6 +17,7 @@ echo "Version: ${VERSION}"
 # Copying files for dist
 cp ../LICENSE ${DISTDIR}
 cp ../setup.py ${DISTDIR}
+cp ../setup.cfg ${DISTDIR}
 cp -r ../src/cli ../src/fts3 ${DISTDIR}/src
 
 # Create tarball
