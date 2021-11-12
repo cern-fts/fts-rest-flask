@@ -87,10 +87,7 @@ class Request:
             raise ServerError(str(code))
 
     def method(self, method, url, body=None, headers=None, user=None, passw=None):
-        _headers = {
-            "Accept": "application/json",
-            "User-Agent": "fts-rest-client/3.12.0",
-        }
+        _headers = {"Accept": "application/json"}
         if headers:
             _headers.update(headers)
         if self.access_token:
