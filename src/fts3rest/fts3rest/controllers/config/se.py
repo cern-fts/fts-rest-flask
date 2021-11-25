@@ -123,6 +123,7 @@ def get_se_config():
             "se_metadata",
             "site",
             "debug_level",
+            "eviction",
         ]:
             link_config[attr] = getattr(opt, attr)
             config["se_info"] = link_config
