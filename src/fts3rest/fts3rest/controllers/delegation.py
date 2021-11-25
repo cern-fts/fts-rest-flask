@@ -184,7 +184,7 @@ def _build_certificate():
 
 
 def _adapt_response(user_agent):
-    match = re.compile("""fts-rest-client/(\d+)\.(\d+)""").search(user_agent)
+    match = re.compile("""fts-.+/(\d+)\.(\d+)""").search(user_agent)
     if match:
         major = int(match.group(1))
         minor = int(match.group(2))
