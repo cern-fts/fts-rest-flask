@@ -49,6 +49,7 @@ DEFAULT_PARAMS = {
     "ipv4": False,
     "ipv6": False,
     "buffer_size": None,
+    "os_project_id": None,
 }
 
 
@@ -296,6 +297,13 @@ class JobSubmitter(Base):
             type=int,
             help="TCP buffer size (expressed in bytes) that will be used for the given transfer job",
         )
+        self.opt_parser.add_option(
+            "--os-project-id",
+            dest="os_project_id",
+            type="string",
+            help="OS project id(s) that indicates the storage space in Swift, "
+            "in the case of transferring between Swift endpoints, use format source_id:dest_id",
+        )
 
     def validate(self):
         self.checksum = None
@@ -395,6 +403,7 @@ class JobSubmitter(Base):
             s3alternate=self.options.s3alternate,
             target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
+            os_project_id=self.options.os_project_id,
         )
 
     def _do_submit(self, context):

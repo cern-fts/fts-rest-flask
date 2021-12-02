@@ -39,6 +39,7 @@ DEFAULT_PARAMS = {
     "priority": 3,
     "max_time_in_queue": 0,
     "s3alternate": False,
+    "os_project_id": None,
 }
 
 

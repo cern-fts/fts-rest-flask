@@ -67,6 +67,8 @@ class JobBuilder:
             param_list.append("ipv6")
         if self.params.get("s3alternate", False):
             param_list.append("s3alternate")
+        if self.params.get("os_project_id", None):
+            param_list.append("osprojectid:%s" % str(self.params["os_project_id"]))
 
         if len(param_list) == 0:
             return None

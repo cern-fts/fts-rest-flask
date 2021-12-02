@@ -137,6 +137,7 @@ def new_job(
     s3alternate=False,
     nostreams=1,
     buffer_size=None,
+    os_project_id=None,
 ):
     """
     Creates a new dictionary representing a job
@@ -164,6 +165,8 @@ def new_job(
         s3alternate:       Use S3 alternate url schema
         nostreams:         Number of streams
         buffer_size:       Tcp buffer size (in bytes) that will be used for the given transfer-job
+        os_project_id:     OS project id(s) that indicates the storage space in Swift,
+                           in the case of transferring between Swift endpoints, use format source_id:dest_id
 
     Returns:
         An initialized dictionary representing a job
@@ -208,6 +211,7 @@ def new_job(
         s3alternate=s3alternate,
         nostreams=nostreams,
         buffer_size=buffer_size,
+        os_project_id=os_project_id,
     )
     job = dict(files=transfers, delete=deletion, params=params)
     return job
