@@ -9,3 +9,4 @@ PyJWT
 jwcrypto
 oic
 Mako
+keystoneauth1

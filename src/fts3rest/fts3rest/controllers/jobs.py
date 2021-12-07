@@ -701,7 +701,7 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id):
                 log.debug("Failed to save credentials for dn: %s because: %s" % (user_dn, str(ex)))
                 Session.rollback()
     else:
-        log.info("Error retrieving cloud credential %s for storage %s", (user_dn, storage_name))
+        log.info("Error retrieving cloud credential %s for storage %s" % (user_dn, storage_name))
 
 
 @authorize(TRANSFER)
