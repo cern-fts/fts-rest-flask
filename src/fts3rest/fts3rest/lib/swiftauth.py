@@ -24,7 +24,7 @@ from keystoneauth1.identity import v3
 log = logging.getLogger(__name__)
 
 
-def _set_swift_credential_cache(cred, cloud_user, os_token, os_project_id):
+def set_swift_credential_cache(cred, cloud_user, os_token, os_project_id):
     cred['user_dn'] = cloud_user.user_dn
     cred['os_project_id'] = os_project_id
     cred['storage_name'] = cloud_user.storage_name
@@ -47,7 +47,7 @@ def get_os_token(cloud_user, access_token, cloud_storage, project_id):
     sess = session.Session(auth=keystone_auth)
     try:
         os_token = sess.get_token()
-        cloudcredential = _set_swift_credential_cache(cloudcredential, cloud_user, os_token, project_id)
+        cloudcredential = set_swift_credential_cache(cloudcredential, cloud_user, os_token, project_id)
         log.debug("Retrieved OS token %s" % os_token)
     except Exception as ex:
         log.warning("Failed to retrieve OS token because: %s" % str(ex))

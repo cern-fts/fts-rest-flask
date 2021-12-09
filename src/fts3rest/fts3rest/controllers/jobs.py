@@ -683,14 +683,29 @@ def modify(job_id_list):
     return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
 
 
-def _set_swift_credentials(se_url, user_dn, access_token, os_project_id):
+def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_tokens):
     """
     Retrieve and save OS token for accessing Swift object store
     """
     storage_name = 'SWIFT:' + se_url[se_url.rfind('/') + 1:]
     cloud_user = Session.query(CloudStorageUser).filter_by(user_dn=user_dn, storage_name=storage_name).one()
     cloud_storage = Session.query(CloudStorage).get(storage_name)
+
     if cloud_user and cloud_storage:
+        # handling manually set OS tokens (takes precedence)
+        if os_tokens:
+            for tok in os_tokens:
+                pair = tok.split(':')
+                if pair[0] == os_project_id:
+                    cloud_credential = swiftauth.set_swift_credential_cache(dict(), cloud_user, pair[1], os_project_id)
+                    try:
+                        Session.merge(CloudCredentialCache(**cloud_credential))
+                        Session.commit()
+                    except Exception as ex:
+                        log.debug("Failed to save credentials for dn: %s because: %s" % (user_dn, str(ex)))
+                        Session.rollback()
+                    return
+        # fetch OS token using OIDC access token
         cloud_credential = swiftauth.get_os_token(cloud_user, access_token, cloud_storage, os_project_id)
         log.debug("cloud credential string: %s" % str(cloud_credential))
         if cloud_credential:
@@ -752,12 +767,12 @@ def submit():
         except AttributeError:
             raise BadRequest("No OS project id is provided for the Swift transfer")
         if source_se[:5] == 'swift':
-            _set_swift_credentials(source_se, user.user_dn, access_token, os_project_ids[cnt])
+            _set_swift_credentials(source_se, user.user_dn, access_token, os_project_ids[cnt], populated.params['os_token'])
             cnt += 1
         if dest_se[:5] == 'swift':
             if cnt == 1 and len(os_project_ids) < 2:
                 raise BadRequest("Only one OS project id is provided for the Swift-to-Swift transfer")
-            _set_swift_credentials(dest_se, user.user_dn, access_token, os_project_ids[cnt])
+            _set_swift_credentials(dest_se, user.user_dn, access_token, os_project_ids[cnt], populated.params['os_token'])
 
     # Insert the job
     try:

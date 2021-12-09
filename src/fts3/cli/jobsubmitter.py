@@ -50,6 +50,7 @@ DEFAULT_PARAMS = {
     "ipv6": False,
     "buffer_size": None,
     "os_project_id": None,
+    "os_token": None,
 }
 
 
@@ -304,6 +305,14 @@ class JobSubmitter(Base):
             help="OS project id(s) that indicates the storage space in Swift, "
             "in the case of transferring between Swift endpoints, use format source_id:dest_id",
         )
+        self.opt_parser.add_option(
+            "--os-token",
+            action="append",
+            dest="os_token",
+            type="string",
+            help="OPTIONAL OS token to authenticate to Swift store, "
+                 "use format corresponding_os_project_id:os_token"
+        )
 
     def validate(self):
         self.checksum = None
@@ -404,6 +413,7 @@ class JobSubmitter(Base):
             target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
             os_project_id=self.options.os_project_id,
+            os_token=self.options.os_token,
         )
 
     def _do_submit(self, context):
