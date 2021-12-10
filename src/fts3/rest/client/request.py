@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 import json
-
+import os
 import urllib3
 import requests
 
@@ -36,7 +36,14 @@ class Request:
         self.passwd = passwd
         self.access_token = access_token
         self.verify = verify
-        self.capath = capath
+
+        if capath:
+            self.capath = capath
+        elif "X509_CERT_DIR" in os.environ:
+            self.capath = os.environ["X509_CERT_DIR"]
+        else:
+            self.capath = "/etc/grid-security/certificates"
+
         # Disable the warnings
         if not verify:
             urllib3.disable_warnings()
