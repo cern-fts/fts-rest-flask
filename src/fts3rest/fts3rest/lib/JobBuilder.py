@@ -299,6 +299,19 @@ class JobBuilder:
                         for file in self.files:
                             file["hashed_id"] = shared_hashed_id
 
+    def _set_os_token_dict(self):
+        if not self.params["os_token"]:
+            return
+
+        os_token = dict()
+        try:
+            for tok in self.params["os_token"]:
+                pair = tok.split(':')
+                os_token[pair[0]] = pair[1]
+            self.params["os_token"] = os_token
+        except Exception:
+            raise BadRequest("Invalid input of os_token")
+
     def _populate_transfers(self, files_list):
         """
         Initializes the list of transfers
@@ -399,6 +412,9 @@ class JobBuilder:
             self.job["user_cred"] = self.params["credential"]
         elif "credentials" in self.params:
             self.job["user_cred"] = self.params["credentials"]
+
+        if "os_token" in self.params.keys():
+            self._set_os_token_dict()
 
         # If reuse is enabled, or it is a bring online job, generate one single "hash" for all files
         if job_type in ("H", "Y") or self.is_bringonline:

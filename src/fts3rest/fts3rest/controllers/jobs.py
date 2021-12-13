@@ -693,20 +693,11 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_toke
 
     if cloud_user and cloud_storage:
         # handling manually set OS tokens (takes precedence)
-        if os_tokens:
-            for tok in os_tokens:
-                pair = tok.split(':')
-                if pair[0] == os_project_id:
-                    cloud_credential = swiftauth.set_swift_credential_cache(dict(), cloud_user, pair[1], os_project_id)
-                    try:
-                        Session.merge(CloudCredentialCache(**cloud_credential))
-                        Session.commit()
-                    except Exception as ex:
-                        log.debug("Failed to save credentials for dn: %s because: %s" % (user_dn, str(ex)))
-                        Session.rollback()
-                    return
+        if os_tokens and os_project_id in os_tokens.keys():
+            cloud_credential = swiftauth.set_swift_credential_cache(dict(), cloud_user, os_tokens[os_project_id], os_project_id)
         # fetch OS token using OIDC access token
-        cloud_credential = swiftauth.get_os_token(cloud_user, access_token, cloud_storage, os_project_id)
+        else:
+            cloud_credential = swiftauth.get_os_token(cloud_user, access_token, cloud_storage, os_project_id)
         log.debug("cloud credential string: %s" % str(cloud_credential))
         if cloud_credential:
             try:
