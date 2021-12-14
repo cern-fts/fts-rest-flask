@@ -153,5 +153,8 @@ deploy_rpm:
   dependencies:
     - client_rpm
     - server_rpm
-
-
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "develop"'
+      when: on_success
+    - if: '$CI_COMMIT_REF_NAME != "develop"'
+      when: manual
