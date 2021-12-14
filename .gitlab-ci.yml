@@ -116,8 +116,8 @@ client_rpm:
     - RELEASE=$(printf "%sgit%s" $(date +%y%m%d%H%M) ${CI_COMMIT_SHORT_SHA})
     - rpmbuild -bs --define "_release ${RELEASE}" fts-rest-client.spec
     - rpmbuild -bb --define "_release ${RELEASE}" fts-rest-client.spec
-    - mkdir /builds/fts/fts-rest-flask/artifacts
-    - mv ~/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
+    - mkdir artifacts/
+    - mv -v ~/rpmbuild/RPMS/noarch/* artifacts/
   artifacts:
     when: on_success
     untracked: true
@@ -131,8 +131,8 @@ server_rpm:
     - RELEASE=$(printf "%sgit%s" $(date +%y%m%d%H%M) ${CI_COMMIT_SHORT_SHA})
     - rpmbuild -bs --define "_release ${RELEASE}" fts-rest-server.spec
     - rpmbuild -bb --define "_release ${RELEASE}" fts-rest-server.spec
-    - mkdir /builds/fts/fts-rest-flask/artifacts
-    - mv ~/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
+    - mkdir artifacts/
+    - mv -v ~/rpmbuild/RPMS/noarch/* artifacts/
   artifacts:
     when: on_success
     untracked: true
