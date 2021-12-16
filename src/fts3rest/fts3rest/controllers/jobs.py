@@ -25,7 +25,7 @@ import logging
 from fts3rest.model import Job, File, JobActiveStates, FileActiveStates
 from fts3rest.model import DataManagement, DataManagementActiveStates
 from fts3rest.model import Credential, FileRetryLog
-from fts3rest.model import CloudStorage, CloudStorageUser, CloudCredentialCache
+from fts3rest.model import CloudStorage, CloudCredentialCache
 from fts3rest.model.meta import Session
 
 from fts3rest.lib import swiftauth
@@ -688,16 +688,16 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_toke
     Retrieve and save OS token for accessing Swift object store
     """
     storage_name = 'SWIFT:' + se_url[se_url.rfind('/') + 1:]
-    cloud_user = Session.query(CloudStorageUser).filter_by(user_dn=user_dn, storage_name=storage_name).one()
     cloud_storage = Session.query(CloudStorage).get(storage_name)
 
-    if cloud_user and cloud_storage:
+    if cloud_storage:
         # handling manually set OS tokens (takes precedence)
         if os_tokens and os_project_id in os_tokens.keys():
-            cloud_credential = swiftauth.set_swift_credential_cache(dict(), cloud_user, os_tokens[os_project_id], os_project_id)
+            cloud_credential = swiftauth.set_swift_credential_cache(dict(), user_dn, storage_name,
+                                                                    os_tokens[os_project_id], os_project_id)
         # fetch OS token using OIDC access token
         else:
-            cloud_credential = swiftauth.get_os_token(cloud_user, access_token, cloud_storage, os_project_id)
+            cloud_credential = swiftauth.get_os_token(user_dn, access_token, cloud_storage, os_project_id)
         log.debug("cloud credential string: %s" % str(cloud_credential))
         if cloud_credential:
             try:
@@ -750,17 +750,17 @@ def submit():
     # Exchange access token for OS token(s) for swift stores
     source_se = populated.job['source_se']
     dest_se = populated.job['dest_se']
-    if user.method == 'oauth2' and (source_se[:5] == 'swift' or dest_se[:5] == 'swift'):
+    if user.method == 'oauth2' and (source_se.startswith('swift') or dest_se.startswith('swift')):
         access_token = credential.proxy[:credential.proxy.find(':')]
         try:
             os_project_ids = populated.job['os_project_id'].split(':')
             cnt = 0
         except AttributeError:
             raise BadRequest("No OS project id is provided for the Swift transfer")
-        if source_se[:5] == 'swift':
+        if source_se.startswith('swift'):
             _set_swift_credentials(source_se, user.user_dn, access_token, os_project_ids[cnt], populated.params['os_token'])
             cnt += 1
-        if dest_se[:5] == 'swift':
+        if dest_se.startswith('swift'):
             if cnt == 1 and len(os_project_ids) < 2:
                 raise BadRequest("Only one OS project id is provided for the Swift-to-Swift transfer")
             _set_swift_credentials(dest_se, user.user_dn, access_token, os_project_ids[cnt], populated.params['os_token'])
