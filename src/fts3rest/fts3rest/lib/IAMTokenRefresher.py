@@ -136,7 +136,6 @@ class IAMTokenRefresher(Thread):
                                 % (str(credential.dn), str(ex))
                             )
                             Session.rollback()
-                            raise
                     time.sleep(self.refresh_interval)
             else:
                 log.debug("THREAD ID: {}".format(current_thread().ident))
