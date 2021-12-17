@@ -68,7 +68,7 @@ class ThreadLocalCache:
 
         # Remove expired entries from cache
         for _dict in dict_list:
-            for key in _dict.keys():
+            for key in list(_dict):
                 if ThreadLocalCache.check_expiry(
                     _dict[key][1], ThreadLocalCache.cache_entry_life
                 ):
