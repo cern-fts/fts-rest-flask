@@ -261,7 +261,7 @@ class view(Delegation):
 
         cred = Session.query(Credential).get((user.delegation_id, user.user_dn))
         if not cred:
-            if _adapt_response(user_agent):
+            if user_agent is None or _adapt_response(user_agent):
                 return None  # FTS-1734: Assure backwards compatibility with old clients who expect a null response
             else:
                 ret = None
