@@ -81,6 +81,14 @@ cp fts3rest/fts-rest.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/fts-rest
 %attr(0755,fts3,fts3) /var/log/fts3rest
 %{_libexecdir}/fts3rest
 
+# Create fts3 user and group
+%pre
+getent group fts3 >/dev/null || groupadd -r fts3
+getent passwd fts3 >/dev/null || \
+    useradd -r -m -g fts3 -d /var/log/fts3 -s /sbin/nologin \
+    -c "File Transfer Service user" fts3
+exit 0
+
 # Install, set SELinux
 %post
 if [ "$1" -eq "1" ] ; then
