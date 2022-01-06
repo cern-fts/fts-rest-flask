@@ -130,12 +130,25 @@ class IAMTokenRefresher(Thread):
                             )
                             Session.merge(credential)
                             Session.commit()
-                        except Exception as ex:
+                        except SQLAlchemyError as ex:
                             log.warning(
-                                "Failed to refresh token for dn: %s because: %s"
+                                "Failed to update refresh token for dn: %s because: %s"
                                 % (str(credential.dn), str(ex))
                             )
                             Session.rollback()
+                        except Exception as ex:
+                            if credential.termination_time <= datetime.utcnow():
+                                Session.delete(credential)
+                                Session.commit()
+                                log.warning(
+                                    "Deleting token for dn: %s refreshing failed because: %s"
+                                    % (str(credential.dn), str(ex))
+                                )
+                            else:
+                                log.warning(
+                                    "Failed to refresh token for dn: %s because: %s"
+                                    % (str(credential.dn), str(ex))
+                                )
                     time.sleep(self.refresh_interval)
             else:
                 log.debug("THREAD ID: {}".format(current_thread().ident))
