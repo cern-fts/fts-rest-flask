@@ -83,6 +83,9 @@ def fts3_config_load(path="/etc/fts3/ftsrestconfig", test=False):
         raise ValueError(
             "Database type '%s' is not recognized" % fts3cfg["fts3.DbType"]
         )
+    # SQLAlquemy configuration
+    fts3cfg["sqlalchemy.pool_timeout"] = fts3cfg["fts3.pool_timeout"]
+    fts3cfg["sqlalchemy.pool_size"] = fts3cfg["fts3.pool_size"]
 
     # Initialize roles
     fts3cfg["fts3.Roles"] = {}
