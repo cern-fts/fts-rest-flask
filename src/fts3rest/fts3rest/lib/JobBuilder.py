@@ -316,7 +316,8 @@ class JobBuilder:
                 job_type = "N"
         log.debug("job_type=" + str(job_type))
         self.is_bringonline = (
-            self.params["copy_pin_lifetime"] > 0 or self.params["bring_online"] > 0
+            safe_int(self.params["copy_pin_lifetime"]) > 0
+            or safe_int(self.params["bring_online"]) > 0
         )
 
         self.is_qos_cdmi_transfer = (
@@ -337,7 +338,7 @@ class JobBuilder:
         if max_time_in_queue is not None:
             expiration_time = time.time() + max_time_in_queue
 
-        if max_time_in_queue is not None and self.params["bring_online"] > 0:
+        if max_time_in_queue is not None and safe_int(self.params["bring_online"]) > 0:
             # Ensure that the bringonline and expiration delta is respected
             timeout_delta = seconds_from_value(
                 app.config.get("fts3.BringOnlineAndExpirationDelta", None)
@@ -348,7 +349,10 @@ class JobBuilder:
                     + str(timeout_delta)
                     + "s"
                 )
-                if max_time_in_queue - self.params["bring_online"] < timeout_delta:
+                if (
+                    max_time_in_queue - safe_int(self.params["bring_online"])
+                    < timeout_delta
+                ):
                     raise BadRequest(
                         "Bringonline and Expiration timeout must be at least "
                         + str(timeout_delta)
@@ -380,10 +384,10 @@ class JobBuilder:
             overwrite_flag=overwrite_flag,
             dst_file_report=safe_flag(self.params["dst_file_report"]),
             source_space_token=self.params["source_spacetoken"],
-            copy_pin_lifetime=int(self.params["copy_pin_lifetime"]),
+            copy_pin_lifetime=safe_int(self.params["copy_pin_lifetime"]),
             checksum_method=self.params["verify_checksum"],
-            bring_online=self.params["bring_online"],
-            archive_timeout=self.params["archive_timeout"],
+            bring_online=safe_int(self.params["bring_online"]),
+            archive_timeout=safe_int(self.params["archive_timeout"]),
             job_metadata=self.params["job_metadata"],
             internal_job_params=self._build_internal_job_params(),
             max_time_in_queue=expiration_time,

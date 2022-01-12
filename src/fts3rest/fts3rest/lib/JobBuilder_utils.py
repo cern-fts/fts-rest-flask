@@ -122,6 +122,21 @@ def safe_filesize(size):
         return float(size)
 
 
+def safe_int(param, default=-1):
+    """
+    Checks if param is of type int
+    If it is not, try to convert it
+    If it fails, make it default
+    """
+    if isinstance(param, int):
+        return param
+    else:
+        try:
+            return int(param)
+        except:
+            return default
+
+
 def generate_hashed_id():
     """
     Generates a uniformly distributed value between 0 and 2**16
