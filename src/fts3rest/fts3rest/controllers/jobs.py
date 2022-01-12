@@ -692,6 +692,8 @@ def submit():
     It can be used to validate (i.e in Python, jsonschema.validate)
     """
     log.debug("submitting job")
+    log.debug("submit::request.data={}".format(str(request.data)))
+    log.debug("submit::request.values={}".format(str(request.values)))
     # First, the request has to be valid JSON
     submitted_dict = get_input_as_dict(request)
 

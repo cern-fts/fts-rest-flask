@@ -587,6 +587,7 @@ class JobBuilder:
         except ValueError as ex:
             raise BadRequest("Invalid value within the request: %s" % str(ex))
         except TypeError as ex:
+            log.exception("JobBuilder -- printing stacktrace")
             raise BadRequest("Malformed request: %s" % str(ex))
         except KeyError as ex:
             raise BadRequest("Missing parameter: %s" % str(ex))
