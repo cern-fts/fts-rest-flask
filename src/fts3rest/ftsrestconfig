@@ -19,6 +19,11 @@ ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
 TokenRefreshDaemonIntervalInSeconds=600
 
+#The alias used for the FTS endpoint, will be published as such in the dashboard transfers UI http://dashb-wlcg-transfers.cern.ch/ui/
+Alias=replacethis
+
+MonitoringMessaging=false
+
 pool_timeout=10
 pool_size=10
 
