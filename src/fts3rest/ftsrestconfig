@@ -24,6 +24,7 @@ Alias=replacethis
 
 MonitoringMessaging=false
 
+[sqlalchemy]
 pool_timeout=10
 pool_size=10
 
