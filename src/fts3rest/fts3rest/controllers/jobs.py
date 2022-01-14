@@ -696,8 +696,12 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_toke
             cloud_credential = swiftauth.set_swift_credential_cache(dict(), user_dn, storage_name,
                                                                     os_tokens[os_project_id], os_project_id)
         # fetch OS token using OIDC access token
-        else:
+        elif access_token:
             cloud_credential = swiftauth.get_os_token(user_dn, access_token, cloud_storage, os_project_id)
+        # return if no OS token and OIDC token provided
+        else:
+            log.info("Failed to set cloud credential %s for storage %s because none provided" % (user_dn, storage_name))
+            return
         log.debug("cloud credential string: %s" % str(cloud_credential))
         if cloud_credential:
             try:
@@ -750,8 +754,10 @@ def submit():
     # Exchange access token for OS token(s) for swift stores
     source_se = populated.job['source_se']
     dest_se = populated.job['dest_se']
-    if user.method == 'oauth2' and (source_se.startswith('swift') or dest_se.startswith('swift')):
-        access_token = credential.proxy[:credential.proxy.find(':')]
+    if source_se.startswith('swift') or dest_se.startswith('swift'):
+        access_token = None
+        if user.method == 'oauth2':
+            access_token = credential.proxy[:credential.proxy.find(':')]
         try:
             os_project_ids = populated.job['os_project_id'].split(':')
             cnt = 0
