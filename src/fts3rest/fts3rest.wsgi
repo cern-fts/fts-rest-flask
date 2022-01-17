@@ -1,7 +1,5 @@
 from fts3rest.config.middleware import create_app
 
 default_config_filename = '/etc/fts3/ftsrestconfig'
-#default_config_filename = (
-#    "/home/ftsflask/fts-rest-flask/src/fts3rest/fts3rest/tests/fts3testconfig"
-#)
+
 application = create_app(default_config_filename)
