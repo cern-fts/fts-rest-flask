@@ -120,6 +120,7 @@ class IAMTokenRefresher(Thread):
                         .filter(Credential.proxy.notilike("%CERTIFICATE%"))
                         .all()
                     )
+                    Session.commit()
                     log.debug("{} credentials to refresh".format(len(credentials)))
                     for credential in credentials:
                         try:
