@@ -11,6 +11,7 @@ BuildRequires:  python3
 Requires:       python3
 Requires:       python36-m2crypto
 Requires:       python36-requests
+Obsoletes:      fts-rest-cli
 
 BuildArch:      noarch
 
