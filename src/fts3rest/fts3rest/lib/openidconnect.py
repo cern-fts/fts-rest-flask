@@ -187,7 +187,7 @@ class OIDCmanager:
             issuer, access_token, scope=scope, audience=audience
         )
         access_token = response["access_token"]
-        refresh_token = response.get("access_token", None)
+        refresh_token = response.get("refresh_token", None)
         return access_token, refresh_token
 
     def refresh_access_token(self, credential):
