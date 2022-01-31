@@ -406,6 +406,10 @@ class JobSubmitter(Base):
                     minutes=self.options.delegate_when_lifetime_lt
                 ),
             )
+            self.logger.debug(
+                "Delegation termination time: %s"
+                % delegator.get_info()["termination_time"]
+            )
 
         submitter = Submitter(context)
         job_id = submitter.submit(transfers=self.transfers, params=self.params)
