@@ -266,6 +266,10 @@ class view(Delegation):
             else:
                 ret = None
         else:
+            log.info(
+                "dlg_id=%s termination_time=%s"
+                % (user.delegation_id, cred.termination_time)
+            )
             ret = {
                 "termination_time": cred.termination_time,
                 "voms_attrs": cred.voms_attrs.split("\n"),
