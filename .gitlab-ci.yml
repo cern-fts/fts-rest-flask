@@ -5,13 +5,17 @@ stages:
   - tests
   - security
   - build
-  - deploy
+  - publish
 
 variables:
   MYSQL_DATABASE: ftsflask
   MYSQL_ROOT_PASSWORD: asdf
   PYTHONPATH: ./src:./src/fts3rest
   FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig_ci
+
+#--------------------------
+# Static Code Analysis
+#--------------------------
 
 black:
   # Check that every file has been formatted with black
@@ -49,6 +53,10 @@ radon:
   stage: static_code_analysis
   script:
   - source .gitlab-ci/radon.sh
+
+#--------------------------
+# Testing jobs
+#--------------------------
 
 functional_tests36:
   image: gitlab-registry.cern.ch/fts/fts-rest-flask:rpm
@@ -89,6 +97,10 @@ functional_tests38:
   - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
   - coverage report
 
+#--------------------------
+# Security
+#--------------------------
+
 bandit:
   # Find potential security issues in file.
   # It's allowed to fail as it may detect false positives.
@@ -97,6 +109,10 @@ bandit:
   script:
   - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
   needs: []
+
+#--------------------------
+# Build jobs
+#--------------------------
 
 client_wheel_sdist:
   stage: build
@@ -107,51 +123,87 @@ client_wheel_sdist:
     when: on_success
     untracked: true
 
-
 client_rpm:
   stage: build
   script:
     - rpmdev-setuptree
-    - cd packaging
-    - source fts-rest-client.sh
-    - rpmbuild -bs --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-client.spec
-    - rpmbuild -bb --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-client.spec
-    - mkdir /builds/fts/fts-rest-flask/artifacts
-    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
+    - ./packaging/fts-rest-client.sh
+    - mkdir ${CI_PROJECT_DIR}/artifacts/
+    - mv -v ~/rpmbuild/RPMS/noarch/* ${CI_PROJECT_DIR}/artifacts/
+    - mv -v ~/rpmbuild/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
   artifacts:
     when: on_success
     untracked: true
-
 
 server_rpm:
   stage: build
   script:
     - rpmdev-setuptree
-    - cd packaging
-    - source fts-rest-server.sh
-    - rpmbuild -bs --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-server.spec
-    - rpmbuild -bb --define "_version ${CI_COMMIT_SHORT_SHA}" fts-rest-server.spec
-    - mkdir /builds/fts/fts-rest-flask/artifacts
-    - mv /home/ci/rpmbuild/RPMS/noarch/* /builds/fts/fts-rest-flask/artifacts
+    - ./packaging/fts-rest-server.sh
+    - mkdir ${CI_PROJECT_DIR}/artifacts/
+    - mv -v ~/rpmbuild/RPMS/noarch/* ${CI_PROJECT_DIR}/artifacts/
+    - mv -v ~/rpmbuild/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
   artifacts:
     when: on_success
     untracked: true
 
+#--------------------------
+# Publish templates
+#--------------------------
 
-deploy_rpm:
-  stage: deploy
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  variables:
-    FTS_REPO: "/eos/workspace/f/fts/repo/www/repos/testing/el7/x86_64/"
-    SSH_OPTIONS: -o StrictHostKeyChecking=no -o GSSAPIAuthentication=yes -o GSSAPITrustDNS=yes -o GSSAPIDelegateCredentials=yes
-  script:
-    - yum install -y openssh-clients
-    - kinit gdrepo <<<$GDREPO_PASSWORD
-    - ls -la
-    - scp ${SSH_OPTIONS} artifacts/*.rpm gdrepo@lxplus.cern.ch:$FTS_REPO
-    - ssh ${SSH_OPTIONS} gdrepo@lxplus "createrepo --update ${FTS_REPO}"
+.publish-template: &publish-template_definition
+  stage: publish
+  image: gitlab-registry.cern.ch/eos/gitlab-eos/cc7:latest
   dependencies:
     - client_rpm
     - server_rpm
+  script:
+    - yum install -y python sssd-client sudo createrepo
+    - automount
+    - cat "$repo_passwd" | kinit "$repo_user"
+    - eosfusebind
+    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/${PREFIX}*.rpm
+    - sleep 60
+  tags:
+    - docker-privileged
+  retry: 2
 
+#--------------------------
+# Publish jobs
+#--------------------------
 
+rpms:
+  <<: *publish-template_definition
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "develop"'
+    - if: $CI_COMMIT_TAG != null
+      when: manual
+      variables:
+        PREFIX: "fts-rest-client"
+    - if: $CI_COMMIT_TAG != null
+      when: manual
+      variables:
+        PREFIX: "fts-rest-server"
+    - if: '$CI_COMMIT_REF_NAME != "develop" && $CI_COMMIT_TAG == null'
+      when: manual
+
+publish-production:
+  stage: publish
+  image: gitlab-registry.cern.ch/eos/gitlab-eos/cc7:latest
+  script:
+    - yum install -y python sssd-client sudo createrepo
+    - automount
+    - cat "$repo_passwd" | kinit "$repo_user"
+    - eosfusebind
+    - packaging/syncrepo --base-origin /eos/workspace/f/fts/repo/www/repos/rc --base-dest /eos/workspace/f/fts/repo/www/repos/ '*.rpm'
+    - sleep 60
+  tags:
+    - docker-privileged
+  retry: 2
+  rules:
+    - if: $CI_COMMIT_TAG != null
+      when: manual

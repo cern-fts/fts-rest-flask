@@ -151,7 +151,7 @@ def get(job_list):
     Get the job with the given ID
     """
     job_ids = job_list.split(",")
-    multistatus = False
+    status_error_count = 0
 
     # request is not available inside the generator
     environ = request.environ
@@ -184,8 +184,6 @@ def get(job_list):
             setattr(job, "http_status", "200 Ok")
             statuses.append(job)
         except HTTPException as ex:
-            if len(job_ids) == 1:
-                raise
             statuses.append(
                 dict(
                     job_id=job_id,
@@ -193,15 +191,21 @@ def get(job_list):
                     http_message=ex.description,
                 )
             )
-            multistatus = True
+            status_error_count += 1
 
     if len(job_ids) == 1:
-        return statuses[0]
-
-    if multistatus:
-        return Response(statuses, status=207, mimetype="application/json")
+        res = statuses[0]
+        if status_error_count == 1:
+            res = Response(
+                statuses[0],
+                status=statuses[0].get("http_status"),
+                mimetype="application/json",
+            )
+    elif status_error_count > 0:
+        res = Response(statuses, status=207, mimetype="application/json")
     else:
-        return statuses
+        res = statuses
+    return res
 
 
 @jsonify
@@ -688,6 +692,8 @@ def submit():
     It can be used to validate (i.e in Python, jsonschema.validate)
     """
     log.debug("submitting job")
+    log.debug("submit::request.data={}".format(str(request.data)))
+    log.debug("submit::request.values={}".format(str(request.values)))
     # First, the request has to be valid JSON
     submitted_dict = get_input_as_dict(request)
 

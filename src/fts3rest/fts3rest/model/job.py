@@ -15,7 +15,7 @@
 from sqlalchemy import Column, DateTime, Integer, String, Enum
 from sqlalchemy.orm import relation, backref
 
-from .base import Base, Flag, Json
+from .base import Base, Flag, TernaryFlag, Json
 from .file import ArchivedFile
 
 JobActiveStates = [
@@ -24,7 +24,9 @@ JobActiveStates = [
     "READY",
     "ACTIVE",
     "DELETE",
+    "ARCHIVING",
     "QOS_TRANSITION",
+    "QOS_REQUEST_SUBMITTED",
 ]
 JobTerminalStates = ["FINISHED", "FAILED", "FINISHEDDIRTY", "CANCELED"]
 
@@ -48,12 +50,14 @@ class Job(Base):
     max_time_in_queue = Column(Integer)
     space_token = Column(String(255))
     internal_job_params = Column(String(255))
-    overwrite_flag = Column(Flag)
+    dst_file_report = Column(Flag)
+    overwrite_flag = Column(TernaryFlag)
     job_finished = Column(DateTime)
     source_space_token = Column(String(255))
     copy_pin_lifetime = Column(Integer)
     verify_checksum = Column(String(1), name="checksum_method")
     bring_online = Column(Integer)
+    archive_timeout = Column(Integer)
     target_qos = Column(String(255))
     job_metadata = Column(Json(255))
     retry = Column(Integer)
@@ -91,12 +95,14 @@ class ArchivedJob(Base):
     max_time_in_queue = Column(Integer)
     space_token = Column(String(255))
     internal_job_params = Column(String(255))
-    overwrite_flag = Column(Flag)
+    dst_file_report = Column(Flag)
+    overwrite_flag = Column(TernaryFlag)
     job_finished = Column(DateTime)
     source_space_token = Column(String(255))
     copy_pin_lifetime = Column(Integer)
     verify_checksum = Column(String(1), name="checksum_method")
     bring_online = Column(Integer)
+    archive_timeout = Column(Integer)
     target_qos = Column(String(255))
     job_metadata = Column(Json(255))
     retry = Column(Integer)

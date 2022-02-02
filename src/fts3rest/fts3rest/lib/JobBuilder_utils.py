@@ -22,11 +22,14 @@ BASE_ID = uuid.UUID("urn:uuid:01874efb-4735-4595-bc9c-591aef8240c9")
 
 DEFAULT_PARAMS = {
     "bring_online": -1,
+    "archive_timeout": -1,
     "verify_checksum": False,
     "copy_pin_lifetime": -1,
     "gridftp": "",
     "job_metadata": None,
     "overwrite": False,
+    "overwrite_on_retry": False,
+    "dst_file_report": False,
     "reuse": None,
     "multihop": False,
     "source_spacetoken": "",
@@ -88,6 +91,15 @@ def validate_url(url):
         raise ValueError("Missing host (%s)" % url.geturl())
 
 
+def metadata(data):
+    if isinstance(data, dict):
+        return data
+    try:
+        return json.loads(data)
+    except:
+        return {"label": str(data)}
+
+
 def safe_flag(flag):
     """
     Traduces from different representations of flag values to True/False
@@ -108,6 +120,21 @@ def safe_filesize(size):
         return 0.0
     else:
         return float(size)
+
+
+def safe_int(param, default=-1):
+    """
+    Checks if param is of type int
+    If it is not, try to convert it
+    If it fails, make it default
+    """
+    if isinstance(param, int):
+        return param
+    else:
+        try:
+            return int(param)
+        except:
+            return default
 
 
 def generate_hashed_id():
@@ -264,6 +291,8 @@ def seconds_from_value(value):
             return int(value) * 60
         elif suffix == "h":
             return int(value) * 3600
+        elif suffix == "d":
+            return int(value) * 3600 * 24
         else:
             return None
     except Exception:

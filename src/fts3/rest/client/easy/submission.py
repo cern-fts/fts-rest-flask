@@ -117,10 +117,13 @@ def new_job(
     verify_checksum=False,
     reuse=None,
     overwrite=False,
+    overwrite_on_retry=False,
     multihop=False,
     source_spacetoken=None,
     spacetoken=None,
     bring_online=None,
+    dst_file_report=False,
+    archive_timeout=None,
     copy_pin_lifetime=None,
     retry=-1,
     retry_delay=0,
@@ -133,6 +136,7 @@ def new_job(
     sid=None,
     s3alternate=False,
     nostreams=1,
+    buffer_size=None,
 ):
     """
     Creates a new dictionary representing a job
@@ -143,10 +147,13 @@ def new_job(
         verify_checksum:   Enable checksum verification: source, destination, both or none
         reuse:             Enable reuse (all transfers are handled by the same process)
         overwrite:         Overwrite the destinations if exist
+        overwrite_on_retry: Enable overwrite files only during FTS retries
         multihop:          Treat the transfer as a multihop transfer
         source_spacetoken: Source space token
         spacetoken:        Destination space token
         bring_online:      Bring online timeout
+        dst_file_report:   Report on the destination tape file if it already exists and overwrite is off
+        archive_timeout:   Archive timeout
         copy_pin_lifetime: Pin lifetime
         retry:             Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
         metadata:          Metadata to bind to the job
@@ -156,6 +163,7 @@ def new_job(
         sid:               Specific id given by the client
         s3alternate:       Use S3 alternate url schema
         nostreams:         Number of streams
+        buffer_size:       Tcp buffer size (in bytes) that will be used for the given transfer-job
 
     Returns:
         An initialized dictionary representing a job
@@ -170,15 +178,24 @@ def new_job(
             raise ClientError(
                 "Bad request: verify_checksum does not contain a valid value"
             )
+
+    if overwrite != False and overwrite_on_retry != False:
+        raise ClientError(
+            "Bad request: overwrite and overwrite-on-retry can not be used at the same time"
+        )
+
     params = dict(
         verify_checksum=verify_checksum,
         reuse=reuse,
         spacetoken=spacetoken,
         bring_online=bring_online,
+        dst_file_report=dst_file_report,
+        archive_timeout=archive_timeout,
         copy_pin_lifetime=copy_pin_lifetime,
         job_metadata=metadata,
         source_spacetoken=source_spacetoken,
         overwrite=overwrite,
+        overwrite_on_retry=overwrite_on_retry,
         multihop=multihop,
         retry=retry,
         retry_delay=retry_delay,
@@ -190,6 +207,7 @@ def new_job(
         sid=sid,
         s3alternate=s3alternate,
         nostreams=nostreams,
+        buffer_size=buffer_size,
     )
     job = dict(files=transfers, delete=deletion, params=params)
     return job

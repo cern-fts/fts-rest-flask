@@ -21,10 +21,13 @@ class Submitter:
         self.context = context
 
     @staticmethod
-    def build_submission(transfers=None, delete=None, staging=None, **kwargs):
+    def build_submission(
+        transfers=None, delete=None, params=None, staging=None, **kwargs
+    ):
         job = dict()
-
         job["params"] = dict()
+        if params:
+            job["params"].update(params)
         job["params"].update(kwargs)
 
         if delete:
@@ -36,21 +39,25 @@ class Submitter:
             if "checksum" in kwargs:
                 for f in job["files"]:
                     if "checksum" not in f:
-                        f["checksum"] = kwargs["checksum"]
+                        f["checksum"] = job["params"]["checksum"]
                 del job["params"]["checksum"]
-            if "filesize" in kwargs:
+            if "filesize" in job["params"]:
                 for f in job["files"]:
-                    f["filesize"] = kwargs["filesize"]
+                    if "filesize" not in f:
+                        f["filesize"] = job["params"]["filesize"]
                 del job["params"]["filesize"]
-            if "file_metadata" in kwargs:
+            if "file_metadata" in job["params"]:
                 for f in job["files"]:
-                    f["metadata"] = kwargs["file_metadata"]
+                    if "metadata" not in f:
+                        f["metadata"] = job["params"]["file_metadata"]
                 del job["params"]["file_metadata"]
 
         return json.dumps(job, indent=2)
 
-    def submit(self, transfers=None, delete=None, **kwargs):
-        job = Submitter.build_submission(transfers, delete, **kwargs)
+    def submit(self, transfers=None, delete=None, params=None, **kwargs):
+        job = Submitter.build_submission(
+            transfers=transfers, delete=delete, params=params, **kwargs
+        )
         r = json.loads(self.context.post_json("/jobs", job))
         return r["job_id"]
 

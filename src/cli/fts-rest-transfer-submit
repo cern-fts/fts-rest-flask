@@ -5,7 +5,8 @@ import traceback
 
 from fts3.cli import JobSubmitter
 
-if __name__ == "__main__":
+
+def main():
     try:
         submitter = JobSubmitter()
         submitter(sys.argv[1:])
@@ -14,3 +15,7 @@ if __name__ == "__main__":
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

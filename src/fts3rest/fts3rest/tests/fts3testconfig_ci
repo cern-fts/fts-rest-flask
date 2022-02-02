@@ -19,6 +19,10 @@ ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
 TokenRefreshDaemonIntervalInSeconds=600
 
+[sqlalchemy]
+pool_timeout=10
+pool_size=10
+
 [roles]
 Public = vo:transfer;all:datamanagement
 lcgadmin = all:config

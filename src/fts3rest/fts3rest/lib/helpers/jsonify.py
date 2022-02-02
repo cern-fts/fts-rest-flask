@@ -20,6 +20,7 @@ import logging
 import types
 import functools
 from flask import Response
+from flask import stream_with_context
 
 log = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ def jsonify(func):
             and not isinstance(data, dict)
             and not isinstance(data, str)
         ):
-            data = stream_response(data)
+            data = stream_with_context(stream_response(data))
         else:
             log.debug("Sending directly json response")
             data = [json.dumps(data, cls=ClassEncoder, indent=None, sort_keys=False)]

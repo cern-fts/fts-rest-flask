@@ -58,7 +58,7 @@ def submit_state_change(job, transfer, transfer_state):
         file_metadata=transfer["file_metadata"],
     )
 
-    tmpfile = tempfile.NamedTemporaryFile(dir=msg_dir, delete=False)
+    tmpfile = tempfile.NamedTemporaryFile(dir=msg_dir, mode="w", delete=False)
     tmpfile.write("SS ")
     json.dump(msg, tmpfile)
     tmpfile.close()

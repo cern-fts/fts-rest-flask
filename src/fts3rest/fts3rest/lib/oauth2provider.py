@@ -234,7 +234,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             try:
                 if "wlcg" in credential["iss"]:
                     # Hardcoded scope and audience for wlcg tokens. To change once the wlcg standard evolves
-                    scope = "offline_access openid storage.read:/ storage.modify:/"
+                    scope = "offline_access openid storage.read:/ storage.modify:/ wlcg.groups"
                     audience = "https://wlcg.cern.ch/jwt/v1/any"
                     (
                         access_token,
@@ -272,18 +272,16 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         return Session.query(Credential).filter(Credential.dlg_id == dlg_id).first()
 
     def _generate_voms_attrs(self, credential):
-        if "email" in credential:
-            if "username" in credential:
-                # 'username' is never there whether offline or online
-                return credential["email"] + " " + credential["username"]
-            else:
-                # 'user_id' is there only online
-                return credential["email"] + " " + credential["user_id"]
-        else:
-            if "username" in credential:
-                return credential["username"] + " "
-            else:
-                return credential["user_id"] + " "
+        attrs = [
+            credential.get("email"),
+            credential.get("username")
+            or credential.get("user_id")
+            or credential.get("client_id"),
+        ]
+
+        voms_attrs = " ".join(filter(None, attrs))
+        log.debug("voms_attrs::: {}".format(voms_attrs))
+        return voms_attrs
 
     def _validate_token_offline(self, access_token):
         """
@@ -291,46 +289,58 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         :param access_token:
         :return: tuple(valid, credential) or tuple(False, None)
         """
+
+        def decode(key):
+            log.debug("Attempt decoding using key={}".format(key.export()))
+            try:
+                if "wlcg" in issuer:
+                    audience = "https://wlcg.cern.ch/jwt/v1/any"
+                    credential = jwt.decode(
+                        access_token,
+                        key.export_to_pem(),
+                        algorithms=[algorithm],
+                        audience=audience,
+                    )
+                else:
+                    # We don't check audience for non-WLCG token
+                    credential = jwt.decode(
+                        access_token,
+                        key.export_to_pem(),
+                        algorithms=[algorithm],
+                        options={"verify_aud": False},
+                    )
+                return credential
+            except Exception:
+                return None
+
         log.debug("entered validate_token_offline")
+        credential = None
         try:
             unverified_payload = jwt.decode(access_token, verify=False)
             unverified_header = jwt.get_unverified_header(access_token)
             issuer = unverified_payload["iss"]
-            key_id = unverified_header["kid"]
-            log.debug("issuer={}, key_id={}".format(issuer, key_id))
+            key_id = unverified_header.get("kid")
+            algorithm = unverified_header.get("alg")
+            log.debug("issuer={}, key_id={}, alg={}".format(issuer, key_id, algorithm))
+            # Retrieval of keys
+            keys = oidc_manager.filter_provider_keys(issuer, key_id, algorithm)
+            jwkeys = [JWK.from_json(json.dumps(key.to_dict())) for key in keys]
 
-            algorithm = unverified_header.get("alg", "RS256")
-            log.debug("alg={}".format(algorithm))
-
-            pub_key = oidc_manager.get_provider_key(issuer, key_id)
-            log.debug("key={}".format(pub_key))
-            pub_key = JWK.from_json(json.dumps(pub_key.to_dict()))
-            log.debug("pubkey={}".format(pub_key))
-            # Verify & Validate
-            if "wlcg" in issuer:
-                audience = "https://wlcg.cern.ch/jwt/v1/any"
-                credential = jwt.decode(
-                    access_token,
-                    pub_key.export_to_pem(),
-                    algorithms=[algorithm],
-                    audience=[audience],
-                )
-            else:
-                credential = jwt.decode(
-                    access_token,
-                    pub_key.export_to_pem(),
-                    algorithms=[algorithm],
-                    options={
-                        "verify_aud": False
-                    },  # We don't check audience for non-WLCG token
-                )
-            log.debug("offline_response::: {}".format(credential))
+            # Find the first key which decodes the token
+            for jwkey in jwkeys:
+                credential = decode(jwkey)
+                if credential is not None:
+                    log.debug("offline_response::: {}".format(credential))
+                    break
         except Exception as ex:
-            log.debug(ex)
-            log.debug("return False (exception)")
+            log.debug("return False, Exception: {}".format(ex))
             return False, None
         log.debug("return True, credential")
-        return True, credential
+
+        if credential is None:
+            log.debug("No key managed to decode the token")
+        log.debug("return {}, credential".format(credential is not None))
+        return (credential is not None), credential
 
     def _validate_token_online(self, access_token):
         """

@@ -5,6 +5,7 @@ import os
 
 import MySQLdb
 from flask import Flask
+from flask import request
 from sqlalchemy import engine_from_config, event
 from werkzeug.exceptions import HTTPException
 
@@ -125,6 +126,15 @@ def create_app(default_config_file=None, test=False):
             }
         )
         response.content_type = "application/json"
+        return response
+
+    # Log http request information after each request
+    @app.after_request
+    def log_request_info(response):
+        log.info(
+            '[From %s] [%s] "%s %s"'
+            % (request.remote_addr, response.status, request.method, request.full_path)
+        )
         return response
 
     # Heartbeat thread

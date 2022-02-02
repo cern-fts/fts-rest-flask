@@ -44,11 +44,6 @@ def do_connect(app):
     Base urls
     """
 
-    # Hello world
-    @app.route("/hello")
-    def hello_world():
-        return "Hello, World!"
-
     # Root
     app.add_url_rule("/", view_func=api.api_version.as_view("api.api_version"))
 
@@ -154,13 +149,16 @@ def do_connect(app):
     # Schema definition
     app.add_url_rule(
         "/api-docs/schema/submit",
-        "api.submit_schema",
-        api.submit_schema,
+        view_func=api.submit_schema.as_view("api.submit_schema"),
         methods=["GET"],
     )
-    app.add_url_rule("/api-docs", "api.api_docs", api.api_docs, methods=["GET"])
     app.add_url_rule(
-        "/api-docs/<resource>", "api.resource_doc", api.resource_doc, methods=["GET"]
+        "/api-docs", view_func=api.api_docs.as_view("api.api_docs"), methods=["GET"]
+    )
+    app.add_url_rule(
+        "/api-docs/<resource>",
+        view_func=api.resource_doc.as_view("api.resource_doc"),
+        methods=["GET"],
     )
 
     # Config entry point

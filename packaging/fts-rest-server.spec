@@ -1,6 +1,6 @@
 Name:           fts-rest-server
-Version:        1.0
-Release:        %{_version}
+Version:        1.0.0
+Release:        %{_release}%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
 License:        ASL 2.0
@@ -18,7 +18,6 @@ Requires:       gfal2-plugin-mock
 Requires:       python36-m2crypto
 Requires:       python36-requests
 Requires:       python36-flask
-Requires:       python36-sqlalchemy
 Requires:       python36-dateutil
 Requires:       python36-jwt
 
@@ -38,7 +37,8 @@ Requires:       python36-markupsafe
 Requires:       pyjwkest
 Requires:       Beaker
 Requires:       typing_extensions
-
+Requires:       SQLAlchemy >= 1.1.15
+Obsoletes:      python36-sqlalchemy
 Requires:       Mako
 Requires:       mysqlclient
 Requires:       jwcrypto
@@ -65,18 +65,29 @@ mkdir -p %{buildroot}%{_libexecdir}/fts3rest
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d
 mkdir -p %{buildroot}%{_sysconfdir}/fts3
 mkdir -p %{buildroot}%{_var}/log/fts3rest
+mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
 cp -r fts3rest/fts3rest %{buildroot}%{python3_sitelib}
 cp fts3rest/fts3rest.wsgi %{buildroot}%{_libexecdir}/fts3rest
 cp fts3rest/fts3rest.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/fts3rest.conf
 cp fts3rest/ftsrestconfig %{buildroot}%{_sysconfdir}/fts3
+cp fts3rest/fts-rest.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/fts-rest
 
 %files
 %license LICENSE
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
 %config(noreplace) %{_sysconfdir}/fts3/ftsrestconfig
+%config(noreplace) %{_sysconfdir}/logrotate.d/fts-rest
 %{python3_sitelib}/fts3rest/
 %attr(0755,fts3,fts3) /var/log/fts3rest
 %{_libexecdir}/fts3rest
+
+# Create fts3 user and group
+%pre
+getent group fts3 >/dev/null || groupadd -r fts3
+getent passwd fts3 >/dev/null || \
+    useradd -r -m -g fts3 -d /var/log/fts3 -s /sbin/nologin \
+    -c "File Transfer Service user" fts3
+exit 0
 
 # Install, set SELinux
 %post
