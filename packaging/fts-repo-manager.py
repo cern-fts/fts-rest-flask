@@ -121,6 +121,8 @@ def is_tag(ref):
     return (
         re.compile("""^(v)(\d+)\.(\d+)\.(\d+)$""").match(ref) != None
         or re.compile("""^(v)(\d+)\.(\d+)$""").match(ref) != None
+        or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-rc$""").match(ref) != None
+        or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-rc(\d)$""").match(ref) != None
     )
 
 
