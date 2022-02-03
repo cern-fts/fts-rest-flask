@@ -561,6 +561,10 @@ class JobBuilder:
             files_list = kwargs.pop("files", None)
             datamg_list = kwargs.pop("delete", None)
 
+            if datamg_list is not None:
+                raise MethodNotAllowed(
+                    description="Deletion jobs are no longer supported by FTS"
+                )
             if files_list is not None and datamg_list is not None:
                 raise BadRequest(
                     "Simultaneous transfer and namespace operations not supported"

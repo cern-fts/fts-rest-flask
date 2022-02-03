@@ -1,5 +1,6 @@
 from datetime import timedelta
 import json
+import unittest
 
 from fts3rest.tests import TestController
 
@@ -407,6 +408,9 @@ class TestJobInvalidSubmits(TestController):
             status=400,
         )
 
+    @unittest.skip(
+        "Deleting jobs in FTS are being decommissioned. Tests should be removed in the future."
+    )
     def test_transfer_and_deletion(self):
         """
         Jobs must be either deletion or transfer, not both
@@ -430,6 +434,9 @@ class TestJobInvalidSubmits(TestController):
 
         self.app.put(url="/jobs", params=json.dumps(job), status=400)
 
+    @unittest.skip(
+        "Deleting jobs in FTS are being decommissioned. Tests should be removed in the future."
+    )
     def test_deletion_bad_surl(self):
         """
         Submit a deletion job with an invalid surl
