@@ -7,7 +7,12 @@ import logging
 import random
 import uuid
 from flask import current_app as app
-from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError
+from werkzeug.exceptions import (
+    BadRequest,
+    Forbidden,
+    InternalServerError,
+    MethodNotAllowed,
+)
 
 from fts3rest.model import BannedSE
 from fts3rest.model.meta import Session
