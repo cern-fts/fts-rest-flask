@@ -321,9 +321,18 @@ class JobSubmitter(Base):
         self._prepare_options()
         if self.params["ipv4"] and self.params["ipv6"]:
             self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
-        if self.params["overwrite"] and self.params["overwrite_on_retry"]:
+        if (
+            sum(
+                [
+                    self.params["overwrite"],
+                    self.params["overwrite_on_retry"],
+                    self.params["overwrite_hop"],
+                ]
+            )
+            > 1
+        ):
             self.opt_parser.error(
-                "overwrite and overwrite-on-retry can not be used at the same time"
+                "Multiple overwrite flags can not be used at the same time"
             )
 
     def _build_transfers(self):

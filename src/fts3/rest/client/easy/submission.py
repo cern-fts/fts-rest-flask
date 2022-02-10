@@ -181,9 +181,9 @@ def new_job(
                 "Bad request: verify_checksum does not contain a valid value"
             )
 
-    if overwrite != False and overwrite_on_retry != False:
+    if sum([overwrite, overwrite_on_retry, overwrite_hop]) > 1:
         raise ClientError(
-            "Bad request: overwrite and overwrite-on-retry can not be used at the same time"
+            "Bad request: Multiple overwrite flags can not be used at the same time"
         )
 
     params = dict(
