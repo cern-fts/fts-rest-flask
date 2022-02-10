@@ -26,6 +26,7 @@ DEFAULT_PARAMS = {
     "checksum": "ADLER32",
     "overwrite": False,
     "overwrite_on_retry": False,
+    "overwrite_hop": False,
     "reuse": False,
     "job_metadata": None,
     "file_metadata": None,
@@ -147,10 +148,16 @@ class JobSubmitter(Base):
             help="overwrite files.",
         )
         self.opt_parser.add_option(
-            "--overwrite--on-retry",
+            "--overwrite-on-retry",
             dest="overwrite_on_retry",
             action="store_true",
-            help="overwrite files.",
+            help="overwrite files on retries.",
+        )
+        self.opt_parser.add_option(
+            "--overwrite-hop",
+            dest="overwrite_hop",
+            action="store_true",
+            help="overwrite all files except the destination in a multihop submission.",
         )
         self.opt_parser.add_option(
             "-r",
@@ -384,6 +391,7 @@ class JobSubmitter(Base):
             job_metadata=_metadata(self.options.job_metadata),
             overwrite=self.options.overwrite,
             overwrite_on_retry=self.options.overwrite_on_retry,
+            overwrite_hop=self.options.overwrite_hop,
             copy_pin_lifetime=self.options.pin_lifetime,
             reuse=self.options.reuse,
             retry=self.options.retry,
