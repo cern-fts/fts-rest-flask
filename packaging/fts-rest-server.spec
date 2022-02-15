@@ -84,8 +84,9 @@ cp fts3rest/fts-rest.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/fts-rest
 # Create fts3 user and group
 %pre
 getent group fts3 >/dev/null || groupadd -r fts3
+getent passwd fts3 >/dev/null && usermod -a -G apache fts3
 getent passwd fts3 >/dev/null || \
-    useradd -r -m -g fts3 -d /var/log/fts3 -s /sbin/nologin \
+    useradd -r -m -g fts3 -G apache -d /var/log/fts3 -s /sbin/nologin \
     -c "File Transfer Service user" fts3
 exit 0
 
