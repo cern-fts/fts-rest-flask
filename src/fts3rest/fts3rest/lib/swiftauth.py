@@ -21,7 +21,7 @@ from datetime import datetime
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
 from fts3rest.model.meta import Session
-from fts3rest.model import Credential, Host, Job, CloudCredentialCache, CloudStorage
+from fts3rest.model import Credential, Job, CloudCredentialCache, CloudStorage
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def set_swift_credential_cache(cred, user_dn, storage_name, os_token, os_project
 
 def get_os_token(user_dn, access_token, cloud_storage, project_id):
     """
-    Get an OS token using an OIDC access token for the cloud storage (in particular, Swift) user
+    Get an OS token using an OIDC access token for the Swift user
     """
     cloudcredential = dict()
 
@@ -49,7 +49,8 @@ def get_os_token(user_dn, access_token, cloud_storage, project_id):
     sess = session.Session(auth=keystone_auth)
     try:
         os_token = sess.get_token()
-        cloudcredential = set_swift_credential_cache(cloudcredential, user_dn, cloud_storage.storage_name,
+        cloudcredential = set_swift_credential_cache(cloudcredential, user_dn,
+                                                     cloud_storage.storage_name,
                                                      os_token, project_id)
         log.debug("Retrieved OS token %s" % os_token)
     except Exception as ex:
@@ -63,7 +64,9 @@ def refresh_os_token(job, se_url, cnt):
 
     credential_cache = (
         Session.query(CloudCredentialCache)
-               .get({"os_project_id": os_project_id, "user_dn": job.user_dn, "storage_name": storage_name})
+               .get({"os_project_id": os_project_id,
+                     "user_dn": job.user_dn,
+                     "storage_name": storage_name})
     )
     if not credential_cache or not credential_cache.os_token_is_expired():
         log.debug("No credential cache to refresh")
@@ -71,7 +74,8 @@ def refresh_os_token(job, se_url, cnt):
 
     credentials = (
         Session.query(Credential)
-               .filter((Credential.proxy.notilike("%CERTIFICATE%")) & (Credential.dn == job.user_dn))
+               .filter((Credential.proxy.notilike("%CERTIFICATE%")) &
+                       (Credential.dn == job.user_dn))
                .all()
     )
     cloud_storage = Session.query(CloudStorage).get(storage_name)
@@ -79,7 +83,8 @@ def refresh_os_token(job, se_url, cnt):
     if cloud_storage:
         for credential in credentials:
             access_token = credential.proxy[:credential.proxy.find(':')]
-            cloud_credential = get_os_token(job.user_dn, access_token, cloud_storage, os_project_id)
+            cloud_credential = get_os_token(job.user_dn, access_token,
+                                            cloud_storage, os_project_id)
             if cloud_credential:
                 try:
                     log.debug("OK refresh_os_token")
@@ -87,7 +92,13 @@ def refresh_os_token(job, se_url, cnt):
                     Session.commit()
                     return
                 except Exception as ex:
-                    log.warning("Failed to save credentials for dn: %s because: %s" % (job.user_dn, str(ex)))
+                    log.warning(
+                        "Failed to save credentials for dn: %s because: %s"
+                        % (job.user_dn, str(ex))
+                    )
                     Session.rollback()
                     raise
-    log.warning("Cannot refresh OS token for user %s at storage %s" % (job.user_dn, storage_name))
+    log.warning(
+        "Cannot refresh OS token for user %s at storage %s"
+        % (job.user_dn, storage_name)
+    )

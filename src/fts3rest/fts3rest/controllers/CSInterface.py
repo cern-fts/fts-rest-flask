@@ -28,6 +28,11 @@ class Connector(ABC):
             from fts3rest.controllers.CSdropbox import DropboxConnector
 
             return DropboxConnector(user_dn, service)
+        if service.strip().upper() == "SWIFT":
+            # import here to avoid circular dependecy problemss
+            from fts3rest.controllers.CSswift import SwiftConnector
+
+            return SwiftConnector(user_dn, service)
 
     @abstractmethod
     def is_registered(self):
