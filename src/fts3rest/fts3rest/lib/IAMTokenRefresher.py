@@ -13,10 +13,11 @@
 #   limitations under the License.
 
 import logging
+from re import T
 import socket
 import time
 import random
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from threading import Thread, current_thread
 
 
@@ -49,51 +50,63 @@ class IAMTokenRefresher(Thread):
             True  # The thread will immediately exit when the main thread exits
         )
         self.tag = tag
+        self.hostname = socket.getfqdn()
         self.refresh_interval = int(
             config.get("fts3.TokenRefreshDaemonIntervalInSeconds", 600)
         )
-        self.config = config
+        self.hearbeat = int(config.get("fts3.HeartBeatInterval", 60))
 
-    def _thread_is_inactive(self, thread):
-        # The thread is considered inactive if it hasn't updated the DB for 3*refresh_interval
-        log.debug("time since last beat {}".format(datetime.utcnow() - thread.beat))
-        if (datetime.utcnow() - thread.beat) > timedelta(
-            seconds=3 * self.refresh_interval
-        ):
-            log.debug("thread is inactive! taking over, beat {}".format(thread.beat))
-        return (datetime.utcnow() - thread.beat) > timedelta(
-            seconds=3 * self.refresh_interval
+    def start_thread(self, rest_name):
+        # Check if there is an active token refresher in the DB
+        token_refresher = (
+            Session.query(Host)
+            .filter(
+                Host.service_name == self.tag,
+                Host.beat
+                > datetime.utcnow() - timedelta(seconds=3 * self.refresh_interval),
+            )
+            .all()
         )
+        if not token_refresher:
+            # If there is no active token refresher check if current host is the first in the instance
+            host = (
+                Session.query(Host)
+                .filter(
+                    Host.service_name == rest_name,
+                    Host.beat
+                    > datetime.utcnow() - timedelta(seconds=5 * self.hearbeat),
+                )
+                .order_by(Host.service_name)
+                .first()
+            )
+            if host and host.hostname == self.hostname:
+                return True
+        return False
 
     def run(self):
         """
         Regularly check if there is another active IAMTokenRefresher in the DB. If not, become the active thread.
         """
         log.debug("CREATE THREAD ID: {}".format(current_thread().ident))
-        # Initial sleep in case all threads started at the same time
-        time.sleep(random.randint(0, 60))  # nosec
+        # Initial sleep to make sure the heartbeat thread has already started and registered all the hosts in the DB
+        time.sleep(2 * self.hearbeat)  # nosec
         # The interval at which the thread will check if there is another active thread.
-        # It is arbitrary: I chose 2 times the refresh interval, plus a random offset to avoid multiple threads
-        # checking at the same time (although DB access is transactional)
-        db_check_interval = 3 * self.refresh_interval + random.randint(0, 120)  # nosec
+        db_check_interval = 3 * self.refresh_interval
         while True:
-            # Check that no other fts-token-refresh-daemon is running
-            refresher_threads = (
-                Session.query(Host).filter(Host.service_name == self.tag).all()
-            )
-            Session.commit()  # Close transaction to avoid repeated read
-            log.debug(
-                "refresher_threads {}, ID {}".format(
-                    len(refresher_threads), current_thread().ident
+            rest_name = "fts_rest"
+            if self.start_thread(rest_name):
+                log.debug("Activating IAMTokenRefresher thread")
+                threads = (
+                    Session.query(Host).filter(Host.service_name == self.tag).all()
                 )
-            )
-            if all(self._thread_is_inactive(thread) for thread in refresher_threads):
-                log.debug("Activating thread")
-                for thread in refresher_threads:
+                for thread in threads:
+                    # Delete
                     Session.delete(thread)
-                    log.debug("delete thread")
-                host = Host(hostname=socket.getfqdn(), service_name=self.tag)
-                log.debug("host object created")
+                    Session.commit()
+                    log.debug("Delete inactive thread")
+
+                host = Host(hostname=self.hostname, service_name=self.tag)
+                log.debug("New token refresher thread created")
                 while True:
                     host.beat = datetime.utcnow()
                     log.debug(
