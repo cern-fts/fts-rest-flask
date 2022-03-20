@@ -150,8 +150,10 @@ class IAMTokenRefresher(Thread):
                                     "Failed to refresh token for dn: %s because: %s"
                                     % (str(credential.dn), str(ex))
                                 )
+                    Session.remove()
                     time.sleep(self.refresh_interval)
             else:
                 log.debug("THREAD ID: {}".format(current_thread().ident))
                 log.debug("Another thread is active -- Going to sleep")
+                Session.remove()
                 time.sleep(db_check_interval)
