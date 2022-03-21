@@ -72,15 +72,6 @@ cp fts3rest/fts3rest.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/fts3rest.conf
 cp fts3rest/ftsrestconfig %{buildroot}%{_sysconfdir}/fts3
 cp fts3rest/fts-rest.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/fts-rest
 
-%files
-%license LICENSE
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
-%config(noreplace) %{_sysconfdir}/fts3/ftsrestconfig
-%config(noreplace) %{_sysconfdir}/logrotate.d/fts-rest
-%{python3_sitelib}/fts3rest/
-%attr(0755,fts3,fts3) /var/log/fts3rest
-%{_libexecdir}/fts3rest
-
 # Create fts3 user and group
 %pre
 getent group fts3 >/dev/null || groupadd -r fts3
@@ -108,6 +99,15 @@ setsebool -P httpd_can_network_connect off
 setsebool -P httpd_execmem off
 fi
 ## Note: if SELinux rules need to be changed after first release, they should be set in an upgrade scriplet
+
+%files
+%license LICENSE
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
+%config(noreplace) %{_sysconfdir}/fts3/ftsrestconfig
+%config(noreplace) %{_sysconfdir}/logrotate.d/fts-rest
+%{python3_sitelib}/fts3rest/
+%attr(0755,fts3,fts3) /var/log/fts3rest
+%{_libexecdir}/fts3rest
 
 %changelog
 * Thu Oct 15 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 1.0
