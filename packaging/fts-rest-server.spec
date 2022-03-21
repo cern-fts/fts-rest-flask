@@ -50,6 +50,14 @@ BuildArch:      noarch
 %description
 File Transfer Service (FTS) -- Python3 HTTP API Server
 
+%package selinux
+Summary:        SELinux support for FTS-REST
+Group:          Applications/Internet
+Requires:       %{name} = %{version}-%{release}
+
+%description selinux
+SELinux support for the FTS HTTP API Server
+
 %prep
 %setup -q
 
@@ -81,24 +89,23 @@ getent passwd fts3 >/dev/null || \
     -c "File Transfer Service user" fts3
 exit 0
 
-# Install, set SELinux
-%post
+# SELinux scriptlets
+%post selinux
 if [ "$1" -eq "1" ] ; then
 semanage port -a -t http_port_t -p tcp 8446
 setsebool -P httpd_can_network_connect on
+setsebool -P httpd_setrlimit=1
 setsebool -P httpd_execmem on
 semanage fcontext -a -t httpd_log_t "/var/log/fts3rest(/.*)?"
 restorecon -R /var/log/fts3rest
 fi
 
-# Uninstall, undo SELinux
-%preun
+%preun selinux
 if [ "$1" -eq "0" ] ; then
 semanage port -d -t http_port_t -p tcp 8446
 setsebool -P httpd_can_network_connect off
 setsebool -P httpd_execmem off
 fi
-## Note: if SELinux rules need to be changed after first release, they should be set in an upgrade scriplet
 
 %files
 %license LICENSE
@@ -108,6 +115,8 @@ fi
 %{python3_sitelib}/fts3rest/
 %attr(0755,fts3,fts3) /var/log/fts3rest
 %{_libexecdir}/fts3rest
+
+%files selinux
 
 %changelog
 * Thu Oct 15 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 1.0
