@@ -21,8 +21,8 @@
                 <th>Global transfer timeout</th>
                 <th>Queue timeout</th>
                 <th>Add seconds/MB</th>
-                <th title="If set, allow only transfers that can be handled entierly by a Gfal2 plugin. Most of the time, this means same-protocol or TPC.">
-                    Disable streaming
+                <th title="When disabled, allow only matching-protocol transfers. This means the transfer is handled entirely by a Gfal2 plugin, resulting in TPC or same-protocol streaming transfers. When protocol translation is enabled, Gfal2 can use different plugins to perform the transfer operation (e.g:  GridFTP --> HTTP), which always results in streaming.">
+                    Disable protocol translation
                     <i class="glyphicon glyphicon-question-sign"></i>
                 </th>
                 <th>Show user DN</th>
