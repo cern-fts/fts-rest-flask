@@ -357,7 +357,6 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         except Exception as ex:
             log.debug("return False, Exception: {}".format(ex))
             return False, None
-        log.debug("return True, credential")
 
         if credential is None:
             log.debug("No key managed to decode the token")
