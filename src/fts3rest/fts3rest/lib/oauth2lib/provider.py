@@ -581,7 +581,7 @@ class ResourceProvider(Provider):
             auth.is_oauth = True
             access_token = header[1]
             self.validate_access_token(access_token, auth)
-            if not auth.is_valid:
+            if not auth.is_valid and auth.error is None:
                 auth.error = "access_denied"
         return auth
 

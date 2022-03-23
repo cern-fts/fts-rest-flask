@@ -214,6 +214,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         (postvalidation, message) = self._token_credential_postvalidation(credential)
         if not postvalidation:
             log.warning("Access token failed post-validation. Reason: {}".format(message))
+            authorization.error = message
             return
 
         # Check if a credential already exists in the DB
