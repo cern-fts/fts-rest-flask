@@ -41,9 +41,12 @@ def do_authentication(credentials, env, config):
     if authn is None:
         return False
     if not authn.is_valid:
-        if authn.error == "access_denied":
-            log.info("about to raise invalid credentials")
-            raise InvalidCredentials("Invalid OAuth2 credentials")
+        if authn.error is not None:
+            log.info("Raising invalid OAuth2 credentials")
+            message = authn.error
+            if authn.error == "access_denied":
+                message = "Invalid OAuth2 credentials"
+            raise InvalidCredentials(message)
         return False
 
     credentials.dn.append(authn.credentials.dn)

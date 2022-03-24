@@ -1,11 +1,12 @@
 Flask
 SQLAlchemy
-M2Crypto  #
+M2Crypto
 requests
-mysqlclient  #  requires python3-devel mysql-devel
+mysqlclient  # requires python3-devel mysql-devel
 dirq
 python-dateutil
 PyJWT
 jwcrypto
+wrapt<1.14  # dependency management for conflicting versions 'jwcrypto --> wrapt' and 'bandit --> wrapt'
 oic
 Mako

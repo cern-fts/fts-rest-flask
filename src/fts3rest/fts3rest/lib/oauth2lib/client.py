@@ -1,5 +1,5 @@
 import requests
-from . import utils
+from fts3rest.lib.oauth2lib import utils
 
 
 class Client(object):

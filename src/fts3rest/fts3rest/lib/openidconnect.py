@@ -97,7 +97,6 @@ class OIDCmanager:
             method="POST",
             authn_method="client_secret_basic",
         )
-        log.debug("introspect_response::: {}".format(response))
         return response
 
     def generate_refresh_token(self, issuer, access_token):

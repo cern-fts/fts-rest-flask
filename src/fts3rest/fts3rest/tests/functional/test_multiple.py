@@ -404,12 +404,12 @@ class TestMultiple(TestController):
                 {
                     "sources": ["http://source.es:8446/file"],
                     "destinations": ["http://dest.ch:8447/file"],
-                    "filesize": 2 ** 30,
+                    "filesize": 2**30,
                 },
                 {
                     "sources": ["http://source.es:8446/otherfile"],
                     "destinations": ["http://dest.ch:8447/otherfile"],
-                    "filesize": 2 ** 30,
+                    "filesize": 2**30,
                 },
             ],
             "params": {"overwrite": True, "reuse": None},
@@ -428,7 +428,7 @@ class TestMultiple(TestController):
         files = Session.query(File).filter(File.job_id == job_id)
         hashed = files[0].hashed_id
         for f in files:
-            self.assertEqual(2 ** 30, f.user_filesize)
+            self.assertEqual(2**30, f.user_filesize)
 
     def test_multihop(self):
         """

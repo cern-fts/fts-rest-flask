@@ -20,7 +20,7 @@ import re
 
 from fts3rest.model import AuthorizationByDn
 from fts3rest.model.meta import Session
-from .methods import Authenticator
+from fts3rest.lib.middleware.fts3auth.methods import Authenticator
 
 log = logging.getLogger(__name__)
 

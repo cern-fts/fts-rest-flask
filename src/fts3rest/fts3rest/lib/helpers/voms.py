@@ -57,7 +57,7 @@ def _get_proxy_fqans(proxy_path):
     proc = Popen(args, shell=False, stdin=None, stdout=PIPE, stderr=STDOUT)
     out = ""
     for l in proc.stdout:
-        out += l
+        out += l.decode()
     rcode = proc.wait()
     if rcode != 0:
         raise VomsException("Failed to get the FQANs of a proxy: " + out)
@@ -80,7 +80,7 @@ def _get_proxy_termination_time(proxy_path):
     proc = Popen(args, shell=False, stdin=None, stdout=PIPE, stderr=STDOUT)
     out = ""
     for l in proc.stdout:
-        out += l
+        out += l.decode()
     rcode = proc.wait()
     if rcode != 0:
         raise VomsException("Failed to get the termination time of a proxy: " + out)
@@ -102,7 +102,7 @@ def _get_proxy_type(proxy_path):
     proc = Popen(args, shell=False, stdin=None, stdout=PIPE, stderr=STDOUT)
     out = ""
     for l in proc.stdout:
-        out += l
+        out += l.decode()
     rcode = proc.wait()
     if rcode != 0:
         raise VomsException("Failed to get the type of a proxy: " + out)
@@ -181,7 +181,7 @@ class VomsClient(object):
         proc = Popen(args, shell=False, stdin=None, stdout=PIPE, stderr=STDOUT)
         out = ""
         for l in proc.stdout:
-            out += l
+            out += l.decode()
         rcode = proc.wait()
         if rcode != 0 and not _check_proxy_validity(new_proxy):
             raise VomsException("Failed to generate a proxy (%d): %s" % (rcode, out))

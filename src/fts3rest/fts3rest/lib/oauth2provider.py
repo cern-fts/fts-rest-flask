@@ -191,10 +191,11 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
         Description of the algorithm:
         - Validate access token offline (using cached keys) or online (using introspection RFC 7662).
+        - Perform token credential post-validation
         - If a credential already exists in the DB and has not expired, the new token is discarded and the old
         credential is used.
         - If a credential already exists in the DB but has expired, delete it.
-        - If there's no credential, Instrospect the token to get additional information (if not done before). Then,
+        - If there's no credential, Introspect the token to get additional information (if not done before). Then,
         exchange the access token with a refresh token. Store both tokens in the DB.
 
         :param access_token:
@@ -208,6 +209,14 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             valid, credential = self._validate_token_online(access_token)
         if not valid:
             log.warning("Access token provided is not valid")
+            return
+
+        (postvalidation, message) = self._token_credential_postvalidation(credential)
+        if not postvalidation:
+            log.warning(
+                "Access token failed post-validation. Reason: {}".format(message)
+            )
+            authorization.error = message
             return
 
         # Check if a credential already exists in the DB
@@ -283,6 +292,21 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         log.debug("voms_attrs::: {}".format(voms_attrs))
         return voms_attrs
 
+    def _token_credential_postvalidation(self, credential):
+        """
+        Run a series of post-validation checks on the access token.
+        Fail early in case any requirements are not met.
+        :param credential:
+        :return: tuple(pre-validation flag, errmsg = None)
+        """
+        scopes = credential.get("scope")
+        if scopes is None:
+            return False, "Credential does not have scope claim"
+        scopes = scopes.split()
+        if "offline_access" not in scopes:
+            return False, "Scope claim does not contain offline_access"
+        return True, None
+
     def _validate_token_offline(self, access_token):
         """
         Validate access token using cached information from the provider
@@ -335,7 +359,6 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         except Exception as ex:
             log.debug("return False, Exception: {}".format(ex))
             return False, None
-        log.debug("return True, credential")
 
         if credential is None:
             log.debug("No key managed to decode the token")

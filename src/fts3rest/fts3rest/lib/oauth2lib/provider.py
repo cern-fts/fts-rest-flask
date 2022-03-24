@@ -3,7 +3,7 @@ import logging
 from requests import Response
 from io import StringIO
 from werkzeug.exceptions import Unauthorized
-from . import utils
+from fts3rest.lib.oauth2lib import utils
 
 log = logging.getLogger(__name__)
 
@@ -581,7 +581,7 @@ class ResourceProvider(Provider):
             auth.is_oauth = True
             access_token = header[1]
             self.validate_access_token(access_token, auth)
-            if not auth.is_valid:
+            if not auth.is_valid and auth.error is None:
                 auth.error = "access_denied"
         return auth
 
