@@ -82,9 +82,9 @@ class TestJobListing(TestController):
         # error_message = json.loads(error['http_message'])
 
         # self.assertEquals(error['status'], '404 Not Found')
-        self.assertEquals(error["job_id"], "1234x")
-        self.assertEquals(error["http_status"], "404 Not Found")
-        self.assertEquals(
+        self.assertEqual(error["job_id"], "1234x")
+        self.assertEqual(error["http_status"], "404 Not Found")
+        self.assertEqual(
             error["http_message"], 'No job with the id "1234x" has been found'
         )
 
