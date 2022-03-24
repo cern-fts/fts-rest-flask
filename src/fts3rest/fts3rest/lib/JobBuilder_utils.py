@@ -6,6 +6,7 @@ reduce the complexity of the module.
 import logging
 import random
 import uuid
+import json
 from flask import current_app as app
 from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError
 

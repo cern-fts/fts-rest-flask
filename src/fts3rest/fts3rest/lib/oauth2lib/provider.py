@@ -3,7 +3,7 @@ import logging
 from requests import Response
 from io import StringIO
 from werkzeug.exceptions import Unauthorized
-from . import utils
+from fts3rest.lib.oauth2lib import utils
 
 log = logging.getLogger(__name__)
 
