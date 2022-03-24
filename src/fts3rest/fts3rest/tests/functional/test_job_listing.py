@@ -111,7 +111,7 @@ class TestJobListing(TestController):
         job_id = self._submit()
 
         job_list = self.app.get(
-            url="/jobs", params={"dlg_id": creds.delegation_id}, status=200
+            url="/jobs?dlg_id=%s" % creds.delegation_id, status=200
         ).json
         self.assertTrue(job_id in map(lambda j: j["job_id"], job_list))
 
@@ -125,9 +125,7 @@ class TestJobListing(TestController):
 
         job_id = self._submit()
 
-        job_list = self.app.get(
-            url="/jobs", params={"user_dn": creds.user_dn}, status=200
-        ).json
+        job_list = self.app.get(url="/jobs?user_dn=%s" % creds.user_dn, status=200).json
         self.assertTrue(job_id in map(lambda j: j["job_id"], job_list))
 
     def test_list_with_vo(self):
@@ -140,9 +138,7 @@ class TestJobListing(TestController):
 
         job_id = self._submit()
 
-        job_list = self.app.get(
-            url="/jobs", params={"vo_name": creds.vos[0]}, status=200
-        ).json
+        job_list = self.app.get(url="/jobs?vo_name=%s" % creds.vos[0], status=200).json
         self.assertTrue(job_id in map(lambda j: j["job_id"], job_list))
 
     def test_list_bad_dlg_id(self):
@@ -154,9 +150,7 @@ class TestJobListing(TestController):
         self.push_delegation()
         creds = self.get_user_credentials()
 
-        self.app.get(
-            url="/jobs", params={"dlg_id": creds.delegation_id + "1234"}, status=403
-        )
+        self.app.get(url="/jobs?dlg_id=%s" % (creds.delegation_id + "1234"), status=403)
 
     def test_list_bad_dn(self):
         """
@@ -168,8 +162,7 @@ class TestJobListing(TestController):
         creds = self.get_user_credentials()
 
         self.app.get(
-            url="/jobs",
-            params={"dlg_id": creds.delegation_id, "user_dn": "/CN=1234"},
+            url="/jobs?dlg_id=%s&user_dn=%s" % (creds.delegation_id, "/CN=1234"),
             status=400,
         )
 
@@ -184,11 +177,8 @@ class TestJobListing(TestController):
         job_id = self._submit()
 
         job_list = self.app.get(
-            url="/jobs",
-            params={
-                "dlg_id": creds.delegation_id,
-                "state_in": "FINISHED,FAILED,CANCELED",
-            },
+            url="/jobs?dlg_id=%s&state_in=FINISHED,FAILED,CANCELED"
+            % creds.delegation_id,
             status=200,
         ).json
         self.assertFalse(job_id in map(lambda j: j["job_id"], job_list))
@@ -204,8 +194,7 @@ class TestJobListing(TestController):
         job_id = self._submit()
 
         job_list = self.app.get(
-            url="/jobs",
-            params={"dlg_id": creds.delegation_id, "state_in": "ACTIVE,SUBMITTED"},
+            url="/jobs?dlg_id=%s&state_in=ACTIVE,SUBMITTED" % creds.delegation_id,
             status=200,
         ).json
         self.assertTrue(job_id in map(lambda j: j["job_id"], job_list))
@@ -219,13 +208,11 @@ class TestJobListing(TestController):
 
         job_id = self._submit()
 
-        job_list = self.app.get(
-            url="/jobs", params={"source_se": "root://source.es"}, status=200
-        ).json
+        job_list = self.app.get(url="/jobs?source_se=root://source.es", status=200).json
         self.assertTrue(job_id in map(lambda j: j["job_id"], job_list))
 
         job_list = self.app.get(
-            url="/jobs", params={"source_se": "gsiftp://source.es"}, status=200
+            url="/jobs?source_se=gsiftp://source.es", status=200
         ).json
         self.assertTrue(job_id not in map(lambda j: j["job_id"], job_list))
 
@@ -238,14 +225,10 @@ class TestJobListing(TestController):
 
         job_id = self._submit()
 
-        job_list = self.app.get(
-            url="/jobs", params={"dest_se": "root://dest.ch"}, status=200
-        ).json
+        job_list = self.app.get(url="/jobs?dest_se=root://dest.ch", status=200).json
         self.assertTrue(job_id in map(lambda j: j["job_id"], job_list))
 
-        job_list = self.app.get(
-            url="/jobs", params={"dest_se": "gsiftp://dest.ch"}, status=200
-        ).json
+        job_list = self.app.get(url="/jobs?dest_se=gsiftp://dest.ch", status=200).json
         self.assertTrue(job_id not in map(lambda j: j["job_id"], job_list))
 
     def test_list_no_vo(self):
@@ -475,12 +458,7 @@ class TestJobListing(TestController):
 
         # Try one hour
         job_list = self.app.get(
-            url="/jobs",
-            params={
-                "dlg_id": creds.delegation_id,
-                "state_in": "FINISHED",
-                "time_window": "1",
-            },
+            url="/jobs?dlg_id=%s&state_in=FINISHED&time_window=1" % creds.delegation_id,
             status=200,
         ).json
 
@@ -488,12 +466,8 @@ class TestJobListing(TestController):
 
         # Try 15 minutes
         job_list = self.app.get(
-            url="/jobs",
-            params={
-                "dlg_id": creds.delegation_id,
-                "state_in": "FINISHED",
-                "time_window": "0:15",
-            },
+            url="/jobs?dlg_id=%s&state_in=FINISHED&time_window=0:15"
+            % creds.delegation_id,
             status=200,
         ).json
 
