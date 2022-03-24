@@ -7,6 +7,6 @@ dirq
 python-dateutil
 PyJWT
 jwcrypto
-wrapt<1.14; python_version <= '3.6' # dependency management for conflicting versions 'jwcrypto --> wrapt' with 'bandit --> wrapt' on Python3.6
+wrapt<1.14  # dependency management for conflicting versions 'jwcrypto --> wrapt' and 'bandit --> wrapt'
 oic
 Mako
