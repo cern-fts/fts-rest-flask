@@ -144,7 +144,7 @@ def generate_hashed_id():
     The name is an unfortunately legacy from when this used to
     be based on a hash on the job
     """
-    return random.randint(0, (2 ** 16) - 1)  # nosec
+    return random.randint(0, (2**16) - 1)  # nosec
 
 
 def has_multiple_options(files):
