@@ -21,38 +21,38 @@ black:
   # Check that every file has been formatted with black
   stage: static_code_analysis
   script:
-  - black --check --fast --target-version py36 src/
+    - black --check --fast --target-version py36 src/
 
 pylint36:
   # Check that every file doesn't have syntax errors
   stage: static_code_analysis
   script:
-  - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
+    - python --version
+    - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
 
 pylint37:
   stage: static_code_analysis
   script:
-  - source ~/.bashrc
-  - pyenv global $PY37
-  - source $VENV_37/bin/activate
-  - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
+    - source ~/.bashrc
+    - pyenv global $PY37
+    - source $VENV_37/bin/activate
+    - python --version
+    - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
 
 pylint38:
   stage: static_code_analysis
   script:
-  - source ~/.bashrc
-  - pyenv global $PY38
-  - source $VENV_38/bin/activate
-  - python --version
-  - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
+    - source ~/.bashrc
+    - pyenv global $PY38
+    - source $VENV_38/bin/activate
+    - python --version
+    - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
 
 radon:
   # Check metrics for every file
   stage: static_code_analysis
   script:
-  - source .gitlab-ci/radon.sh
+    - source .gitlab-ci/radon.sh
 
 #--------------------------
 # Testing jobs
@@ -65,9 +65,9 @@ functional_tests36:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
-  - python3 --version
-  - source .gitlab-ci/db.sh
-  - pytest-3 src/ -x
+    - python3 --version
+    - source .gitlab-ci/db.sh
+    - pytest-3 src/ -x
 
 functional_tests37:
   stage: tests
@@ -75,13 +75,13 @@ functional_tests37:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
-  - source ~/.bashrc
-  - pyenv global $PY37
-  - python --version
-  - source $VENV_37/bin/activate
-  - source .gitlab-ci/db.sh
-  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-  - coverage report
+    - source ~/.bashrc
+    - pyenv global $PY37
+    - python --version
+    - source $VENV_37/bin/activate
+    - source .gitlab-ci/db.sh
+    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+    - coverage report
 
 functional_tests38:
   stage: tests
@@ -89,13 +89,13 @@ functional_tests38:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
-  - source ~/.bashrc
-  - pyenv global $PY38
-  - python --version
-  - source $VENV_38/bin/activate
-  - source .gitlab-ci/db.sh
-  - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-  - coverage report
+    - source ~/.bashrc
+    - pyenv global $PY38
+    - python --version
+    - source $VENV_38/bin/activate
+    - source .gitlab-ci/db.sh
+    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+    - coverage report
 
 #--------------------------
 # Security
@@ -107,8 +107,8 @@ bandit:
   allow_failure: true
   stage: security
   script:
-  - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
-  needs: []
+    - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
+  needs: [ ]
 
 #--------------------------
 # Build jobs
@@ -117,8 +117,8 @@ bandit:
 client_wheel_sdist:
   stage: build
   script:
-  - python3 setup.py bdist_wheel
-  - python3 setup.py sdist
+    - python3 setup.py bdist_wheel
+    - python3 setup.py sdist
   artifacts:
     when: on_success
     untracked: true
