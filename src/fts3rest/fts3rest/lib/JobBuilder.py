@@ -363,6 +363,8 @@ class JobBuilder:
             overwrite_flag = "Y"
         elif self.params["overwrite_on_retry"]:
             overwrite_flag = "R"
+        elif self.params["overwrite_hop"]:
+            overwrite_flag = "M"
         else:
             overwrite_flag = None
 
