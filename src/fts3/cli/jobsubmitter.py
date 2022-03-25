@@ -26,6 +26,7 @@ DEFAULT_PARAMS = {
     "checksum": "ADLER32",
     "overwrite": False,
     "overwrite_on_retry": False,
+    "overwrite_hop": False,
     "reuse": False,
     "job_metadata": None,
     "file_metadata": None,
@@ -147,10 +148,16 @@ class JobSubmitter(Base):
             help="overwrite files.",
         )
         self.opt_parser.add_option(
-            "--overwrite--on-retry",
+            "--overwrite-on-retry",
             dest="overwrite_on_retry",
             action="store_true",
-            help="overwrite files.",
+            help="overwrite files on retries.",
+        )
+        self.opt_parser.add_option(
+            "--overwrite-hop",
+            dest="overwrite_hop",
+            action="store_true",
+            help="overwrite all files except the destination in a multihop submission.",
         )
         self.opt_parser.add_option(
             "-r",
@@ -314,9 +321,18 @@ class JobSubmitter(Base):
         self._prepare_options()
         if self.params["ipv4"] and self.params["ipv6"]:
             self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
-        if self.params["overwrite"] and self.params["overwrite_on_retry"]:
+        if (
+            sum(
+                [
+                    self.params["overwrite"],
+                    self.params["overwrite_on_retry"],
+                    self.params["overwrite_hop"],
+                ]
+            )
+            > 1
+        ):
             self.opt_parser.error(
-                "overwrite and overwrite-on-retry can not be used at the same time"
+                "Multiple overwrite flags can not be used at the same time"
             )
 
     def _build_transfers(self):
@@ -384,6 +400,7 @@ class JobSubmitter(Base):
             job_metadata=_metadata(self.options.job_metadata),
             overwrite=self.options.overwrite,
             overwrite_on_retry=self.options.overwrite_on_retry,
+            overwrite_hop=self.options.overwrite_hop,
             copy_pin_lifetime=self.options.pin_lifetime,
             reuse=self.options.reuse,
             retry=self.options.retry,
@@ -412,6 +429,16 @@ class JobSubmitter(Base):
             )
 
         submitter = Submitter(context)
+
+        supports_overwrite_hop = int(context.endpoint_info["core"]["major"]) > 3 or (
+            int(context.endpoint_info["core"]["major"]) == 3
+            and int(context.endpoint_info["core"]["minor"]) >= 12
+        )
+        if self.params["overwrite_hop"] and not supports_overwrite_hop:
+            self.logger.warning(
+                "overwrite-hop is only availabe after server version 3.12.0"
+            )
+
         job_id = submitter.submit(transfers=self.transfers, params=self.params)
 
         if self.options.json:
