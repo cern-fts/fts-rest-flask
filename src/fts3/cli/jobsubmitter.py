@@ -429,6 +429,16 @@ class JobSubmitter(Base):
             )
 
         submitter = Submitter(context)
+
+        supports_overwrite_hop = int(context.endpoint_info["core"]["major"]) > 3 or (
+            int(context.endpoint_info["core"]["major"]) == 3
+            and int(context.endpoint_info["core"]["minor"]) >= 12
+        )
+        if self.params["overwrite_hop"] and not supports_overwrite_hop:
+            self.logger.warning(
+                "overwrite-hop is only availabe after server version 3.12.0"
+            )
+
         job_id = submitter.submit(transfers=self.transfers, params=self.params)
 
         if self.options.json:
