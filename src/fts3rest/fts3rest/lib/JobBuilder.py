@@ -415,6 +415,8 @@ class JobBuilder:
 
         if "os_token" in self.params.keys():
             self._set_os_token_dict()
+        else:
+            self.params["os_token"] = None
 
         # If reuse is enabled, or it is a bring online job, generate one single "hash" for all files
         if job_type in ("H", "Y") or self.is_bringonline:

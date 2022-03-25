@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from flask import request, Response
-from werkzeug.exceptions import Forbidden, BadRequest, NotFound, Conflict
+from werkzeug.exceptions import Forbidden, BadRequest, NotFound, Conflict, InternalServerError
 
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
@@ -691,15 +691,19 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_toke
     cloud_storage = Session.query(CloudStorage).get(storage_name)
     # verify that the cloud user is registered
     try:
-        Session.query(CloudStorageUser).filter_by(
+        cloud_user = Session.query(CloudStorageUser).filter_by(
             user_dn=user_dn,
             storage_name=storage_name
         ).first()
     except Exception as ex:
+        raise InternalServerError(
+            "Error occurred when verifying cloud user"
+        )
+    if not cloud_user:
         raise BadRequest(
-                "Cloud user is not registered for using cloud storage %s"
-                % storage_name
-            )
+            "Cloud user is not registered for using cloud storage %s"
+            % storage_name
+        )
 
     if cloud_storage:
         # handling manually set OS tokens (takes precedence)

@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 
-from werkzeug.exceptions import NotFound, BadRequest, Forbidden
+from werkzeug.exceptions import NotFound, BadRequest, Forbidden, InternalServerError
 from flask import request
 import urllib
 import logging
@@ -31,9 +31,22 @@ log = logging.getLogger(__name__)
 
 
 class SwiftConnector(Connector):
-
+    @jsonify
     def is_registered(self):
-        pass
+        surl = request.args.get("surl")
+        parsed = urlparse(surl)
+        try:
+            cloud_user = Session.query(CloudStorageUser).filter_by(
+                user_dn=self.user_dn,
+                storage_name='SWIFT:' + parsed.hostname
+            ).first()
+        except Exception as ex:
+            raise InternalServerError(
+                "Error occurred when verifying cloud user."
+            )
+        if cloud_user:
+            return True
+        return False
 
     def remove_token(self):
         pass
@@ -45,19 +58,23 @@ class SwiftConnector(Connector):
         pass
 
     def get_access_granted(self):
-        pass
+        surl, project_id, os_token, access_token = self._get_valid_surl_and_tokens()
+        if not os_token:
+            raise BadRequest(
+                "No OS token provided."
+            )
+        return self._set_os_token(surl, project_id, os_token)
 
     def get_folder_content(self):
-        surl, project_id, access_token = self._get_valid_surl()
-        return self._get_content(surl, project_id, access_token)
+        surl, project_id, os_token, access_token = self._get_valid_surl_and_tokens()
+        return self._get_content(surl, project_id, os_token, access_token)
 
     def get_file_link(self, path):
-        # "dropbox" could be also "sandbox"
         pass
 
     # Internal functions
 
-    def _get_content(self, surl, project_id, access_token):
+    def _get_content(self, surl, project_id, os_token, access_token):
         parsed = urlparse(surl)
         urlbase = "https://" + parsed.hostname + "/v1/AUTH_" + project_id
         params = None
@@ -69,17 +86,25 @@ class SwiftConnector(Connector):
             url = urlbase + parsed.path
         return self._make_call(
             url,
-            self._get_swift_token(parsed.hostname, project_id, access_token),
+            os_token if os_token
+            else self._get_swift_token(parsed.hostname, project_id, access_token),
             params,
         )
 
-    def _get_valid_surl(self):
+    def _get_valid_surl_and_tokens(self):
         surl = request.args.get("surl")
         project_id = request.args.get("projectid")
+
         try:
             access_token = request.headers.get("Authorization").split()[1]
         except Exception as ex:
             access_token = None
+
+        try:
+            os_token = request.headers.get("X-Auth-Token")
+        except Exception as ex:
+            os_token = None
+
         if not surl:
             raise BadRequest("Missing surl parameter")
         parsed = urlparse(surl)
@@ -87,19 +112,27 @@ class SwiftConnector(Connector):
             raise BadRequest("Forbiden SURL scheme")
         if not project_id:
             raise BadRequest("Missing project id parameter")
-        return str(surl), str(project_id), access_token
 
-    def _get_swift_token(self, storage_name, project_id, access_token):
+        return str(surl), str(project_id), os_token, access_token
+
+    def _verify_cloud_user(self, storage_name):
         try:
-            Session.query(CloudStorageUser).filter_by(
+            cloud_user = Session.query(CloudStorageUser).filter_by(
                 user_dn=self.user_dn,
                 storage_name='SWIFT:' + storage_name
             ).first()
         except Exception as ex:
+            raise InternalServerError(
+                "Error occurred when verifying cloud user"
+            )
+        if not cloud_user:
             raise BadRequest(
                 "Cloud user is not registered for using cloud storage %s"
                 % storage_name
             )
+
+    def _get_swift_token(self, storage_name, project_id, access_token):
+        self._verify_cloud_user(storage_name)
 
         cloud_credential = None
         if access_token:
@@ -121,6 +154,7 @@ class SwiftConnector(Connector):
                     return cloud_credential["os_token"]
             except Exception as ex:
                 log.debug("failed to retrieve an OS token")
+        # try to fetch OS token stored in DB
         if not cloud_credential:
             credential_cache = (
                 Session.query(CloudCredentialCache)
@@ -131,6 +165,34 @@ class SwiftConnector(Connector):
             if credential_cache:
                 return credential_cache.os_token
         raise BadRequest("Do not have enough credentials to access cloud storage")
+
+    def _set_os_token(self, surl, project_id, os_token):
+        parsed = urlparse(surl)
+        self._verify_cloud_user(parsed.hostname)
+
+        cloud_credential = swiftauth.set_swift_credential_cache(dict(),
+                                                                self.user_dn,
+                                                                'SWIFT:' + parsed.hostname,
+                                                                os_token,
+                                                                project_id)
+        if cloud_credential:
+            try:
+                Session.merge(CloudCredentialCache(**cloud_credential))
+                Session.commit()
+            except Exception as ex:
+                log.debug(
+                    "Failed to save credentials for dn: %s because: %s"
+                    % (self.user_dn, str(ex))
+                )
+                Session.rollback()
+                raise InternalServerError(
+                    "Error when saving credentials"
+                )
+        else:
+            raise InternalServerError(
+                "Error when saving credentials"
+            )
+        return {}
 
     def _make_call(self, command_url, os_token, parameters):
         if parameters is not None:
