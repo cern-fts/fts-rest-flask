@@ -68,7 +68,7 @@ functional_tests36:
       alias: mariadb
   script:
     - python3 --version
-    - source .gitlab-ci/db.sh
+    - ./.gitlab-ci/setup-db.sh
     - pytest-3 src/ -x
 
 functional_tests37:
@@ -81,7 +81,7 @@ functional_tests37:
     - pyenv global $PY37
     - python --version
     - source $VENV_37/bin/activate
-    - source .gitlab-ci/db.sh
+    - ./.gitlab-ci/setup-db.sh
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
 
@@ -95,7 +95,7 @@ functional_tests38:
     - pyenv global $PY38
     - python --version
     - source $VENV_38/bin/activate
-    - source .gitlab-ci/db.sh
+    - ./.gitlab-ci/setup-db.sh
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
 

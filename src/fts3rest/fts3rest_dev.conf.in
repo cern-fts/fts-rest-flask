@@ -1,5 +1,5 @@
 ###
-# httpd configuration file for DEVELOPMENT
+# HTTPd configuration file for DEVELOPMENT
 ###
 
 Listen 8446
@@ -22,23 +22,28 @@ Listen 8446
     # Enable SSL in this port
     SSLEngine on
 
+    # Logs
+    ErrorLog logs/fts3rest_error_log
+
+    LogFormat "%a %l %u %t \"%r\" %>s %b %D"
+    TransferLog logs/fts3rest_access_log
 
     LoadModule wsgi_module /opt/rh/httpd24/root/etc/httpd/modules/mod_rh-python36-wsgi.so
 
-    <Directory /home/ftsflask/fts-rest-flask/src/fts3rest>
-        Require all granted
-    </Directory>
-
-    WSGIScriptAlias / /home/ftsflask/fts-rest-flask/src/fts3rest/fts3rest.wsgi
+    WSGIScriptAlias / %%PROJECT_DIR%%/src/fts3rest/fts3rest.wsgi
     # Note that it is highly recommended that the WSGI application script file in
     # this case NOT be placed within the existing DocumentRoot for your main Apache
     # installation, or the particular site you are setting it up for. This is
     # because if that directory is otherwise being used as a source of static files,
     # the source code for your application might be able to be downloaded.
 
+    <Directory %%PROJECT_DIR%%/src/fts3rest>
+        Require all granted
+    </Directory>
+
     WSGIDaemonProcess ftsrest processes=2 threads=15 user=ftsflask group=ftsflask \
-    python-home=/home/ftsflask/fts-rest-flask/venv \
-    python-path=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest
+    python-home=%%PROJECT_DIR%%/%%VENV%% \
+    python-path=%%PROJECT_DIR%%/src:%%PROJECT_DIR%%/src/fts3rest
 
     WSGIProcessGroup ftsrest
     WSGIApplicationGroup %{GLOBAL}
