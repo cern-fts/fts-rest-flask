@@ -395,4 +395,4 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         return credential
 
     def _should_validate_offline(self):
-        return "fts3.ValidateAccessTokenOffline" in self.config.keys()
+        return self.config.get("fts3.ValidateAccessTokenOffline", True)
