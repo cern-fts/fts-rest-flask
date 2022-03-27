@@ -212,7 +212,7 @@ class DropboxConnector(Connector):
         try:
             data = urlencode(values).encode()
             req = urllib.request.Request(command_url, data, headers)
-            response = urllib.request.urlopen(req)
+            response = urllib.request.urlopen(req)  # nosec
             res_con = response.read()
             return res_con
         except HTTPError as e:

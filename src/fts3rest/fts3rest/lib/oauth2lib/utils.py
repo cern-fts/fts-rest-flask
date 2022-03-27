@@ -7,7 +7,9 @@ UNICODE_ASCII_CHARACTERS = string.ascii_letters + string.digits
 
 def random_ascii_string(length):
     random = SystemRandom()
-    return "".join([random.choice(UNICODE_ASCII_CHARACTERS) for x in range(length)])
+    return "".join(
+        [random.choice(UNICODE_ASCII_CHARACTERS) for x in range(length)]  # nosec
+    )
 
 
 def url_query_params(url):

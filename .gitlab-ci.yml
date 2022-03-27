@@ -3,7 +3,6 @@ image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 stages:
   - static_code_analysis
   - tests
-  - security
   - build
   - publish
 
@@ -56,6 +55,15 @@ radon:
     - radon --version
     - source .gitlab-ci/radon.sh
 
+bandit:
+  # Find potential security issues in file.
+  # It's allowed to fail as it may detect false positives.
+  allow_failure: true
+  stage: static_code_analysis
+  script:
+    - bandit --version
+    - bandit --ini .gitlab-ci/bandit.ini
+
 #--------------------------
 # Testing jobs
 #--------------------------
@@ -98,19 +106,6 @@ functional_tests38:
     - ./.gitlab-ci/setup-db.sh
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
-
-#--------------------------
-# Security
-#--------------------------
-
-bandit:
-  # Find potential security issues in file.
-  # It's allowed to fail as it may detect false positives.
-  allow_failure: true
-  stage: security
-  script:
-    - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
-  needs: [ ]
 
 #--------------------------
 # Build jobs
