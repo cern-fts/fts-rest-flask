@@ -69,15 +69,18 @@ bandit:
 #--------------------------
 
 functional_tests36:
-  image: gitlab-registry.cern.ch/fts/fts-rest-flask:rpm
   stage: tests
   services:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
-    - python3 --version
+    - source ~/.bashrc
+    - pyenv global $PY36
+    - python --version
+    - source $VENV_36/bin/activate
     - ./.gitlab-ci/setup-db.sh
-    - pytest-3 src/ -x
+    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+    - coverage report
 
 functional_tests37:
   stage: tests
