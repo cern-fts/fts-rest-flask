@@ -81,6 +81,7 @@ functional_tests36:
     - ./.gitlab-ci/setup-db.sh
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
+  needs: []
 
 functional_tests37:
   stage: tests
@@ -95,6 +96,7 @@ functional_tests37:
     - ./.gitlab-ci/setup-db.sh
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
+  needs: []
 
 functional_tests38:
   stage: tests
@@ -109,6 +111,7 @@ functional_tests38:
     - ./.gitlab-ci/setup-db.sh
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
+  needs: []
 
 #--------------------------
 # Build jobs
