@@ -362,7 +362,7 @@ class JobSubmitter(Base):
                 params.update(bulk["params"])
 
         # Apply command-line parameters
-        for k, v in iter(kwargs.items()):
+        for k, v in kwargs.items():
             if v is not None:
                 params[k] = v
 
@@ -394,10 +394,10 @@ class JobSubmitter(Base):
             spacetoken=self.options.destination_token,
             source_spacetoken=self.options.source_token,
             fail_nearline=self.options.fail_nearline,
-            file_metadata=_metadata(self.options.file_metadata),
+            file_metadata=self.options.file_metadata,
             filesize=self.options.file_size,
             gridftp=self.options.gridftp_params,
-            job_metadata=_metadata(self.options.job_metadata),
+            job_metadata=self.options.job_metadata,
             overwrite=self.options.overwrite,
             overwrite_on_retry=self.options.overwrite_on_retry,
             overwrite_hop=self.options.overwrite_hop,
