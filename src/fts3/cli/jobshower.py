@@ -29,7 +29,7 @@ class JobShower(Base):
             $ %(prog)s -s https://fts3-devel.cern.ch:8446 c079a636-c363-11e3-b7e5-02163e009f5a
             Request ID: c079a636-c363-11e3-b7e5-02163e009f5a
             Status: FINISHED
-            Client DN: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=saketag/CN=678984/CN=Alejandro Alvarez Ayllon
+            Client DN: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=ftssuite/CN=678523/CN=Robot: fts3 testsuite
             Reason:
             Submission time: 2014-04-13T23:31:34
             Priority: 3

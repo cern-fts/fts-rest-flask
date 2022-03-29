@@ -2,10 +2,10 @@
 DbType=mysql
 
 #db username
-DbUserName=ftsflask
+DbUserName=fts3
 
 #db password
-DbPassword=
+DbPassword=ftsflaskpass
 
 #For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db")
 DbConnectString=localhost:3306/ftsflask

@@ -3,7 +3,6 @@ image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 stages:
   - static_code_analysis
   - tests
-  - security
   - build
   - publish
 
@@ -56,20 +55,33 @@ radon:
     - radon --version
     - source .gitlab-ci/radon.sh
 
+bandit:
+  # Find potential security issues in file.
+  # It's allowed to fail as it may detect false positives.
+  allow_failure: true
+  stage: static_code_analysis
+  script:
+    - bandit --version
+    - bandit --ini .gitlab-ci/bandit.ini
+
 #--------------------------
 # Testing jobs
 #--------------------------
 
 functional_tests36:
-  image: gitlab-registry.cern.ch/fts/fts-rest-flask:rpm
   stage: tests
   services:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
-    - python3 --version
-    - source .gitlab-ci/db.sh
-    - pytest-3 src/ -x
+    - source ~/.bashrc
+    - pyenv global $PY36
+    - python --version
+    - source $VENV_36/bin/activate
+    - ./.gitlab-ci/setup-db.sh
+    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+    - coverage report
+  needs: []
 
 functional_tests37:
   stage: tests
@@ -81,9 +93,10 @@ functional_tests37:
     - pyenv global $PY37
     - python --version
     - source $VENV_37/bin/activate
-    - source .gitlab-ci/db.sh
+    - ./.gitlab-ci/setup-db.sh
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
+  needs: []
 
 functional_tests38:
   stage: tests
@@ -95,22 +108,10 @@ functional_tests38:
     - pyenv global $PY38
     - python --version
     - source $VENV_38/bin/activate
-    - source .gitlab-ci/db.sh
+    - ./.gitlab-ci/setup-db.sh
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
-
-#--------------------------
-# Security
-#--------------------------
-
-bandit:
-  # Find potential security issues in file.
-  # It's allowed to fail as it may detect false positives.
-  allow_failure: true
-  stage: security
-  script:
-    - bandit -r src/ --exclude src/fts3rest/fts3rest/tests/
-  needs: [ ]
+  needs: []
 
 #--------------------------
 # Build jobs

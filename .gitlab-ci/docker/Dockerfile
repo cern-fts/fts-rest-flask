@@ -38,8 +38,8 @@ ENV LANG en_US.utf-8
 
 # Copy the requirements files
 USER root
-COPY pipcompile.sh pipsyncdev.sh requirements.in dev-requirements.in ./
-RUN cd /home/ci && chown ci:ci pipcompile.sh pipsyncdev.sh requirements.in dev-requirements.in
+COPY pipcompile.sh requirements.in dev-requirements.in ./
+RUN cd /home/ci && chown ci:ci pipcompile.sh requirements.in dev-requirements.in
 USER ci
 
 # Prepare virtual environments
@@ -49,15 +49,15 @@ ENV VENV_38 /home/ci/venv_38
 
 RUN . ~/.bashrc && pyenv global $PY36 && python3 -m venv $VENV_36 && \
     . $VENV_36/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-    . ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
+    . ./pipcompile.sh --sync && deactivate
 
 RUN . ~/.bashrc && pyenv global $PY37 && python3 -m venv $VENV_37 && \
     . $VENV_37/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-    . ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
+    . ./pipcompile.sh --sync && deactivate
 
 RUN . ~/.bashrc && pyenv global $PY38 && python3 -m venv $VENV_38 && \
     . $VENV_38/bin/activate && pip install --upgrade pip && pip install pip-tools && \
-    . ./pipcompile.sh && . ./pipsyncdev.sh && deactivate
+    . ./pipcompile.sh --sync && deactivate
 
 # Run on Python3.6 by default
 RUN . ~/.bashrc && pyenv global $PY36

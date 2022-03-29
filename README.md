@@ -1,157 +1,203 @@
-# About the migration
-The migration of [fts-rest](https://gitlab.cern.ch:8443/fts/fts-rest) started after the decisions made in 
-the [evaluation](https://its.cern.ch/jira/browse/FTS-1496).
+FTS3-REST-Flask
+===============
 
-The development is happening at fts-flask.cern.ch, with the local user ftsflask 
+FTS3-REST-Flask is the RESTful API for the FTS3 Service.  
 
-# Git workflow
-- `Master` cannot be pushed to directly.
-- Create a new branch for each ticket and merge it to master through a merge request.
+This is the front-facing component to communicate with the FTS3 Service,
+allowing submission of transfers, querying transfer updates, as well as configuration management.  
 
-# Gitlab CI
-The current pipeline runs for every push in every branch:
-- black: fails if the code hasn't been formatted with black
-- pylint: fails if the code has syntax errors. If you are sure that pylint is mistaken, add `# pylint: skip-file` at
- the beginning of the relevant file. Runs for every supported Python3 version
-- radon: fails if the code complexity is too high
-- functional tests: Run for every supported Python3 version
-- bandit: detects potential security issues in the code, but it's allowed to fail as there may be false positives.
-To ignore a false positive, append `# nosec"` to the offending line
-- build: RPM for the client and server, plus sdist and wheel for the client
+The project consists of an Apache module running Python3 + Flask. 
+It is also a direct continuation of the former [fts-rest][1], where the migration 
+decision and evaluation can be seen [here][2].
+
+## Installation
+
+The project should be installed via RPMs, provided via the FTS repository.
+
+### Installing the client
+
+Make sure to have the FTS repositories enabled:
+- [production][3] repository: official RPMs deemed ready for production
+- [development][4] repository: RPMs built on the latest `develop` branch commit
+
+#### Installing the client:
+```shell
+$ yum install -y fts-rest-client
+```
+
+#### Installing the server
+
+The project needs `mod_wsgi` built for Python 3.6, which on Centos 7 is provided by the `rh-python36-mod_wsgi` package.
+All other requirements are specified in the spec files.
+```shell
+$ yum-config-manager --enable centos-sclo-rh
+$ yum install -y rh-python36-mod_wsgi
+$ yum install -y fts-rest-server
+```
+
+Configuring the server is done via the following two configuration files:
+- `/etc/fts3/ftsrestconfig`
+- `/etc/htpd/conf.d/fts3rest.conf`
+
+## Development
+
+The project is tracked using JIRA, under the [FTS Project][5] (requires CERN log-in). 
+Soon the project will be mirrored on GitHub, where issues and pull requests are also accepted (and encouraged!). 
+
+For development purposes, using a virtual environment is encouraged.
+
+### Git Workflow
+
+This project follows a simplified [GitFlow][6] model. The main branch is the `develop` branch,
+with `master` being reserved only for tagged released.
+
+Feature branches are developed separately and merged into the `develop` branch.
+When preparing a release, either `develop` is merged directly into `master`
+or a release branch is created. Production hotfixes are allowed only in case of necessity.
+Both release and hotfix branch changes must be merged back into `develop`.
+
+### Development workflow
+
+When taking on a task, the following workflow model should be followed:
+1. Create a JIRA ticket for the identified problem
+2. Estimate the magnitude of the task:
+    - Small changes can go directly on the `develop` branch
+    - Larger changes must go into a separate feature branch
+3. Implement and test your changes
+4. Merge them into the `develop` branch:
+    - Merge large changes via merge requests and request code review
+    - Changes affecting the database must also be code reviewed!
+5. Close the JIRA ticket and mark the appropriate `fixVersion`
+
+### Continuous Integration
+
+The project uses Gitlab-CI for CI/CD. The [pipeline][7] runs for every push, in every branch:
+- black: checks code must be formatted with `black`
+- pylint: checks for syntax errors (runs for every supported Python3 version)
+  - If you are sure that pylint is mistaken, add `# pylint: skip-file` at the beginning of the relevant file
+- functional tests: run for every supported Python3 version
+- bandit: detects potential security issues in the code
+  - Allowed to fail as it flags many false positives.
+  - To ignore a false positive, append `# nosec` to the offending line
+- build: RPM for the client and server, plus `sdist` and `wheel` for the client
 - deploy: upload client and server RPM to the FTS testing repository
 
-Merge requests will proceed only if the pipeline succeeds.
+Merge requests will proceed only if the pipeline succeeds.  
+In case of emergency the pipeline can be [skipped][8].
 
-In case of emergency the pipeline can be [skipped](https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs).
+The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the `.gitlab-ci` directory and the 
+image is hosted in the container registry of this project. The image contains the pre-installed Python environment 
+in order to speed up CI execution. When new environment is desired (such as new or upgraded dependencies), 
+a new image must be created via the `.gitlab-ci/docker/docker_push.sh` script.
 
-The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the .gitlab-ci directory and the 
-image is in the container registry for this project. The image contains the Python tools preinstalled so the CI runs faster.
-To build and push the image, cd to .gitlab-ci and run .docker_push.sh. This should be done when new dependencies are added.
+#### During development
 
-Developers should add the `pre-commit` hook to their local repository. This scripts does this for every commit:
-- Runs black to format the changed files.
-- Runs pylint only on the changed files for speed. As pylint works better when it is run on all the project, some rules have been disabled.
-- Runs radon and bandit only on the changed files.
-The hook can be skipped, in case bandit detects false positives, with the commit option `--no-verify`.
+Developers may add the `.gitlab-ci/pre-commit` hook to their local repository, 
+enabling the following checks before every commit:
+- Run `black` to format the changed files
+- Run `pylint` only on the changed files
+  - Note: As pylint works better when it is run on the full project, some rules have been disabled
+- Run `radon` and `bandit` only on the changed files
+  - In case of false positives, the hook can be skipped with the commit option `--no-verify`
 
-# Functional tests
-Openid tests don't run in CI because the container would need a client registered and this is 
- difficult to set up. To run these tests in a development environment, the environment variables 'xdc_ClientId' and 'xdc_ClientSecret' must be set.
+A convenience script is provided to install the `pre-commit` hook:
+```shell
+$ cd .gitlab-ci/
+$ ./precommit_install.sh
+```
 
-# Python dependencies
-This project uses [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies:
+### Python dependencies
+
+The project uses [pip-tools][9] to manage dependencies:
 - `requirements.in`: list of dependencies for the production app
 - `dev-requirements.in`: extra list of packages used for development (e.g. static code analysis)
-- `pipcompile.sh`: run it in the development server in order to generate `requirements.txt`
-- `pipsyncdev.sh`: run it afterwards to synchronize the virtual environment with the requirements.
 
-# Installation requirements
-Because we need mod_wsgi built for Python 3.6, we need to use rh-python36-mod_wsgi
-```
-yum-config-manager --enable centos-sclo-rh
-yum install rh-python36-mod_wsgi
-```
-All other requirements are specified in the spec files.
+### Setting up the development environment
 
-# Build packages
-Check .gitlab-ci.yml to see how the packages are built
-
-
-# Create a development server
-```bash
-# Create VM
-ssh garciacc@aiadm.cern.ch
-unset OS_PROJECT_ID;
-unset OS_TENANT_ID;
-unset OS_TENANT_NAME;
-export OS_PROJECT_NAME="IT FTS development";
-ai-bs --foreman-hostgroup fts/flask --cc7 --foreman-environment ftsclean \
-      --landb-responsible fts-devel --nova-flavor m2.large \
-      fts-flask-02
-           
-# Install dependencies
-ssh root@fts-flask-02
-yum install centos-release-scl-rh
-yum-config-manager --enable centos-sclo-rh
-yum install python3-devel openssl-devel swig gcc gcc-c++ make httpd-devel \
-mysql-devel gfal2-python3 gfal2-plugin-mock rh-python36-mod_wsgi \
-git mariadb mariadb-server gridsite -y
-
-# Prepare DB and log directories
-systemctl start mariadb    
-mkdir /var/run/mariadb             
-chown mysql:mysql  /var/run/mariadb
-mkdir /var/log/fts3rest
-chown ftsflask /var/log/fts3rest
-
-# Prepare application and Python dependencies
-su ftsflask
-cd
-git clone https://gitlab.cern.ch/fts/fts-rest-flask.git
-cd fts-rest-flask                 
-# use --system-site-packages in order to use gfal2-python3      
-python3 -m venv venv --system--site-packages
-source venv/bin/activate
-pip install --upgrade pip
-pip install pip-tools
-. ./pipcompile.sh 
-. ./pipsyncdev.sh
-                                            
-# Load DB
-cd ..
-curl -O https://gitlab.cern.ch/fts/fts3/-/raw/fts-oidc-integration/src/db/schema/mysql/fts-schema-6.0.0.sql
-mysql_secure_installation # put a password for root
-echo "CREATE DATABASE ftsflask;" | mysql --user=root --password
-mysql --user=root --password ftsflask < fts-schema-6.0.0.sql
-echo "CREATE USER ftsflask;" | mysql --user=root --password
-echo "GRANT ALL PRIVILEGES ON ftsflask.* TO 'ftsflask'@'localhost' IDENTIFIED BY 'anotherpassword';" | mysql --user=root --password
-cd fts-rest-flask
-. runtests.sh
-
-# Prepare server
-exit
-cp fts-rest-flask/src/fts3rest/httpd_fts.conf /etc/httpd/conf.d/
-setenforce 0
-chmod o+rx -R /home/ftsflask/
-systemctl restart httpd
-
-
+The `pipcompile.sh` script is provided to help set up a development environment:
+```shell
+$ virtualeRenv
+$ source venv/bin/activate
+(venv) $ pip install --upgrade pip
+(venv) $ pip install pip-tools
+(venv) $ ./pipcompile.sh --sync
 ```
 
-# Create a development environment
-- clone the repository and cd into it
-- create a venv and activate it
-- run `pip install --upgrade pip`
-- run `pip install pip-tools`
-- run `source pipcompile.sh`
-- run `source pipsyncdev.sh`. If these steps fail, it's because you are missing some system dependencies. 
-Check the beginning of .gitlab-ci/Dockerfile to see what you need to install.
-- run `source precommit_install.sh`
+Running `pipcompile.sh` will generate `requirements.txt`. Running the command with `--sync`
+will also synchronize the virtual environment with the requirements.
 
-
-# How to run development server
-Flask:
-```
-export PYTHONPATH=/home/ftsflask/fts-rest-flask/src:/home/ftsflask/fts-rest-flask/src/fts3rest 
-export FLASK_APP=/home/ftsflask/fts-rest-flask/src/fts3rest/fts3restwsgi.py
-export FLASK_ENV=development
-flask run 
-curl  http://127.0.0.1:5000/hello
-```
-httpd:
-```
-cp /home/ftsflask/fts-rest-flask/src/fts3rest/httpd_fts.conf /etc/httpd/conf.d/
-systemctl start httpd
-curl http://localhost:80/hello
+Additionally, you will need to configure the HTTPd config file. 
+A template version for development is offered at `src/fts3rest/fts3rest_dev_conf.in`. 
+To fill it with the right paths and install it, run the `install-httpd-dev.sh` script:
+```shell
+$ cd src/fts3rest/
+$ ./install-httpd-dev.sh
 ```
 
-# Connect to local database
-To access the config page:
-```
-INSERT INTO t_authz_dn VALUES ('yourdn');
+### Functional tests
+
+The functional tests reside under `src/fts3rest/fts3rest/tests/functional`. 
+
+In oder to run the tests, a fully functional MySQL-compatible database is required.
+The database must have the appropriate FTS schema and the connection details configured 
+in the FTS3 REST config file. 
+
+Example on Centos 7 with locally installed `mariadb`: 
+```shell
+$ wget https://gitlab.cern.ch/fts/fts3/-/raw/v3.11.0/src/db/schema/mysql/fts-schema-7.0.0.sql
+$ mysql -u root --execute "CREATE DATABASE ftsflask;"
+$ mysql -u root --execute "CREATE USER 'fts3'@'%';"
+$ mysql -u root --execute "GRANT ALL PRIVILEGES ON ftsflask.* TO 'fts3'@'%' IDENTIFIED BY 'fsflaskpass';"
+$ mysql -u fts3 --password=ftsflaskpass ftsflask
+MariaDB [ftsflask]> source fts-schema-7.0.0.sql
 ```
 
-# Run tests 
+Before running the tests, make sure to include the `fts3rest` project in the `PYTHONPATH`.  
+Additionally, the `FTS3TESTCONFIG` environment variable can also be set to use a different config file during testing:
+```shell
+$ export PYTHONPATH="${PROJECT_DIR}/src:${PROJECT_DIR}/src/fts3rest"
+$ export FTS3TESTCONFIG="${PROJECT_DIR}/src/fts3rest/fts3rest/tests/fts3testconfig"
 ```
-source runtests.sh
+
+For ease-of-use, the `runtests.sh` script is provided:
+```shell
+$ cd src/fts3rest
+$ ./runtests.sh
 ```
+
+**Note**: OIDC tests are not run in the CI as the container would need a client registered and this has not yet been set up.   
+To run OIDC tests in a development environment, the environment variables `xdc_ClientId` and `xdc_ClientSecret` must be set.
+
+### Building packages
+
+In order to build RPM packages, two utility scripts are provided 
+for the client and server: `fts-rest-client.sh` and `fts-rest-server.sh`.
+
+The following example shows how to build server packages:
+```shell
+$ rpmdev-setuptree
+$ ./packaging/fts-rest-server.sh
+$ tree "${HOME}/rpmbuild/RPMS"
+```
+
+## Useful links
+
+- Documentation: https://fts3-docs.web.cern.ch/fts3-docs/fts-rest/docs/index.html
+- FTS Repository: https://fts-repo.web.cern.ch/fts-repo/
+- Apache License, version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+- Support channels: fts-support@cern.ch
+- Development team contact: fts-devel@cern.ch 
+
+
+[1]: https://gitlab.cern.ch/fts/fts-rest
+[2]: https://its.cern.ch/jira/browse/FTS-1496
+[3]: https://fts-repo.web.cern.ch/fts-repo/el7/x86_64/
+[4]: https://fts-repo.web.cern.ch/fts-repo/testing/el7/x86_64/
+[5]: https://its.cern.ch/jira/projects/FTS/issues
+[6]: https://nvie.com/posts/a-successful-git-branching-model/
+[7]: https://gitlab.cern.ch/fts/fts-rest-flask/-/pipelines
+[8]: https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs
+[9]: https://github.com/jazzband/pip-tools
+
+[10]: https://fts3-docs.web.cern.ch/fts3-docs/fts-rest/docs/index.html
+[11]: https://www.apache.org/licenses/LICENSE-2.0

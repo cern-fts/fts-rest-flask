@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import sys
+
 from .base import Base
 from fts3.rest.client import Submitter
 
@@ -20,6 +22,7 @@ from fts3.rest.client import Submitter
 class JobCanceller(Base):
     def __init__(self):
         super(JobCanceller, self).__init__(
+            extra_args="JOB_ID",
             description="""
             This command can be used to cancel a running job.  It returns the final state of the canceled job.
             Please, mind that if the job is already in a final state (FINISHEDDIRTY, FINISHED, FAILED),
@@ -33,6 +36,11 @@ class JobCanceller(Base):
             CANCELED, CANCELED, CANCELED
             """,
         )
+
+    def validate(self):
+        if len(self.args) == 0:
+            self.logger.critical("Need a job id")
+            sys.exit(1)
 
     def run(self):
         if ":" in self.args[0]:

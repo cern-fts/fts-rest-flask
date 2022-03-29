@@ -57,7 +57,7 @@ def _get_default_proxy():
     """
     Returns the default proxy location
     """
-    return "/tmp/x509up_u%d" % os.geteuid()
+    return "/tmp/x509up_u%d" % os.geteuid()  # nosec
 
 
 class Context(object):

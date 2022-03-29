@@ -299,12 +299,10 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         :param credential:
         :return: tuple(pre-validation flag, errmsg = None)
         """
-        scopes = credential.get("scope")
-        if scopes is None:
-            return False, "Credential does not have scope claim"
-        scopes = scopes.split()
-        if "offline_access" not in scopes:
-            return False, "Scope claim does not contain offline_access"
+        if not self._should_validate_offline():
+            scopes = credential.get("scope")
+            if "offline_access" not in scopes:
+                return False, "Scope claim does not contain offline_access"
         return True, None
 
     def _validate_token_offline(self, access_token):
@@ -395,4 +393,4 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         return credential
 
     def _should_validate_offline(self):
-        return "fts3.ValidateAccessTokenOffline" in self.config.keys()
+        return self.config.get("fts3.ValidateAccessTokenOffline", True)
