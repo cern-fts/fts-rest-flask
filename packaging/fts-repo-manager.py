@@ -119,12 +119,10 @@ def construct_location(platform, arch, filename):
 
 def is_tag(ref):
     return (
-        re.compile("""^(v)(\d+)\.(\d+)\.(\d+)$""").match(ref) != None
-        or re.compile("""^(v)(\d+)\.(\d+)$""").match(ref) != None
-        or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-rc$""").match(ref) != None
-        or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-rc(\d)$""").match(ref) != None
-        or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-client$""").match(ref) != None
-        or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-server$""").match(ref) != None
+        re.compile(
+            """^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-(server|client))?$"""
+        ).match(ref)
+        != None
     )
 
 
