@@ -123,6 +123,8 @@ def is_tag(ref):
         or re.compile("""^(v)(\d+)\.(\d+)$""").match(ref) != None
         or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-rc$""").match(ref) != None
         or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-rc(\d)$""").match(ref) != None
+        or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-client$""").match(ref) != None
+        or re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-server$""").match(ref) != None
     )
 
 
@@ -296,7 +298,17 @@ def main():
     args = parseargs()
 
     repository = Repository(args.base)
-    packages = [Package(x) for x in args.packages]
+
+    if re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-client$""").match(args.ref) != None:
+        packages = [
+            Package(x) for x in args.packages if x.startswith("fts-rest-client")
+        ]
+    elif re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-server$""").match(args.ref) != None:
+        packages = [
+            Package(x) for x in args.packages if x.startswith("fts-rest-server")
+        ]
+    else:
+        packages = [Package(x) for x in args.packages]
 
     repository.store(args.ref, packages, args.arch_dir)
 
