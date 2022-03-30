@@ -297,14 +297,20 @@ def main():
 
     repository = Repository(args.base)
 
-    if re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-client$""").match(args.ref) != None:
-        packages = [
-            Package(x) for x in args.packages if x.startswith("fts-rest-client")
-        ]
-    elif re.compile("""^(v)(\d+)\.(\d+)\.(\d+)-server$""").match(args.ref) != None:
-        packages = [
-            Package(x) for x in args.packages if x.startswith("fts-rest-server")
-        ]
+    if (
+        re.compile("""^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-client)$""").match(
+            args.ref
+        )
+        != None
+    ):
+        packages = [Package(x) for x in args.packages if "fts-rest-client" in x]
+    elif (
+        re.compile("""^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-server)$""").match(
+            args.ref
+        )
+        != None
+    ):
+        packages = [Package(x) for x in args.packages if "fts-rest-server" in x]
     else:
         packages = [Package(x) for x in args.packages]
 
