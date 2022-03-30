@@ -34,7 +34,7 @@ if [[ $BRANCH =~ ^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-(server|client))?$ ]]; t
 fi
 
 if [[ ! -z ${RELEASE} ]]; then
-  sed -i "s/Release:.*/Release: ${RELEASE}%{?dist}/g" packaging/fts-rest-client.spec
+  sed -i "s/Release:.*/Release: ${RELEASE}%{?dist}/g" packaging/fts-rest-server.spec
 fi
 
 print_info
