@@ -54,10 +54,13 @@ DEFAULT_PARAMS = {
 
 
 def _metadata(data):
-    try:
-        return json.loads(data)
-    except Exception:
-        return str(data)
+    if data is not None:
+        try:
+            return json.loads(data)
+        except Exception:
+            return str(data)
+    else:
+        return None
 
 
 class JobSubmitter(Base):
@@ -362,15 +365,13 @@ class JobSubmitter(Base):
                 params.update(bulk["params"])
 
         # Apply command-line parameters
-        for k, v in iter(kwargs.items()):
+        for k, v in kwargs.items():
             if v is not None:
                 params[k] = v
 
         # JSONify metadata
-        if params["job_metadata"] is not None:
-            params["job_metadata"] = _metadata(params["job_metadata"])
-        if params["file_metadata"] is not None:
-            params["file_metadata"] = _metadata(params["file_metadata"])
+        params["job_metadata"] = _metadata(params["job_metadata"])
+        params["file_metadata"] = _metadata(params["file_metadata"])
         return params
 
     def _prepare_options(self):
@@ -394,10 +395,10 @@ class JobSubmitter(Base):
             spacetoken=self.options.destination_token,
             source_spacetoken=self.options.source_token,
             fail_nearline=self.options.fail_nearline,
-            file_metadata=_metadata(self.options.file_metadata),
+            file_metadata=self.options.file_metadata,
             filesize=self.options.file_size,
             gridftp=self.options.gridftp_params,
-            job_metadata=_metadata(self.options.job_metadata),
+            job_metadata=self.options.job_metadata,
             overwrite=self.options.overwrite,
             overwrite_on_retry=self.options.overwrite_on_retry,
             overwrite_hop=self.options.overwrite_hop,
