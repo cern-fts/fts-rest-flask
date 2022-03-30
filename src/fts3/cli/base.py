@@ -125,7 +125,7 @@ class Base:
         self.opt_parser.add_option(
             "--capath",
             dest="capath",
-            default="/etc/grid-security/certificates",
+            default=None,
             help="use the specified directory to verify the peer",
         )
         self.opt_parser.add_option(
