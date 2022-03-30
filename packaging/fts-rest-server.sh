@@ -29,8 +29,12 @@ else
   printf "Using environment set variable BRANCH=%s\n" "${BRANCH}"
 fi
 
-if [[ $BRANCH =~ ^(tags/)?(v)[.0-9]+(-(rc)?([0-9]+))?$ ]]; then
+if [[ $BRANCH =~ ^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-(server|client))?$ ]]; then
   RELEASE="${BASH_REMATCH[4]}${BASH_REMATCH[5]}"
+fi
+
+if [[ ! -z ${RELEASE} ]]; then
+  sed -i "s/Release:.*/Release: ${RELEASE}%{?dist}/g" packaging/fts-rest-server.spec
 fi
 
 print_info
@@ -53,5 +57,5 @@ echo "Created tarball: " ~/rpmbuild/SOURCES/fts-rest-server-${VERSION}.tar.gz
 
 cd ~/rpmbuild/SPECS
 
-rpmbuild -bs --define "_release ${RELEASE}" fts-rest-server.spec
-rpmbuild -bb --define "_release ${RELEASE}" fts-rest-server.spec
+rpmbuild -bs fts-rest-server.spec
+rpmbuild -bb fts-rest-server.spec

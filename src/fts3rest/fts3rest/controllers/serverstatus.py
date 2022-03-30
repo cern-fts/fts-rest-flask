@@ -32,10 +32,10 @@ def hosts_activity():
     What are the hosts doing
     """
     staging = Session.execute(
-        "SELECT COUNT(*), agent_dn "
+        "SELECT COUNT(*), staging_host "
         " FROM t_file "
         " WHERE file_state = 'STARTED' "
-        " GROUP BY agent_dn"
+        " GROUP BY staging_host"
     )
     response = dict()
 
@@ -43,10 +43,10 @@ def hosts_activity():
         response[host] = dict(staging=count)
 
     active = Session.execute(
-        "SELECT COUNT(*), transferHost "
+        "SELECT COUNT(*), transfer_host "
         " FROM t_file "
         " WHERE file_state = 'ACTIVE' "
-        " GROUP BY transferHost"
+        " GROUP BY transfer_host"
     )
     for (count, host) in active:
         if host not in response:

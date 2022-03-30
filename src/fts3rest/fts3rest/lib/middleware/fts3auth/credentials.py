@@ -20,7 +20,7 @@ import re
 
 from fts3rest.model import AuthorizationByDn
 from fts3rest.model.meta import Session
-from .methods import Authenticator
+from fts3rest.lib.middleware.fts3auth.methods import Authenticator
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def generate_delegation_id(dn, fqans):
     Returns:
         The associated delegation id
     """
-    d = hashlib.sha1()
+    d = hashlib.sha1()  # nosec
     d.update(dn.encode("utf-8"))
 
     for fqan in fqans:

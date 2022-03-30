@@ -100,7 +100,7 @@ def return_type(type=None, array_of=None):
     Notes:
         Either type or array_of must be specified, but at least one!
     """
-    assert (type or array_of) and not (type and array_of)
+    assert (type or array_of) and not (type and array_of)  # nosec
 
     def return_type_inner(function):
         if array_of:

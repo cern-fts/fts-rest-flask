@@ -14,9 +14,8 @@ RUN yum install --nogpgcheck python3 python36-pytest git python3-devel openssl-d
 
 RUN useradd --create-home ci
 
-# create directory for logs
+# Create directory for logs
 RUN chown ci /var/log/fts3rest
 
 WORKDIR /home/ci
 USER ci
-

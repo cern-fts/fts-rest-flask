@@ -28,10 +28,10 @@ class WhoAmI(Base):
             """,
             example="""
             $ %(prog)s -s https://fts3-pilot.cern.ch:8446
-            User DN: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=saketag/CN=678984/CN=Alejandro Alvarez Ayllon
+            User DN: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=ftssuite/CN=678523/CN=Robot: fts3 testsuite
             VO: dteam
             VO: dteam/cern
-            Delegation id: 9a4257f435fa2010
+            Delegation id: 7d42924a9ce352c1
             """,
         )
 

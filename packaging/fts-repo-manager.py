@@ -119,8 +119,10 @@ def construct_location(platform, arch, filename):
 
 def is_tag(ref):
     return (
-        re.compile("""^(v)(\d+)\.(\d+)\.(\d+)$""").match(ref) != None
-        or re.compile("""^(v)(\d+)\.(\d+)$""").match(ref) != None
+        re.compile(
+            """^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-(server|client))?$"""
+        ).match(ref)
+        != None
     )
 
 
@@ -294,7 +296,23 @@ def main():
     args = parseargs()
 
     repository = Repository(args.base)
-    packages = [Package(x) for x in args.packages]
+
+    if (
+        re.compile("""^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-client)$""").match(
+            args.ref
+        )
+        != None
+    ):
+        packages = [Package(x) for x in args.packages if "fts-rest-client" in x]
+    elif (
+        re.compile("""^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-server)$""").match(
+            args.ref
+        )
+        != None
+    ):
+        packages = [Package(x) for x in args.packages if "fts-rest-server" in x]
+    else:
+        packages = [Package(x) for x in args.packages]
 
     repository.store(args.ref, packages, args.arch_dir)
 

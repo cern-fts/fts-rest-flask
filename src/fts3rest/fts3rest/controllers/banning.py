@@ -119,7 +119,7 @@ def _cancel_transfers(storage=None, vo_name=None):
             else:
                 limit = ""
             Session.execute(
-                "UPDATE t_file SET"
+                "UPDATE t_file SET"  # nosec
                 "   file_state = 'SUBMITTED' "
                 "WHERE"
                 "  job_id = :job_id AND file_index = :file_index AND file_state = 'NOT_USED' "
