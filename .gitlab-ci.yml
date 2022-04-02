@@ -135,7 +135,7 @@ client_rpm:
     - yum install -y git rpm-build tree
     - ./packaging/client/fts-rest-client.sh
     - mkdir ${CI_PROJECT_DIR}/artifacts/
-    - mv build/client/RPMS/noarch/* build/client/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+    - cp -r build/client/RPMS build/client/SRPMS ${CI_PROJECT_DIR}/artifacts/
     - tree artifacts/
   variables:
     BRANCH: ${CI_COMMIT_REF_NAME}
@@ -150,7 +150,7 @@ server_rpm:
     - yum install -y git rpm-build tree
     - ./packaging/server/fts-rest-server.sh
     - mkdir ${CI_PROJECT_DIR}/artifacts/
-    - mv build/server/RPMS/noarch/* build/server/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+    - cp -r build/server/RPMS build/server/SRPMS ${CI_PROJECT_DIR}/artifacts/
     - tree artifacts/
   variables:
     BRANCH: ${CI_COMMIT_REF_NAME}
@@ -173,7 +173,7 @@ server_rpm:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
     - eosfusebind
-    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/*.rpm
+    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/RPMS/*/*.rpm artifacts/SRPMS/*
     - sleep 60
   tags:
     - docker-privileged
