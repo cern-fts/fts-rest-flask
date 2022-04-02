@@ -132,7 +132,7 @@ client_rpm:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
   script:
-    - yum install -y rpm-build tree
+    - yum install -y git rpm-build tree
     - ./packaging/client/fts-rest-client.sh
     - mkdir ${CI_PROJECT_DIR}/artifacts/
     - mv build/client/RPMS/noarch/* build/client/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
@@ -147,7 +147,7 @@ server_rpm:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
   script:
-    - yum install -y rpm-build tree
+    - yum install -y git rpm-build tree
     - ./packaging/server/fts-rest-server.sh
     - mkdir ${CI_PROJECT_DIR}/artifacts/
     - mv build/server/RPMS/noarch/* build/server/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
