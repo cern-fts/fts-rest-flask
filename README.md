@@ -175,9 +175,8 @@ for the client and server: `fts-rest-client.sh` and `fts-rest-server.sh`.
 
 The following example shows how to build server packages:
 ```shell
-$ rpmdev-setuptree
-$ ./packaging/fts-rest-server.sh
-$ tree "${HOME}/rpmbuild/RPMS"
+$ ./packaging/server/fts-rest-server.sh
+$ tree "build/server/RPMS"
 ```
 
 ## Useful links

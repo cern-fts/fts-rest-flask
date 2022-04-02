@@ -127,13 +127,14 @@ client_wheel_sdist:
     untracked: true
 
 client_rpm:
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
   script:
-    - rpmdev-setuptree
-    - ./packaging/fts-rest-client.sh
+    - yum install -y rpm-build tree
+    - ./packaging/client/fts-rest-client.sh
     - mkdir ${CI_PROJECT_DIR}/artifacts/
-    - mv -v ~/rpmbuild/RPMS/noarch/* ${CI_PROJECT_DIR}/artifacts/
-    - mv -v ~/rpmbuild/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+    - mv build/client/RPMS/noarch/* build/client/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+    - tree artifacts/
   variables:
     BRANCH: ${CI_COMMIT_REF_NAME}
   artifacts:
@@ -141,13 +142,14 @@ client_rpm:
     untracked: true
 
 server_rpm:
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
   script:
-    - rpmdev-setuptree
-    - ./packaging/fts-rest-server.sh
+    - yum install -y rpm-build tree
+    - ./packaging/server/fts-rest-server.sh
     - mkdir ${CI_PROJECT_DIR}/artifacts/
-    - mv -v ~/rpmbuild/RPMS/noarch/* ${CI_PROJECT_DIR}/artifacts/
-    - mv -v ~/rpmbuild/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+    - mv build/server/RPMS/noarch/* build/server/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+    - tree artifacts/
   variables:
     BRANCH: ${CI_COMMIT_REF_NAME}
   artifacts:
