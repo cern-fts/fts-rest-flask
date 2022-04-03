@@ -4,6 +4,7 @@ stages:
   - static_code_analysis
   - tests
   - build
+  - rpm-tests
   - publish
 
 variables:
@@ -157,6 +158,27 @@ server_rpm:
   artifacts:
     when: on_success
     untracked: true
+
+#--------------------------
+# RPM testing jobs
+#--------------------------
+
+rpm_tests:
+  stage: rpm-tests
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  services:
+    - name: centos/mariadb:latest
+      alias: mariadb
+  script:
+    - yum install -y yum-plugin-priorities mariadb python36-pytest
+    - echo -e "[fts-testing]\nname=FTS Testing Repository\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/testing/el7/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-testing.repo
+    - yum localinstall --nogpgcheck -y artifacts/RPMS/*/*.rpm
+    - export FTS3TESTCONFIG=/usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig_ci
+    - unset PYTHONPATH
+    - ./.gitlab-ci/setup-db.sh
+    - pytest-3 -x /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
+  dependencies:
+    - server_rpm
 
 #--------------------------
 # Publish templates
