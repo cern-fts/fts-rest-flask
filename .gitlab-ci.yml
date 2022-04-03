@@ -135,14 +135,15 @@ client_rpm:
   script:
     - yum install -y git rpm-build tree
     - ./packaging/client/fts-rest-client.sh
-    - mkdir ${CI_PROJECT_DIR}/artifacts/
-    - cp -r build/client/RPMS build/client/SRPMS ${CI_PROJECT_DIR}/artifacts/
+    - mkdir artifacts/
+    - cp -r build/client/RPMS build/client/SRPMS artifacts/
     - tree artifacts/
   variables:
     BRANCH: ${CI_COMMIT_REF_NAME}
   artifacts:
     when: on_success
-    untracked: true
+    paths:
+      - artifacts/
 
 server_rpm:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
@@ -150,14 +151,15 @@ server_rpm:
   script:
     - yum install -y git rpm-build tree
     - ./packaging/server/fts-rest-server.sh
-    - mkdir ${CI_PROJECT_DIR}/artifacts/
-    - cp -r build/server/RPMS build/server/SRPMS ${CI_PROJECT_DIR}/artifacts/
+    - mkdir artifacts/
+    - cp -r build/server/RPMS build/server/SRPMS artifacts/
     - tree artifacts/
   variables:
     BRANCH: ${CI_COMMIT_REF_NAME}
   artifacts:
     when: on_success
-    untracked: true
+    paths:
+      - artifacts/
 
 #--------------------------
 # RPM testing jobs
