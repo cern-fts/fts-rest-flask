@@ -62,7 +62,7 @@ bandit:
     - bandit --ini .gitlab-ci/bandit.ini
 
 #--------------------------
-# Testing job templates
+# Testing jobs
 #--------------------------
 
 .functional_tests_template: &functional_tests_definition
@@ -71,8 +71,8 @@ bandit:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
-    - PY="PY${CI_JOB_NAME##*tests}"
-    - VENV="VENV_${CI_JOB_NAME##*tests}"
+    - PY="PY${CI_JOB_NAME##*_tests}"
+    - VENV="VENV_${CI_JOB_NAME##*_tests}"
     - source ~/.bashrc
     - pyenv global ${!PY}
     - python --version
@@ -82,28 +82,18 @@ bandit:
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
   needs: []
-  variables: &testing_variables
+  variables:
     PYTHONPATH: ./src:./src/fts3rest
     FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig
 
-#--------------------------
-# Testing jobs
-#--------------------------
-
 functional_tests36:
   <<: *functional_tests_definition
-  variables:
-    <<: *testing_variables
 
 functional_tests37:
   <<: *functional_tests_definition
-  variables:
-    <<: *testing_variables
 
 functional_tests38:
   <<: *functional_tests_definition
-  variables:
-    <<: *testing_variables
 
 #--------------------------
 # Build jobs

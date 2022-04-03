@@ -116,7 +116,7 @@ The project uses [pip-tools][9] to manage dependencies:
 
 The `pipcompile.sh` script is provided to help set up a development environment:
 ```shell
-$ virtualeRenv
+$ virtualenv venv
 $ source venv/bin/activate
 (venv) $ pip install --upgrade pip
 (venv) $ pip install pip-tools

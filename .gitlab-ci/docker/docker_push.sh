@@ -7,7 +7,3 @@ docker build -t gitlab-registry.cern.ch/fts/fts-rest-flask:ci .
 docker login gitlab-registry.cern.ch/fts/fts-rest-flask
 docker push gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 rm pipcompile.sh requirements.in dev-requirements.in
-
-echo "Building fts-rest-flask:rpm..."
-docker build -t gitlab-registry.cern.ch/fts/fts-rest-flask:rpm . -f ./Dockerfile-rpm
-docker push gitlab-registry.cern.ch/fts/fts-rest-flask:rpm
