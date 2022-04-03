@@ -147,7 +147,7 @@ Example on Centos 7 with locally installed `mariadb`:
 $ wget https://gitlab.cern.ch/fts/fts3/-/raw/v3.11.0/src/db/schema/mysql/fts-schema-7.0.0.sql
 $ mysql -u root --execute "CREATE DATABASE ftsflask;"
 $ mysql -u root --execute "CREATE USER 'fts3'@'%';"
-$ mysql -u root --execute "GRANT ALL PRIVILEGES ON ftsflask.* TO 'fts3'@'%' IDENTIFIED BY 'fsflaskpass';"
+$ mysql -u root --execute "GRANT ALL PRIVILEGES ON ftsflask.* TO 'fts3'@'%' IDENTIFIED BY 'ftsflaskpass';"
 $ mysql -u fts3 --password=ftsflaskpass ftsflask
 MariaDB [ftsflask]> source fts-schema-7.0.0.sql
 ```

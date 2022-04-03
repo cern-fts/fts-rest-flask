@@ -9,9 +9,7 @@ stages:
 
 variables:
   MYSQL_DATABASE: ftsflask
-  MYSQL_ROOT_PASSWORD: asdf
-  PYTHONPATH: ./src:./src/fts3rest
-  FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig_ci
+  MYSQL_ROOT_PASSWORD: ftsflaskroot
 
 #--------------------------
 # Static Code Analysis
@@ -66,53 +64,52 @@ bandit:
     - bandit --ini .gitlab-ci/bandit.ini
 
 #--------------------------
+# Testing job templates
+#--------------------------
+
+.functional_tests_template: &functional_tests_definition
+  stage: tests
+  services:
+    - name: centos/mariadb:latest
+      alias: mariadb
+  script:
+    - source ~/.bashrc
+    - pyenv global $PY
+    - python --version
+    - source $VENV/bin/activate
+    - ./.gitlab-ci/setup-db.sh
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mariadb/" $FTS3TESTCONFIG
+    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+    - coverage report
+  needs: []
+  variables: &testing_variables
+    PYTHONPATH: ./src:./src/fts3rest
+    FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig
+
+#--------------------------
 # Testing jobs
 #--------------------------
 
 functional_tests36:
-  stage: tests
-  services:
-    - name: centos/mariadb:latest
-      alias: mariadb
-  script:
-    - source ~/.bashrc
-    - pyenv global $PY36
-    - python --version
-    - source $VENV_36/bin/activate
-    - ./.gitlab-ci/setup-db.sh
-    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-    - coverage report
-  needs: []
+  <<: *functional_tests_definition
+  variables:
+    <<: *testing_variables
+    PY: $PY36
+    VENV: $VENV_36
 
 functional_tests37:
-  stage: tests
-  services:
-    - name: centos/mariadb:latest
-      alias: mariadb
-  script:
-    - source ~/.bashrc
-    - pyenv global $PY37
-    - python --version
-    - source $VENV_37/bin/activate
-    - ./.gitlab-ci/setup-db.sh
-    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-    - coverage report
-  needs: []
+  <<: *functional_tests_definition
+  variables:
+    <<: *testing_variables
+    PY: $PY37
+    VENV: $VENV_37
 
 functional_tests38:
-  stage: tests
-  services:
-    - name: centos/mariadb:latest
-      alias: mariadb
-  script:
-    - source ~/.bashrc
-    - pyenv global $PY38
-    - python --version
-    - source $VENV_38/bin/activate
-    - ./.gitlab-ci/setup-db.sh
-    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-    - coverage report
-  needs: []
+  <<: *functional_tests_definition
+  variables:
+    <<: *testing_variables
+    PY: $PY38
+    VENV: $VENV_38
 
 #--------------------------
 # Build jobs
@@ -175,12 +172,13 @@ rpm_tests:
     - yum install -y yum-plugin-priorities mariadb python36-pytest
     - echo -e "[fts-testing]\nname=FTS Testing Repository\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/testing/el7/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-testing.repo
     - yum localinstall --nogpgcheck -y artifacts/RPMS/*/*.rpm
-    - export FTS3TESTCONFIG=/usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig_ci
-    - unset PYTHONPATH
     - ./.gitlab-ci/setup-db.sh
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mariadb/" $FTS3TESTCONFIG
     - pytest-3 -x /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
   dependencies:
     - server_rpm
+  variables:
+    FTS3TESTCONFIG: /usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig
 
 #--------------------------
 # Publish templates
