@@ -73,7 +73,8 @@ client_wheel_sdist:
     - python3 setup.py sdist
   artifacts:
     when: on_success
-    untracked: true
+    paths:
+      - dist/
 
 client_rpm:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
