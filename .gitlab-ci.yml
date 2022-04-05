@@ -2,19 +2,31 @@ image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci
 
 stages:
   - static_code_analysis
-  - tests
   - build
+  - tests
   - publish
 
 variables:
   MYSQL_DATABASE: ftsflask
-  MYSQL_ROOT_PASSWORD: asdf
-  PYTHONPATH: ./src:./src/fts3rest
-  FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig_ci
+  MYSQL_ROOT_PASSWORD: ftsflaskroot
 
-#--------------------------
+#---------------------------------
 # Static Code Analysis
-#--------------------------
+#---------------------------------
+
+.pylint_template: &pylint_definition
+  # Check for Python syntax errors
+  stage: static_code_analysis
+  script:
+    - PY="PY${CI_JOB_NAME##pylint}"
+    - VENV="VENV_${CI_JOB_NAME##pylint}"
+    - source ~/.bashrc
+    - pyenv global ${!PY}
+    - source ${!VENV}/bin/activate
+    - pylint --version
+    - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
+  variables:
+    PYTHONPATH: ./src:./src/fts3rest
 
 black:
   # Check that every file has been formatted with black
@@ -24,29 +36,13 @@ black:
     - black --check --fast --target-version py36 src/
 
 pylint36:
-  # Check that every file doesn't have syntax errors
-  stage: static_code_analysis
-  script:
-    - pylint --version
-    - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
+  <<: *pylint_definition
 
 pylint37:
-  stage: static_code_analysis
-  script:
-    - source ~/.bashrc
-    - pyenv global $PY37
-    - source $VENV_37/bin/activate
-    - pylint --version
-    - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
+  <<: *pylint_definition
 
 pylint38:
-  stage: static_code_analysis
-  script:
-    - source ~/.bashrc
-    - pyenv global $PY38
-    - source $VENV_38/bin/activate
-    - pylint --version
-    - pylint --output-format colorized --disable C,R,W src/ --ignored-modules=sqlalchemy
+  <<: *pylint_definition
 
 radon:
   # Check metrics for every file
@@ -65,94 +61,106 @@ bandit:
     - bandit --ini .gitlab-ci/bandit.ini
 
 #--------------------------
-# Testing jobs
-#--------------------------
-
-functional_tests36:
-  stage: tests
-  services:
-    - name: centos/mariadb:latest
-      alias: mariadb
-  script:
-    - source ~/.bashrc
-    - pyenv global $PY36
-    - python --version
-    - source $VENV_36/bin/activate
-    - ./.gitlab-ci/setup-db.sh
-    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-    - coverage report
-  needs: []
-
-functional_tests37:
-  stage: tests
-  services:
-    - name: centos/mariadb:latest
-      alias: mariadb
-  script:
-    - source ~/.bashrc
-    - pyenv global $PY37
-    - python --version
-    - source $VENV_37/bin/activate
-    - ./.gitlab-ci/setup-db.sh
-    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-    - coverage report
-  needs: []
-
-functional_tests38:
-  stage: tests
-  services:
-    - name: centos/mariadb:latest
-      alias: mariadb
-  script:
-    - source ~/.bashrc
-    - pyenv global $PY38
-    - python --version
-    - source $VENV_38/bin/activate
-    - ./.gitlab-ci/setup-db.sh
-    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
-    - coverage report
-  needs: []
-
-#--------------------------
 # Build jobs
 #--------------------------
 
 client_wheel_sdist:
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
   script:
+    - yum install -y python3 python3-wheel
     - python3 setup.py bdist_wheel
     - python3 setup.py sdist
   artifacts:
     when: on_success
-    untracked: true
+    paths:
+      - dist/
 
 client_rpm:
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
   script:
-    - rpmdev-setuptree
-    - ./packaging/fts-rest-client.sh
-    - mkdir ${CI_PROJECT_DIR}/artifacts/
-    - mv -v ~/rpmbuild/RPMS/noarch/* ${CI_PROJECT_DIR}/artifacts/
-    - mv -v ~/rpmbuild/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+    - yum install -y git rpm-build tree
+    - ./packaging/client/fts-rest-client.sh
+    - mkdir artifacts/
+    - cp -r build/client/RPMS build/client/SRPMS artifacts/
+    - tree artifacts/
   variables:
     BRANCH: ${CI_COMMIT_REF_NAME}
   artifacts:
     when: on_success
-    untracked: true
+    paths:
+      - artifacts/
 
 server_rpm:
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
   script:
-    - rpmdev-setuptree
-    - ./packaging/fts-rest-server.sh
-    - mkdir ${CI_PROJECT_DIR}/artifacts/
-    - mv -v ~/rpmbuild/RPMS/noarch/* ${CI_PROJECT_DIR}/artifacts/
-    - mv -v ~/rpmbuild/SRPMS/* ${CI_PROJECT_DIR}/artifacts/
+    - yum install -y git rpm-build tree
+    - ./packaging/server/fts-rest-server.sh
+    - mkdir artifacts/
+    - cp -r build/server/RPMS build/server/SRPMS artifacts/
+    - tree artifacts/
   variables:
     BRANCH: ${CI_COMMIT_REF_NAME}
   artifacts:
     when: on_success
-    untracked: true
+    paths:
+      - artifacts/
+
+#--------------------------
+# Testing jobs
+#--------------------------
+
+.functional_tests_template: &functional_tests_definition
+  stage: tests
+  services:
+    - name: centos/mariadb:latest
+      alias: mariadb
+  script:
+    - PY="PY${CI_JOB_NAME##*_tests}"
+    - VENV="VENV_${CI_JOB_NAME##*_tests}"
+    - source ~/.bashrc
+    - pyenv global ${!PY}
+    - python --version
+    - source ${!VENV}/bin/activate
+    - ./.gitlab-ci/setup-db.sh
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mariadb/" $FTS3TESTCONFIG
+    - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
+    - coverage report
+  needs: []
+  variables:
+    PYTHONPATH: ./src:./src/fts3rest
+    FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig
+
+functional_tests36:
+  <<: *functional_tests_definition
+
+functional_tests37:
+  <<: *functional_tests_definition
+
+functional_tests38:
+  <<: *functional_tests_definition
+
+rpm_tests:
+  stage: tests
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  services:
+    - name: centos/mariadb:latest
+      alias: mariadb
+  script:
+    - yum install -y yum-plugin-priorities mariadb python36-pytest
+    - echo -e "[fts-testing]\nname=FTS Testing Repository\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/testing/el7/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-testing.repo
+    - yum localinstall --nogpgcheck -y artifacts/RPMS/*/*.rpm
+    - ./.gitlab-ci/setup-db.sh
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mariadb/" $FTS3TESTCONFIG
+    - pytest-3 -x /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
+  dependencies:
+    - server_rpm
+  needs:
+    - server_rpm
+  variables:
+    FTS3TESTCONFIG: /usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig
 
 #--------------------------
 # Publish templates
@@ -169,7 +177,7 @@ server_rpm:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
     - eosfusebind
-    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/*.rpm
+    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/RPMS/*/*.rpm artifacts/SRPMS/*
     - sleep 60
   tags:
     - docker-privileged

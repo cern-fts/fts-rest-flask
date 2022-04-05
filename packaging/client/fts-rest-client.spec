@@ -8,6 +8,8 @@ URL:            https://fts.web.cern.ch/
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3
+BuildRequires:  python3-rpm-macros
+BuildRequires:  python-rpm-macros
 Requires:       python3
 Requires:       python36-m2crypto
 Requires:       python36-requests
