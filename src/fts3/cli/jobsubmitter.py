@@ -15,7 +15,6 @@
 
 from datetime import timedelta
 import json
-import logging
 import sys
 import time
 
@@ -431,21 +430,22 @@ class JobSubmitter(Base):
 
         submitter = Submitter(context)
 
-        core = context.endpoint_info["core"]
-        if core:
-            major = core["major"]
-            minor = core["minor"]
+        supports_overwrite_hop = True
 
         try:
-            supports_overwrite_hop = int(major) > 3 or (
-                int(major) == 3 and int(minor) >= 12
-            )
-        except:
-            supports_overwrite_hop = False  # Fallback in case the API returns a non integer for the core version number
+            core = context.endpoint_info.get("core")
+            if core is not None:
+                major = core["major"]
+                minor = core["minor"]
+                supports_overwrite_hop = int(major) > 3 or (
+                    int(major) == 3 and int(minor) >= 12
+                )
+        except Exception:
+            pass  # Print compatibility warning only when fully confident
 
         if self.params["overwrite_hop"] and not supports_overwrite_hop:
             self.logger.warning(
-                "overwrite-hop is only availabe after fts server version 3.12.0"
+                "overwrite-hop is only available for FTS Server >= 3.12.0"
             )
 
         job_id = submitter.submit(transfers=self.transfers, params=self.params)
