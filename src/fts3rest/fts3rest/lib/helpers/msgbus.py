@@ -56,6 +56,7 @@ def submit_state_change(job, transfer, transfer_state):
         timestamp=time.time() * 1000,
         job_metadata=job["job_metadata"],
         file_metadata=transfer["file_metadata"],
+        staging_metadata=transfer["staging_metadata"],
     )
 
     tmpfile = tempfile.NamedTemporaryFile(dir=msg_dir, mode="w", delete=False)
