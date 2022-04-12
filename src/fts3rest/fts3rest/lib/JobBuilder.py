@@ -173,12 +173,15 @@ class JobBuilder:
                 user_filesize=safe_filesize(file_dict.get("filesize", 0)),
                 selection_strategy=file_dict.get("selection_strategy", "auto"),
                 checksum=file_dict.get("checksum", None),
+                staging_metadata=file_dict.get("staging_metadata", None),
                 file_metadata=file_dict.get("metadata", None),
                 activity=file_dict.get("activity", "default"),
                 hashed_id=shared_hashed_id
                 if shared_hashed_id
                 else generate_hashed_id(),
             )
+            if f["staging_metadata"] != None:
+                f["staging_metadata"] = validate_staging_metadata(f["staging_metadata"])
             if f["file_metadata"] != None:
                 f["file_metadata"] = metadata(f["file_metadata"])
             self.files.append(f)
