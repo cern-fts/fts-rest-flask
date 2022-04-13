@@ -202,15 +202,15 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         :param authorization: attribute .is_valid is set to True if validation successful
         """
         authorization.is_valid = False
-        online_validation = False
 
         if self._should_validate_offline():
-            _, credential = self._validate_token_offline(access_token)
+            valid, credential = self._validate_token_offline(access_token)
+            validation_method = "offline"
         else:
-            _, credential = self._validate_token_online(access_token)
-            online_validation = True
+            valid, credential = self._validate_token_online(access_token)
+            validation_method = "online"
         (valid, message) = self._token_credential_postvalidation(
-            credential, online_validation
+            credential, valid, validation_method == "online"
         )
         if not valid:
             authorization.error = message
@@ -230,9 +230,9 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             if self._should_validate_offline():
                 log.debug("offline and not in db")
                 # Introspect to obtain additional information
-                _, credential = self._validate_token_online(access_token)
+                valid, credential = self._validate_token_online(access_token)
                 (valid, message) = self._token_credential_postvalidation(
-                    credential, validated_online=True
+                    credential, valid, validated_online=True
                 )
                 if not valid:
                     authorization.error = message
@@ -293,21 +293,26 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         log.debug("voms_attrs::: {}".format(voms_attrs))
         return voms_attrs
 
-    def _token_credential_postvalidation(self, credential, validated_online):
+    def _token_credential_postvalidation(self, credential, valid, validated_online):
         """
         Run a series of post-validation checks on the token credential object.
         Fail early in case any requirements are not met.
         :param credential: the credential object
+        :param valid: the result of the offline/online validation
         :param validated_online: whether validation was done online or not
         :return: tuple(pre-validation flag, errmsg = None)
         """
-        if credential is None:
+        if credential is None or not valid:
             log.warning("Access token provided is not valid")
             return False, "Invalid OAuth2 credentials"
         if validated_online:
+            message = None
             scopes = credential.get("scope")
-            if "offline_access" not in scopes:
+            if scopes is None:
+                message = "Scope claim not found in online validation response"
+            elif "offline_access" not in scopes:
                 message = "Scope claim does not contain offline_access"
+            if message is not None:
                 log.warning(
                     "Access token failed post-validation. Reason: {}".format(message)
                 )
