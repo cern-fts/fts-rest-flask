@@ -130,9 +130,8 @@ class OIDCmanager:
             refresh_token = response["refresh_token"]
             log.debug("refresh_token_response::: {}".format(refresh_token))
         except Exception as ex:
-            log.warning("Exception raised when requesting refresh token")
-            log.warning(ex)
-            raise ex
+            log.warning("Exception during refresh token request: {}".format(ex))
+            raise Exception("Exception during refresh token request")
         log.debug("refresh_token_response::: {}".format(refresh_token))
         return refresh_token
 
@@ -142,6 +141,7 @@ class OIDCmanager:
         :param issuer: issuer of the access token
         :param access_token: token to exchange
         :param scope: string containing scopes separated by space
+        :param audience: the token audience
         :return: provider response in json
         :raise Exception: if request fails
         """
@@ -168,9 +168,8 @@ class OIDCmanager:
             response = response.json()
             log.debug("response: {}".format(response))
         except Exception as ex:
-            log.warning("Exception raised when exchanging token")
-            log.warning(ex)
-            raise ex
+            log.warning("Exception during token exchange: {}".format(ex))
+            raise Exception("Exception during token exchange")
         return response
 
     def generate_token_with_scope(self, issuer, access_token, scope, audience=None):
@@ -179,6 +178,7 @@ class OIDCmanager:
         :param issuer: issuer of the access token
         :param access_token:
         :param scope: string containing scopes separated by space
+        :param audience: the token audience
         :return: new access token and optional refresh_token
         :raise Exception: If token cannot be obtained
         """
