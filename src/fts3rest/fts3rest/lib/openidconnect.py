@@ -79,7 +79,7 @@ class OIDCmanager:
                  false otherwise
         """
         unverified_payload = jwt.decode(
-            access_token, options={"verify_signature": False}
+            access_token, verify=False, options={"verify_signature": False}
         )
         issuer = unverified_payload["iss"]
         log.debug("Checking client registration for issuer={}".format(issuer))
@@ -223,7 +223,7 @@ class OIDCmanager:
         """
         access_token, refresh_token = credential.proxy.split(":")
         unverified_payload = jwt.decode(
-            access_token, options={"verify_signature": False}
+            access_token, verify=False, options={"verify_signature": False}
         )
         issuer = unverified_payload["iss"]
         client = self.clients[issuer]
@@ -245,7 +245,7 @@ class OIDCmanager:
         refresh_token = new_credential.get("refresh_token", refresh_token)
         access_token = new_credential.get("access_token")
         unverified_payload = jwt.decode(
-            access_token, options={"verify_signature": False}
+            access_token, verify=False, options={"verify_signature": False}
         )
         expiration_time = unverified_payload["exp"]
         credential.proxy = new_credential["access_token"] + ":" + refresh_token

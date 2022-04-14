@@ -357,7 +357,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         credential = None
         try:
             unverified_payload = jwt.decode(
-                access_token, options={"verify_signature": False}
+                access_token, verify=False, options={"verify_signature": False}
             )
             unverified_header = jwt.get_unverified_header(access_token)
             issuer = unverified_payload["iss"]
@@ -391,7 +391,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         """
         try:
             unverified_payload = jwt.decode(
-                access_token, options={"verify_signature": False}
+                access_token, verify=False, options={"verify_signature": False}
             )
             issuer = unverified_payload["iss"]
             log.debug("issuer={}".format(issuer))
