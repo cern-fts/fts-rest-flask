@@ -78,7 +78,9 @@ class OIDCmanager:
         :return: true if a client is registered for the token issuer,
                  false otherwise
         """
-        unverified_payload = jwt.decode(access_token, verify=False)
+        unverified_payload = jwt.decode(
+            access_token, options={"verify_signature": False}
+        )
         issuer = unverified_payload["iss"]
         log.debug("Checking client registration for issuer={}".format(issuer))
         return issuer in self.clients
@@ -220,7 +222,9 @@ class OIDCmanager:
         :return: Updated credential containing new access token
         """
         access_token, refresh_token = credential.proxy.split(":")
-        unverified_payload = jwt.decode(access_token, verify=False)
+        unverified_payload = jwt.decode(
+            access_token, options={"verify_signature": False}
+        )
         issuer = unverified_payload["iss"]
         client = self.clients[issuer]
         log.debug("refresh_access_token for {}".format(issuer))
@@ -240,7 +244,9 @@ class OIDCmanager:
         # A new refresh token is optional
         refresh_token = new_credential.get("refresh_token", refresh_token)
         access_token = new_credential.get("access_token")
-        unverified_payload = jwt.decode(access_token, verify=False)
+        unverified_payload = jwt.decode(
+            access_token, options={"verify_signature": False}
+        )
         expiration_time = unverified_payload["exp"]
         credential.proxy = new_credential["access_token"] + ":" + refresh_token
         credential.termination_time = datetime.utcfromtimestamp(expiration_time)

@@ -356,7 +356,9 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         log.debug("entered validate_token_offline")
         credential = None
         try:
-            unverified_payload = jwt.decode(access_token, verify=False)
+            unverified_payload = jwt.decode(
+                access_token, options={"verify_signature": False}
+            )
             unverified_header = jwt.get_unverified_header(access_token)
             issuer = unverified_payload["iss"]
             key_id = unverified_header.get("kid")
@@ -388,7 +390,9 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         :return: tuple(valid, credential) or tuple(False, None)
         """
         try:
-            unverified_payload = jwt.decode(access_token, verify=False)
+            unverified_payload = jwt.decode(
+                access_token, options={"verify_signature": False}
+            )
             issuer = unverified_payload["iss"]
             log.debug("issuer={}".format(issuer))
             response = oidc_manager.introspect(issuer, access_token)
