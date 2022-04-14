@@ -31,7 +31,6 @@ class OIDCmanager:
         self._retrieve_clients_keys()
 
     def _configure_clients(self, providers_config):
-        # log.debug('provider_info::: {}'.format(client.provider_info))
         for provider in providers_config:
             try:
                 client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
@@ -43,11 +42,21 @@ class OIDCmanager:
                     client_secret=providers_config[provider]["client_secret"],
                 )
                 client.store_registration_info(client_reg)
-                issuer = client.provider_info["issuer"]
-                self.clients[issuer] = client
+                if self._validate_client(client):
+                    issuer = client.provider_info["issuer"]
+                    self.clients[issuer] = client
             except Exception as ex:
                 log.warning("Exception registering provider: {}".format(provider))
                 log.warning(ex)
+
+    def _validate_client(self, client):
+        if "introspection_endpoint" not in client.provider_info:
+            issuer = client.provider_info["issuer"]
+            log.warning(
+                "Discarding {} -- missing introspection endpoint".format(issuer)
+            )
+            return False
+        return True
 
     def _retrieve_clients_keys(self):
         for provider in self.clients:
