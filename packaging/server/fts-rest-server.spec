@@ -88,6 +88,10 @@ getent passwd fts3 >/dev/null && usermod -a -G apache fts3
 getent passwd fts3 >/dev/null || \
     useradd -r -m -g fts3 -G apache -d /var/log/fts3 -s /sbin/nologin \
     -c "File Transfer Service user" fts3
+if [ ! -d /var/log/fts3 ] ; then
+mkdir /var/log/fts3
+chown fts3:fts3 /var/log/fts3
+fi
 exit 0
 
 # SELinux scriptlets
