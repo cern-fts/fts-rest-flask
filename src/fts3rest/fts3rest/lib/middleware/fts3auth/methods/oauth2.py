@@ -15,7 +15,6 @@
 
 
 import types
-from fts3rest.lib.oauth2provider import FTS3OAuth2ResourceProvider
 from fts3rest.lib.middleware.fts3auth.credentials import (
     vo_from_fqan,
     build_vo_from_dn,
@@ -36,6 +35,10 @@ def do_authentication(credentials, env, config):
     """
     The user will be the one who gave the bearer token
     """
+    # TODO: There is a circular dependency between credentials::UserCredentials and
+    #       oauth2provider::FTS3OAuth2ResourceProvider
+    from fts3rest.lib.oauth2provider import FTS3OAuth2ResourceProvider
+
     res_provider = FTS3OAuth2ResourceProvider(env, config)
     authn = res_provider.get_authorization()
     if authn is None:
