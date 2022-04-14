@@ -61,6 +61,19 @@ class OIDCmanager:
             for keybundle in keybundles:
                 keybundle.cache_time = cache_time
 
+    def client_is_registered(self, access_token):
+        """
+        Given an access token, checks whether a client is registered
+        for the token issuer.
+        :param access_token:
+        :return: true if a client is registered for the token issuer,
+                 false otherwise
+        """
+        unverified_payload = jwt.decode(access_token, verify=False)
+        issuer = unverified_payload["iss"]
+        log.debug("Checking client registration for issuer={}".format(issuer))
+        return issuer in self.clients
+
     def filter_provider_keys(self, issuer, kid=None, alg=None):
         """
         Return Provider Keys after applying Key ID and Algorithm filter.
@@ -88,7 +101,9 @@ class OIDCmanager:
         :param access_token: token to introspect
         :return: JSON response
         """
-        client = self.clients[issuer]
+        client = self.clients.get(issuer)
+        if client is None:
+            raise ValueError("Could not retrieve client for issuer={}".format(issuer))
         response = client.do_any(
             request_args={"token": access_token},
             request=TokenIntrospectionRequest,

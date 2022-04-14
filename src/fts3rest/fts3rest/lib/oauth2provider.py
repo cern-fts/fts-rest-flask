@@ -203,6 +203,10 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         """
         authorization.is_valid = False
 
+        if not oidc_manager.client_is_registered(access_token):
+            authorization.error = "TokenProvider not supported"
+            return
+
         if self._should_validate_offline():
             valid, credential = self._validate_token_offline(access_token)
             validation_method = "offline"
@@ -391,7 +395,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             log.debug("online_response::: {}".format(response))
             return response["active"], response
         except Exception as ex:
-            log.debug("exception {}".format(ex))
+            log.debug("Exception: {}".format(ex))
             return False, None
 
     def _save_credential(self, dlg_id, dn, proxy, voms_attrs, termination_time):
