@@ -70,17 +70,15 @@ class OIDCmanager:
             for keybundle in keybundles:
                 keybundle.cache_time = cache_time
 
-    def client_is_registered(self, access_token):
+    def token_issuer_supported(self, access_token):
         """
         Given an access token, checks whether a client is registered
         for the token issuer.
         :param access_token:
-        :return: true if a client is registered for the token issuer,
-                 false otherwise
+        :return: true if token issuer is supported, false otherwise
+        :raise KeyError: issuer claim missing
         """
-        unverified_payload = jwt.decode(
-            access_token, verify=False, options={"verify_signature": False}
-        )
+        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         issuer = unverified_payload["iss"]
         log.debug("Checking client registration for issuer={}".format(issuer))
         return issuer in self.clients
@@ -222,9 +220,7 @@ class OIDCmanager:
         :return: Updated credential containing new access token
         """
         access_token, refresh_token = credential.proxy.split(":")
-        unverified_payload = jwt.decode(
-            access_token, verify=False, options={"verify_signature": False}
-        )
+        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         issuer = unverified_payload["iss"]
         client = self.clients[issuer]
         log.debug("refresh_access_token for {}".format(issuer))
@@ -244,15 +240,28 @@ class OIDCmanager:
         # A new refresh token is optional
         refresh_token = new_credential.get("refresh_token", refresh_token)
         access_token = new_credential.get("access_token")
-        unverified_payload = jwt.decode(
-            access_token, verify=False, options={"verify_signature": False}
-        )
+        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         expiration_time = unverified_payload["exp"]
         credential.proxy = new_credential["access_token"] + ":" + refresh_token
         credential.termination_time = datetime.utcfromtimestamp(expiration_time)
 
         return credential
 
+    @staticmethod
+    def jwt_options_unverified(options=None):
+        options_unverified = {
+            "verify_signature": False,
+            "verify_exp": False,
+            "verify_nbf": False,
+            "verify_iat": False,
+            "verify_aud": False,
+            "verify_iss": False,
+        }
+        if options is not None:
+            options_unverified.update(options)
+        return options_unverified
+
 
 # Should be the only instance, called during the middleware initialization
 oidc_manager = OIDCmanager()
+jwt_options_unverified = OIDCmanager.jwt_options_unverified
