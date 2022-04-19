@@ -166,7 +166,9 @@ class FTS3OAuth2AuthorizationProvider(AuthorizationProvider):
 class FTS3ResourceAuthorization(ResourceAuthorization):
     dlg_id = None
     credentials = None
+    issuer = None
     scope = None
+    groups = None
 
 
 class FTS3OAuth2ResourceProvider(ResourceProvider):
@@ -253,7 +255,6 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                     return
             # Store credential in DB
             log.debug("Store credential in DB")
-            dlg_id = generate_delegation_id(credential["sub"], "")
             try:
                 if "wlcg" in credential["iss"]:
                     # Hardcoded scope and audience for wlcg tokens. To change once the wlcg standard evolves
@@ -272,6 +273,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             except Exception as ex:
                 authorization.error = str(ex)
                 return
+            dlg_id = generate_delegation_id(credential["sub"], "")
             credential_db = self._save_credential(
                 dlg_id,
                 credential["sub"],
@@ -281,6 +283,9 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             )
 
         authorization.is_oauth = True
+        authorization.issuer = credential["iss"]
+        authorization.scope = self._scope_from_credential(credential)
+        authorization.groups = credential.get("wlcg.groups")
         authorization.token = credential_db.proxy.split(":")[0]
         authorization.dlg_id = credential_db.dlg_id
         authorization.expires_in = credential_db.termination_time - datetime.utcnow()
@@ -296,16 +301,18 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         return Session.query(Credential).filter(Credential.dlg_id == dlg_id).first()
 
     def _generate_voms_attrs(self, credential):
-        attrs = [
-            credential.get("email"),
-            credential.get("username")
-            or credential.get("user_id")
-            or credential.get("client_id"),
-        ]
-
-        voms_attrs = " ".join(filter(None, attrs))
+        voms_attrs = ""
+        groups = credential.get("wlcg.groups")
+        if groups is not None:
+            voms_attrs = " ".join(groups)
         log.debug("voms_attrs::: {}".format(voms_attrs))
         return voms_attrs
+
+    def _scope_from_credential(self, credential):
+        scope = credential.get("scope")
+        if isinstance(scope, list):
+            scope = " ".join(scope)
+        return scope
 
     def _validate_token_offline(self, access_token):
         """
