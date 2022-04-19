@@ -13,15 +13,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
 import types
-from fts3rest.lib.middleware.fts3auth.credentials import (
-    vo_from_fqan,
-    build_vo_from_dn,
-    InvalidCredentials,
-    generate_delegation_id,
-)
 import logging
+from urllib.parse import urlparse
+from fts3rest.lib.middleware.fts3auth.credentials import InvalidCredentials
 
 log = logging.getLogger(__name__)
 
@@ -52,13 +47,10 @@ def do_authentication(credentials, env, config):
             raise InvalidCredentials(message)
         return False
 
-    credentials.dn.append(authn.credentials.dn)
     credentials.user_dn = authn.credentials.dn
+    credentials.dn.append(authn.credentials.dn)
+    _build_vo_from_token_auth(credentials, authn)
     credentials.delegation_id = authn.credentials.dlg_id
-    if authn.credentials.voms_attrs:
-        for fqan in authn.credentials.voms_attrs.split():
-            credentials.voms_cred.append(fqan)
-            credentials.vos.append(fqan)
     credentials.method = "oauth2"
 
     # Override get_granted_level_for so we can filter by the scope
@@ -73,5 +65,23 @@ def do_authentication(credentials, env, config):
         "get_granted_level_for",
         types.MethodType(_oauth2_get_granted_level_for, credentials),
     )
-
     return True
+
+
+def _build_vo_from_token_auth(credentials, token_auth):
+    if token_auth.groups is not None:
+        for group in token_auth.groups:
+            if group.startswith("/"):
+                group = group[1:]
+            if group not in credentials.vos:
+                credentials.vos.append(group)
+        credentials.voms_cred.extend(token_auth.groups)
+    else:
+        credentials.vos.append(_build_vo_from_issuer(token_auth.issuer))
+
+
+def _build_vo_from_issuer(issuer):
+    try:
+        return urlparse(issuer).hostname
+    except Exception:
+        return issuer
