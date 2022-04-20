@@ -42,21 +42,13 @@ class OIDCmanager:
                     client_secret=providers_config[provider]["client_secret"],
                 )
                 client.store_registration_info(client_reg)
-                if self._validate_client(client):
-                    issuer = client.provider_info["issuer"]
-                    self.clients[issuer] = client
+                issuer = client.provider_info["issuer"]
+                if "introspection_endpoint" not in client.provider_info:
+                    log.warning("{} -- missing introspection endpoint".format(issuer))
+                self.clients[issuer] = client
             except Exception as ex:
                 log.warning("Exception registering provider: {}".format(provider))
                 log.warning(ex)
-
-    def _validate_client(self, client):
-        if "introspection_endpoint" not in client.provider_info:
-            issuer = client.provider_info["issuer"]
-            log.warning(
-                "Discarding {} -- missing introspection endpoint".format(issuer)
-            )
-            return False
-        return True
 
     def _retrieve_clients_keys(self):
         for provider in self.clients:
@@ -113,6 +105,8 @@ class OIDCmanager:
         client = self.clients.get(issuer)
         if client is None:
             raise ValueError("Could not retrieve client for issuer={}".format(issuer))
+        if "introspection_endpoint" not in client.provider_info:
+            raise Exception("Issuer does not support introspection")
         response = client.do_any(
             request_args={"token": access_token},
             request=TokenIntrospectionRequest,
