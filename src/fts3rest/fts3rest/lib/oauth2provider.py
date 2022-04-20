@@ -18,7 +18,6 @@ import json
 import jwt
 from fts3rest.model.meta import Session
 from fts3rest.lib.middleware.fts3auth.constants import VALID_OPERATIONS
-from fts3rest.lib.middleware.fts3auth.credentials import generate_delegation_id
 from fts3rest.lib.oauth2lib.provider import (
     AuthorizationProvider,
     ResourceAuthorization,
@@ -28,7 +27,7 @@ from fts3rest.lib.openidconnect import oidc_manager, jwt_options_unverified
 from jwcrypto.jwk import JWK
 from flask import request
 
-from fts3rest.model import Credential, CredentialCache
+from fts3rest.model import CredentialCache
 from fts3rest.model.oauth2 import OAuth2Application, OAuth2Code, OAuth2Token
 
 log = logging.getLogger(__name__)
@@ -166,7 +165,9 @@ class FTS3OAuth2AuthorizationProvider(AuthorizationProvider):
 class FTS3ResourceAuthorization(ResourceAuthorization):
     dlg_id = None
     credentials = None
+    subject = None
     issuer = None
+    expiry = None
     scope = None
     groups = None
 
@@ -187,21 +188,42 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
     def get_authorization_header(self):
         return self.environ.get("HTTP_AUTHORIZATION", None)
 
+    def obtain_refresh_token_from_auth(self, authorization):
+        """
+        Obtain a refresh token from a filled-in token authorization object
+
+        :param authorization: the token authorization object as filled-in
+                              by the validate_access_token() method
+        :return: an access/refresh token pair
+        """
+        if authorization.issuer is None or authorization.token is None:
+            raise ValueError("Invalid token authorization object!")
+        if "wlcg" in authorization.issuer:
+            # Hardcoded scope and audience for wlcg tokens. To change once the wlcg standard evolves
+            scope = "offline_access openid storage.read:/ storage.modify:/ wlcg.groups"
+            audience = "https://wlcg.cern.ch/jwt/v1/any"
+            (access_token, refresh_token,) = oidc_manager.generate_token_with_scope(
+                authorization.issuer, authorization.token, scope, audience
+            )
+        else:
+            access_token = authorization.token
+            refresh_token = oidc_manager.generate_refresh_token(
+                authorization.issuer, authorization.token
+            )
+        return access_token, refresh_token
+
     def validate_access_token(self, access_token, authorization):
         """
         Validate access token offline or online
 
         Description of the algorithm:
-        - Validate access token offline (using cached keys) or online (using introspection RFC 7662).
-        - Perform token credential post-validation
-        - If a credential already exists in the DB and has not expired, the new token is discarded and the old
-        credential is used.
-        - If a credential already exists in the DB but has expired, delete it.
-        - If there's no credential, Introspect the token to get additional information (if not done before). Then,
-        exchange the access token with a refresh token. Store both tokens in the DB.
+          - Check whether the Token Issuer is supported
+          - Validate access token offline (using cached keys) or online (using introspection RFC 7662)
+            -- Offline validation must have valid "exp", "iat" and "nbf" claims
+            -- Online validation must include "offline_access" scope
 
         :param access_token:
-        :param authorization: attribute .is_valid is set to True if validation successful
+        :param authorization: attribute to fill-in with token information
         """
         authorization.is_valid = False
         validation_method = "offline" if self._should_validate_offline() else "online"
@@ -229,94 +251,23 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             authorization.error = str(ex)
             return
 
-        # Check if a credential already exists in the DB
-        credential_db = (
-            Session.query(Credential).filter(Credential.dn == credential["sub"]).first()
-        )
-        if credential_db and credential_db.expired():
-            log.debug("Deleting expired credential '{}'".format(credential["sub"]))
-            Session.delete(credential_db)
-            Session.commit()
-            credential_db = None
-
-        if not credential_db:
-            if validation_method == "offline":
-                log.debug("offline and not in db")
-                # Introspect to obtain additional information
-                try:
-                    valid, credential = self._validate_token_online(access_token)
-                    if not valid:
-                        return
-                except Exception as ex:
-                    log.warning(
-                        "Exception during online validation: {}".format(str(ex))
-                    )
-                    authorization.error = str(ex)
-                    return
-            # Store credential in DB
-            log.debug("Store credential in DB")
-            try:
-                if "wlcg" in credential["iss"]:
-                    # Hardcoded scope and audience for wlcg tokens. To change once the wlcg standard evolves
-                    scope = "offline_access openid storage.read:/ storage.modify:/ wlcg.groups"
-                    audience = "https://wlcg.cern.ch/jwt/v1/any"
-                    (
-                        access_token,
-                        refresh_token,
-                    ) = oidc_manager.generate_token_with_scope(
-                        credential["iss"], access_token, scope, audience
-                    )
-                else:
-                    refresh_token = oidc_manager.generate_refresh_token(
-                        credential["iss"], access_token
-                    )
-            except Exception as ex:
-                authorization.error = str(ex)
-                return
-            dlg_id = generate_delegation_id(credential["sub"], "")
-            credential_db = self._save_credential(
-                dlg_id,
-                credential["sub"],
-                str(access_token) + ":" + str(refresh_token),
-                self._generate_voms_attrs(credential),
-                datetime.utcfromtimestamp(credential["exp"]),
-            )
-
         authorization.is_oauth = True
         authorization.issuer = credential["iss"]
+        authorization.subject = credential["sub"]
+        authorization.client_id = credential.get("client_id")
+        authorization.expiry = credential["exp"]
         authorization.scope = self._scope_from_credential(credential)
         authorization.groups = credential.get("wlcg.groups")
-        authorization.token = credential_db.proxy.split(":")[0]
-        authorization.dlg_id = credential_db.dlg_id
-        authorization.expires_in = credential_db.termination_time - datetime.utcnow()
-        if authorization.expires_in > timedelta(seconds=0):
-            authorization.credentials = self._get_credentials(credential_db.dlg_id)
-            if authorization.credentials:
-                authorization.is_valid = True
-
-    def _get_credentials(self, dlg_id):
-        """
-        Get the user credentials bound to the authorization token
-        """
-        return Session.query(Credential).filter(Credential.dlg_id == dlg_id).first()
-
-    def _generate_voms_attrs(self, credential):
-        voms_attrs = ""
-        groups = credential.get("wlcg.groups")
-        if groups is not None:
-            voms_attrs = " ".join(groups)
-        log.debug("voms_attrs::: {}".format(voms_attrs))
-        return voms_attrs
-
-    def _scope_from_credential(self, credential):
-        scope = credential.get("scope")
-        if isinstance(scope, list):
-            scope = " ".join(scope)
-        return scope
+        authorization.token = access_token
+        authorization.expires_in = (
+            datetime.utcfromtimestamp(credential["exp"]) - datetime.utcnow()
+        )
+        authorization.is_valid = authorization.expires_in > timedelta(seconds=0)
 
     def _validate_token_offline(self, access_token):
         """
         Validate access token using cached information from the provider
+
         :param access_token:
         :return: tuple(valid, credential) or tuple(False, None)
         :raise Exception: exception on invalid token
@@ -369,6 +320,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         Validate access token using Introspection (RFC 7662).
         Furthermore, run some FTS specific validations, such as
         requiring the "offline_access" scope.
+
         :param access_token:
         :return: tuple(valid, credential) or tuple(False, None)
         :raise Exception: exception during introspection
@@ -386,20 +338,14 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         if scopes is None:
             raise ValueError("Scope claim not found in online validation response")
         if "offline_access" not in scopes:
-            raise ValueError("Scope claim dos not contain 'offline_access'")
+            raise ValueError("Scope claim dos not contain offline_access")
         return True, credential
 
-    def _save_credential(self, dlg_id, dn, proxy, voms_attrs, termination_time):
-        credential = Credential(
-            dlg_id=dlg_id,
-            dn=dn,
-            proxy=proxy,
-            voms_attrs=voms_attrs,
-            termination_time=termination_time,
-        )
-        Session.add(credential)
-        Session.commit()
-        return credential
+    def _scope_from_credential(self, credential):
+        scope = credential.get("scope")
+        if isinstance(scope, list):
+            scope = " ".join(scope)
+        return scope
 
     def _should_validate_offline(self):
         return self.config.get("fts3.ValidateAccessTokenOffline", True)

@@ -16,7 +16,13 @@
 import types
 import logging
 from urllib.parse import urlparse
-from fts3rest.lib.middleware.fts3auth.credentials import InvalidCredentials
+from datetime import datetime
+from fts3rest.lib.middleware.fts3auth.credentials import (
+    generate_delegation_id,
+    InvalidCredentials,
+)
+from fts3rest.model.meta import Session
+from fts3rest.model import Credential
 
 log = logging.getLogger(__name__)
 
@@ -47,13 +53,25 @@ def do_authentication(credentials, env, config):
             raise InvalidCredentials(message)
         return False
 
-    credentials.user_dn = authn.credentials.dn
-    credentials.dn.append(authn.credentials.dn)
-    _build_vo_from_token_auth(credentials, authn)
-    credentials.delegation_id = authn.credentials.dlg_id
     credentials.method = "oauth2"
+    credentials.user_dn = authn.subject
+    credentials.dn.append(authn.subject)
+    _build_vo_from_token_auth(credentials, authn)
+    credentials.delegation_id = generate_delegation_id(
+        credentials.user_dn, credentials.voms_cred
+    )
 
-    # Override get_granted_level_for so we can filter by the scope
+    # Handle the database part of token authentication
+    # Should be refactored and moved to the delegation process
+    try:
+        _handle_credential_storing(res_provider, credentials, authn)
+    except Exception as ex:
+        log.warning("Error obtaining refresh token: {}".format(str(ex)))
+        raise InvalidCredentials(
+            "Error obtaining refresh tokens (is offline_access scope included?)"
+        )
+
+    # Override get_granted_level_for to allow filtering by scope claim
     setattr(credentials, "oauth2_scope", authn.scope)
     setattr(
         credentials,
@@ -85,3 +103,61 @@ def _build_vo_from_issuer(issuer):
         return urlparse(issuer).hostname
     except Exception:
         return issuer
+
+
+def _handle_credential_storing(resource_provider, credentials, token_auth):
+    """
+    This method takes care of all database token-related operations.
+
+    Ideally, the token credentials would only touch the database
+    during the delegation process. However, as delegation is not
+    implemented yet for tokens, it happens on every authentication.
+
+    Algorithm:
+        - If a credential already exists in the database but has expired, delete it
+        - If there's no credential anymore, exchange the access token for a refresh token
+        - Store the access/refresh token pair in the database
+
+    :param resource_provider: the OAuth2 Resource Provider object
+    :param credentials: the constructed UserCredential object
+    :param token_auth: the token authorization object
+    """
+    # Check if a credential already exists in the database
+    credential_db = (
+        Session.query(Credential)
+        .filter(Credential.dlg_id == credentials.delegation_id)
+        .first()
+    )
+    # Delete expired credential
+    if credential_db and credential_db.expired():
+        log.debug(
+            "Deleting expired credential dlg_id={}".format(credentials.delegation_id)
+        )
+        try:
+            Session.delete(credential_db)
+            Session.commit()
+        except Exception:
+            Session.rollback()
+        credential_db = None
+    if not credential_db:
+        # Exchange access token for a refresh token if no credential exists
+        log.debug("Obtaining refresh token")
+        access_token, refresh_token = resource_provider.obtain_refresh_token_from_auth(
+            token_auth
+        )
+        # Store access/refresh token pair in the database
+        credential = Credential(
+            dlg_id=credentials.delegation_id,
+            dn=credentials.user_dn,
+            proxy=str(access_token) + ":" + str(refresh_token),
+            voms_attrs=" ".join(credentials.voms_cred)
+            if len(credentials.voms_cred) > 0
+            else "",
+            termination_time=datetime.utcfromtimestamp(token_auth.expiry),
+        )
+        try:
+            Session.merge(credential)
+            Session.commit()
+        except Exception:
+            Session.rollback()
+            raise
