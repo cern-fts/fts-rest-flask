@@ -13,12 +13,12 @@
 #   limitations under the License.
 
 
-from werkzeug.exceptions import NotFound, BadRequest, Forbidden, InternalServerError
+from werkzeug.exceptions import BadRequest, InternalServerError
 from flask import request
 import urllib
 import logging
 import json
-from urllib.parse import urlparse, urlencode
+from urllib.parse import urlparse
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from fts3rest.lib import swiftauth
@@ -35,16 +35,7 @@ class SwiftConnector(Connector):
     def is_registered(self):
         surl = request.args.get("surl")
         parsed = urlparse(surl)
-        try:
-            cloud_user = Session.query(CloudStorageUser).filter_by(
-                user_dn=self.user_dn,
-                storage_name='SWIFT:' + parsed.hostname
-            ).first()
-        except Exception as ex:
-            raise InternalServerError(
-                "Error occurred when verifying cloud user."
-            )
-        if cloud_user:
+        if swiftauth.verified_swift_storage_user(self.user_dn, 'SWIFT:' + parsed.hostname):
             return True
         return False
 
@@ -58,25 +49,25 @@ class SwiftConnector(Connector):
         pass
 
     def get_access_granted(self):
-        surl, project_id, os_token, access_token = self._get_valid_surl_and_tokens()
-        if not os_token:
+        cred = self._get_valid_creds()
+        if not cred["os_token"]:
             raise BadRequest(
                 "No OS token provided."
             )
-        return self._set_os_token(surl, project_id, os_token)
+        return self._set_os_token(cred)
 
     def get_folder_content(self):
-        surl, project_id, os_token, access_token = self._get_valid_surl_and_tokens()
-        return self._get_content(surl, project_id, os_token, access_token)
+        cred = self._get_valid_creds()
+        return self._get_content(cred)
 
     def get_file_link(self, path):
         pass
 
     # Internal functions
 
-    def _get_content(self, surl, project_id, os_token, access_token):
-        parsed = urlparse(surl)
-        urlbase = "https://" + parsed.hostname + "/v1/AUTH_" + project_id
+    def _get_content(self, cred):
+        parsed = urlparse(cred["surl"])
+        urlbase = "https://" + parsed.hostname + "/v1/AUTH_" + cred["project_id"]
         params = None
         rightmost_slash = parsed.path.rfind("/")
         if rightmost_slash != 0:
@@ -86,53 +77,42 @@ class SwiftConnector(Connector):
             url = urlbase + parsed.path
         return self._make_call(
             url,
-            os_token if os_token
-            else self._get_swift_token(parsed.hostname, project_id, access_token),
+            cred["os_token"] if cred["os_token"]
+            else self._get_swift_token(parsed.hostname, cred["project_id"], cred["access_token"]),
             params,
         )
 
-    def _get_valid_surl_and_tokens(self):
-        surl = request.args.get("surl")
-        project_id = request.args.get("projectid")
+    def _get_valid_creds(self):
+        cred = dict()
+        cred["surl"] = str(request.args.get("surl"))
+        cred["project_id"] = str(request.args.get("projectid"))
 
         try:
-            access_token = request.headers.get("Authorization").split()[1]
+            cred["access_token"] = request.headers.get("Authorization").split()[1]
         except Exception as ex:
-            access_token = None
+            cred["access_token"] = None
 
         try:
-            os_token = request.headers.get("X-Auth-Token")
+            cred["os_token"] = request.headers.get("X-Auth-Token")
         except Exception as ex:
-            os_token = None
+            cred["os_token"] = None
 
-        if not surl:
+        if not cred["surl"]:
             raise BadRequest("Missing surl parameter")
-        parsed = urlparse(surl)
+        parsed = urlparse(cred["surl"])
         if parsed.scheme in ["file"]:
             raise BadRequest("Forbiden SURL scheme")
-        if not project_id:
+        if not cred["project_id"]:
             raise BadRequest("Missing project id parameter")
 
-        return str(surl), str(project_id), os_token, access_token
+        return cred
 
-    def _verify_cloud_user(self, storage_name):
-        try:
-            cloud_user = Session.query(CloudStorageUser).filter_by(
-                user_dn=self.user_dn,
-                storage_name='SWIFT:' + storage_name
-            ).first()
-        except Exception as ex:
-            raise InternalServerError(
-                "Error occurred when verifying cloud user"
-            )
-        if not cloud_user:
+    def _get_swift_token(self, storage_name, project_id, access_token):
+        if not swiftauth.verified_swift_storage_user(self.user_dn, 'SWIFT:' + storage_name):
             raise BadRequest(
                 "Cloud user is not registered for using cloud storage %s"
                 % storage_name
             )
-
-    def _get_swift_token(self, storage_name, project_id, access_token):
-        self._verify_cloud_user(storage_name)
 
         cloud_credential = None
         if access_token:
@@ -166,15 +146,19 @@ class SwiftConnector(Connector):
                 return credential_cache.os_token
         raise BadRequest("Do not have enough credentials to access cloud storage")
 
-    def _set_os_token(self, surl, project_id, os_token):
-        parsed = urlparse(surl)
-        self._verify_cloud_user(parsed.hostname)
+    def _set_os_token(self, cred):
+        parsed = urlparse(cred["surl"])
+        if not swiftauth.verified_swift_storage_user(self.user_dn, 'SWIFT:' + parsed.hostname):
+            raise BadRequest(
+                "Cloud user is not registered for using cloud storage %s"
+                % parsed.hostname
+            )
 
         cloud_credential = swiftauth.set_swift_credential_cache(dict(),
                                                                 self.user_dn,
                                                                 'SWIFT:' + parsed.hostname,
-                                                                os_token,
-                                                                project_id)
+                                                                cred["os_token"],
+                                                                cred["project_id"])
         if cloud_credential:
             try:
                 Session.merge(CloudCredentialCache(**cloud_credential))

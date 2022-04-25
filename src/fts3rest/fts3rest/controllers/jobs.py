@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from flask import request, Response
-from werkzeug.exceptions import Forbidden, BadRequest, NotFound, Conflict, InternalServerError
+from werkzeug.exceptions import Forbidden, BadRequest, NotFound, Conflict
 
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
@@ -689,17 +689,7 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_toke
     """
     storage_name = 'SWIFT:' + se_url[se_url.rfind('/') + 1:]
     cloud_storage = Session.query(CloudStorage).get(storage_name)
-    # verify that the cloud user is registered
-    try:
-        cloud_user = Session.query(CloudStorageUser).filter_by(
-            user_dn=user_dn,
-            storage_name=storage_name
-        ).first()
-    except Exception as ex:
-        raise InternalServerError(
-            "Error occurred when verifying cloud user"
-        )
-    if not cloud_user:
+    if not swiftauth.verified_swift_storage_user(user_dn, storage_name):
         raise BadRequest(
             "Cloud user is not registered for using cloud storage %s"
             % storage_name
@@ -707,7 +697,7 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_toke
 
     if cloud_storage:
         # handling manually set OS tokens (takes precedence)
-        if os_tokens and os_project_id in os_tokens.keys():
+        if os_tokens and os_project_id in os_tokens:
             cloud_credential = swiftauth.set_swift_credential_cache(dict(),
                                                                     user_dn,
                                                                     storage_name,
@@ -724,8 +714,13 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_toke
                 % (user_dn, storage_name)
             )
             return
+        # save swift credentials
         log.debug("cloud credential string: %s" % str(cloud_credential))
         if cloud_credential:
+            if not swiftauth.verified_swift_project_user(cloud_storage, cloud_credential):
+                raise BadRequest(
+                    "Cloud user does not have access to the required Swift project"
+                )
             try:
                 Session.merge(CloudCredentialCache(**cloud_credential))
                 Session.commit()
@@ -740,6 +735,19 @@ def _set_swift_credentials(se_url, user_dn, access_token, os_project_id, os_toke
             "Error retrieving cloud credential %s for storage %s"
             % (user_dn, storage_name)
         )
+
+
+def _initialize_swift_cred(proxy, ids, method):
+    access_token = None
+    if method == 'oauth2':
+        access_token = proxy[:proxy.find(':')]
+    try:
+        os_project_ids = ids.split(':')
+    except AttributeError:
+        raise BadRequest(
+            "No OS project id is provided for the Swift transfer"
+        )
+    return access_token, os_project_ids
 
 
 @authorize(TRANSFER)
@@ -780,32 +788,24 @@ def submit():
     log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
 
     # Exchange access token for OS token(s) for swift stores
-    source_se = populated.job['source_se']
-    dest_se = populated.job['dest_se']
-    swift_source = source_se.startswith('swift')
-    swift_dest = dest_se.startswith('swift')
+    swift_source = populated.job['source_se'].startswith('swift')
+    swift_dest = populated.job['dest_se'].startswith('swift')
     if swift_source or swift_dest:
-        access_token = None
-        if user.method == 'oauth2':
-            access_token = credential.proxy[:credential.proxy.find(':')]
-        try:
-            os_project_ids = populated.job['os_project_id'].split(':')
-            cnt = 0
-        except AttributeError:
-            raise BadRequest(
-                "No OS project id is provided for the Swift transfer"
-            )
+        access_token, os_project_ids = _initialize_swift_cred(credential.proxy,
+                                                              populated.job['os_project_id'],
+                                                              user.method)
+        id_cnt = 0
         if swift_source:
-            _set_swift_credentials(source_se, user.user_dn, access_token,
-                                   os_project_ids[cnt], populated.params['os_token'])
-            cnt += 1
+            _set_swift_credentials(populated.job['source_se'], user.user_dn, access_token,
+                                   os_project_ids[id_cnt], populated.params['os_token'])
+            id_cnt += 1
         if swift_dest:
-            if cnt == 1 and len(os_project_ids) < 2:
+            if id_cnt == 1 and len(os_project_ids) < 2:
                 raise BadRequest(
                     "Only one OS project id is provided for the Swift to Swift transfer"
                 )
-            _set_swift_credentials(dest_se, user.user_dn, access_token,
-                                   os_project_ids[cnt], populated.params['os_token'])
+            _set_swift_credentials(populated.job['dest_se'], user.user_dn, access_token,
+                                   os_project_ids[id_cnt], populated.params['os_token'])
 
     # Insert the job
     try:

@@ -20,8 +20,9 @@ from datetime import datetime
 
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
+from keystoneclient.v3 import client
 from fts3rest.model.meta import Session
-from fts3rest.model import Credential, Job, CloudCredentialCache, CloudStorage
+from fts3rest.model import Credential, Job, CloudCredentialCache, CloudStorage, CloudStorageUser
 
 log = logging.getLogger(__name__)
 
@@ -102,3 +103,39 @@ def refresh_os_token(job, se_url, cnt):
         "Cannot refresh OS token for user %s at storage %s"
         % (job.user_dn, storage_name)
     )
+
+
+def verified_swift_storage_user(user_dn, storage_name):
+    try:
+        cloud_user = Session.query(CloudStorageUser).filter_by(
+            user_dn=user_dn,
+            storage_name=storage_name
+        ).first()
+    except Exception as ex:
+        log.warning("Failed to query cloud storage user because: %s" % str(ex))
+        return False
+    if not cloud_user:
+        return False
+    return True
+
+
+def _project_accessible(projects, project_id):
+    for project in projects:
+        if project.id == project_id:
+            return True
+    return False
+
+
+def verified_swift_project_user(cloud_storage, cloud_credential):
+    token_auth = v3.token.Token(auth_url=cloud_storage.keystone_url,
+                                token=cloud_credential['os_token'])
+    sess = session.Session(auth=token_auth)
+    try:
+        user_id = sess.get_user_id()
+        keystone_client = client.Client(session=sess, interface="public")
+        projects = keystone_client.projects.list(user=user_id)
+        if _project_accessible(projects, cloud_credential['os_project_id']):
+            return True
+    except Exception as ex:
+        log.warning("Failed to verify user have access to project because: %s" % str(ex))
+    return False
