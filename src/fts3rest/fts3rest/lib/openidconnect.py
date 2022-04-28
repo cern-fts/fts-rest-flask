@@ -31,7 +31,6 @@ class OIDCmanager:
         self._retrieve_clients_keys()
 
     def _configure_clients(self, providers_config):
-        # log.debug('provider_info::: {}'.format(client.provider_info))
         for provider in providers_config:
             try:
                 client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
@@ -44,6 +43,8 @@ class OIDCmanager:
                 )
                 client.store_registration_info(client_reg)
                 issuer = client.provider_info["issuer"]
+                if "introspection_endpoint" not in client.provider_info:
+                    log.warning("{} -- missing introspection endpoint".format(issuer))
                 self.clients[issuer] = client
             except Exception as ex:
                 log.warning("Exception registering provider: {}".format(provider))
@@ -60,6 +61,19 @@ class OIDCmanager:
             keybundles = client.keyjar.issuer_keys[provider]
             for keybundle in keybundles:
                 keybundle.cache_time = cache_time
+
+    def token_issuer_supported(self, access_token):
+        """
+        Given an access token, checks whether a client is registered
+        for the token issuer.
+        :param access_token:
+        :return: true if token issuer is supported, false otherwise
+        :raise KeyError: issuer claim missing
+        """
+        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
+        issuer = unverified_payload["iss"]
+        log.debug("Checking client registration for issuer={}".format(issuer))
+        return issuer in self.clients
 
     def filter_provider_keys(self, issuer, kid=None, alg=None):
         """
@@ -88,7 +102,11 @@ class OIDCmanager:
         :param access_token: token to introspect
         :return: JSON response
         """
-        client = self.clients[issuer]
+        client = self.clients.get(issuer)
+        if client is None:
+            raise ValueError("Could not retrieve client for issuer={}".format(issuer))
+        if "introspection_endpoint" not in client.provider_info:
+            raise Exception("Issuer does not support introspection")
         response = client.do_any(
             request_args={"token": access_token},
             request=TokenIntrospectionRequest,
@@ -130,9 +148,8 @@ class OIDCmanager:
             refresh_token = response["refresh_token"]
             log.debug("refresh_token_response::: {}".format(refresh_token))
         except Exception as ex:
-            log.warning("Exception raised when requesting refresh token")
-            log.warning(ex)
-            raise ex
+            log.warning("Exception during refresh token request: {}".format(ex))
+            raise Exception("Exception during refresh token request")
         log.debug("refresh_token_response::: {}".format(refresh_token))
         return refresh_token
 
@@ -142,6 +159,7 @@ class OIDCmanager:
         :param issuer: issuer of the access token
         :param access_token: token to exchange
         :param scope: string containing scopes separated by space
+        :param audience: the token audience
         :return: provider response in json
         :raise Exception: if request fails
         """
@@ -168,9 +186,8 @@ class OIDCmanager:
             response = response.json()
             log.debug("response: {}".format(response))
         except Exception as ex:
-            log.warning("Exception raised when exchanging token")
-            log.warning(ex)
-            raise ex
+            log.warning("Exception during token exchange: {}".format(ex))
+            raise Exception("Exception during token exchange")
         return response
 
     def generate_token_with_scope(self, issuer, access_token, scope, audience=None):
@@ -179,6 +196,7 @@ class OIDCmanager:
         :param issuer: issuer of the access token
         :param access_token:
         :param scope: string containing scopes separated by space
+        :param audience: the token audience
         :return: new access token and optional refresh_token
         :raise Exception: If token cannot be obtained
         """
@@ -196,7 +214,7 @@ class OIDCmanager:
         :return: Updated credential containing new access token
         """
         access_token, refresh_token = credential.proxy.split(":")
-        unverified_payload = jwt.decode(access_token, verify=False)
+        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         issuer = unverified_payload["iss"]
         client = self.clients[issuer]
         log.debug("refresh_access_token for {}".format(issuer))
@@ -216,13 +234,28 @@ class OIDCmanager:
         # A new refresh token is optional
         refresh_token = new_credential.get("refresh_token", refresh_token)
         access_token = new_credential.get("access_token")
-        unverified_payload = jwt.decode(access_token, verify=False)
+        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         expiration_time = unverified_payload["exp"]
         credential.proxy = new_credential["access_token"] + ":" + refresh_token
         credential.termination_time = datetime.utcfromtimestamp(expiration_time)
 
         return credential
 
+    @staticmethod
+    def jwt_options_unverified(options=None):
+        options_unverified = {
+            "verify_signature": False,
+            "verify_exp": False,
+            "verify_nbf": False,
+            "verify_iat": False,
+            "verify_aud": False,
+            "verify_iss": False,
+        }
+        if options is not None:
+            options_unverified.update(options)
+        return options_unverified
+
 
 # Should be the only instance, called during the middleware initialization
 oidc_manager = OIDCmanager()
+jwt_options_unverified = OIDCmanager.jwt_options_unverified

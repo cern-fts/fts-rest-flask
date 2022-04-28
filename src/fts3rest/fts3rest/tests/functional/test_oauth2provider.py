@@ -65,11 +65,12 @@ class TestFTS3OAuth2ResourceProvider(TestController):
         auth = self.oauth2_resource_provider.authorization_class()
         self.oauth2_resource_provider.validate_access_token(token, auth)
         self.assertFalse(auth.is_valid)
+        self.assertTrue(auth.error)
 
     def test_validate_token_offline_expired(self):
         token = self.expired_token
-        valid, credential = self.oauth2_resource_provider._validate_token_offline(token)
-        self.assertFalse(valid)
+        with self.assertRaises(Exception):
+            self.oauth2_resource_provider._validate_token_offline(token)
 
     def test_validate_token_online_expired(self):
         token = self.expired_token
