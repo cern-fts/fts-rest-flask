@@ -20,6 +20,7 @@ import re
 
 from fts3rest.model import AuthorizationByDn
 from fts3rest.model.meta import Session
+from fts3rest.model.config import Gridmap
 from fts3rest.lib.middleware.fts3auth.methods import Authenticator
 
 log = logging.getLogger(__name__)
@@ -65,23 +66,15 @@ def generate_delegation_id(dn, fqans):
     return d.hexdigest()[:16]
 
 
-def build_vo_from_dn(user_dn):
+def gridmap_vo(user_dn):
     """
-    Generate an 'anonymous' VO from the user_dn
+    Retrieves the pre-set VO for a given user DN from the Gridmap table
     """
-    components = filter(
-        lambda c: len(c) == 2, map(lambda c: tuple(c.split("=")), user_dn.split("/"))
-    )
-    domain = []
-    uname = ""
-    for key, value in components:
-        if key.upper() == "CN" and not uname:
-            uname = value
-        elif key.upper() == "DC":
-            domain.append(value)
-    # Normalize name
-    uname = "".join(uname.split())
-    return uname + "@" + ".".join(reversed(domain))
+    gridmap = Session.query(Gridmap).filter(Gridmap.dn == user_dn).first()
+    if gridmap:
+        log.debug("Gridmap: {} -- {}".format(gridmap.dn, gridmap.vo))
+        return gridmap.vo
+    return None
 
 
 class InvalidCredentials(Exception):

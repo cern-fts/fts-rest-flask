@@ -5,6 +5,7 @@ import time
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
 from fts3rest.model import Job
+from fts3rest.lib.middleware.fts3auth.credentials import generate_delegation_id
 import random
 from math import ceil
 
@@ -25,7 +26,7 @@ class TestJobSubmission(TestController):
 
         self.assertEqual(job.user_dn, dn)
         if no_vo:
-            self.assertEqual(job.vo_name, "TestUser@cern.ch")
+            self.assertEqual(job.vo_name, generate_delegation_id(dn, []))
         else:
             self.assertEqual(job.vo_name, "testvo")
         self.assertEqual(job.job_state, "SUBMITTED")
@@ -49,7 +50,7 @@ class TestJobSubmission(TestController):
         self.assertEqual(files[0].checksum, "adler32:1234")
         self.assertEqual(files[0].file_metadata["mykey"], "myvalue")
         if no_vo:
-            self.assertEqual(files[0].vo_name, "TestUser@cern.ch")
+            self.assertEqual(job.vo_name, generate_delegation_id(dn, []))
         else:
             self.assertEqual(files[0].vo_name, "testvo")
 
