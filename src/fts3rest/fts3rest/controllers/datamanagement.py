@@ -103,6 +103,7 @@ def _http_status_from_errno(err_code):
 
 
 def _http_error_from_gfal2_error(error):
+    log.info("gfal2 error: errno = %d %s" % error.errno, error.message)
     raise _http_status_from_errno(error.errno)("[%d] %s" % (error.errno, error.message))
 
 
