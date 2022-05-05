@@ -114,6 +114,7 @@ class OIDCmanager:
             "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
             "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
             "subject_token": access_token,
+            "requested_token_type": "urn:ietf:params:oauth:token-type:refresh_token",
             "scope": "offline_access openid profile",
             "audience": client.client_id,
         }
@@ -128,7 +129,7 @@ class OIDCmanager:
             )
             response = response.json()
             log.debug("response: {}".format(response))
-            refresh_token = response["refresh_token"]
+            refresh_token = response["access_token"]
             log.debug("refresh_token_response::: {}".format(refresh_token))
         except Exception as ex:
             log.warning("Exception raised when requesting refresh token")
