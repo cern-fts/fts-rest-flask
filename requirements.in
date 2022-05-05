@@ -10,3 +10,4 @@ jwcrypto
 oic
 Mako
 keystoneauth1
+python-keystoneclient

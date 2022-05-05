@@ -794,18 +794,18 @@ def submit():
         access_token, os_project_ids = _initialize_swift_cred(credential.proxy,
                                                               populated.job['os_project_id'],
                                                               user.method)
-        id_cnt = 0
+        id_count = 0
         if swift_source:
             _set_swift_credentials(populated.job['source_se'], user.user_dn, access_token,
-                                   os_project_ids[id_cnt], populated.params['os_token'])
-            id_cnt += 1
+                                   os_project_ids[id_count], populated.params['os_token'])
+            id_count += 1
         if swift_dest:
-            if id_cnt == 1 and len(os_project_ids) < 2:
+            if id_count == 1 and len(os_project_ids) < 2:
                 raise BadRequest(
                     "Only one OS project id is provided for the Swift to Swift transfer"
                 )
             _set_swift_credentials(populated.job['dest_se'], user.user_dn, access_token,
-                                   os_project_ids[id_cnt], populated.params['os_token'])
+                                   os_project_ids[id_count], populated.params['os_token'])
 
     # Insert the job
     try:

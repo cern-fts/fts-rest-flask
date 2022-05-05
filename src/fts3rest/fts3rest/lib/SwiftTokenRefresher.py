@@ -123,12 +123,12 @@ class SwiftTokenRefresher(Thread):
                     )
                     log.debug("{} jobs' OS tokens to refresh".format(len(jobs)))
                     for job in jobs:
-                        cnt = 0
+                        id_count = 0
                         if job.source_se.startswith("swift"):
-                            swiftauth.refresh_os_token(job, job.source_se, cnt)
-                            cnt += 1
+                            swiftauth.refresh_os_token(job, job.source_se, id_count)
+                            id_count += 1
                         if job.dest_se.startswith("swift"):
-                            swiftauth.refresh_os_token(job, job.dest_se, cnt)
+                            swiftauth.refresh_os_token(job, job.dest_se, id_count)
 
                     time.sleep(self.refresh_interval)
             else:

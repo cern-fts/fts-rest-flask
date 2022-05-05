@@ -178,9 +178,9 @@ class SwiftConnector(Connector):
             )
         return {}
 
-    def _make_call(self, command_url, os_token, parameters):
-        if parameters is not None:
-            command_url += "?" + parameters
+    def _make_call(self, command_url, os_token, params):
+        if params is not None:
+            command_url += "?" + params
         headers = {"X-Auth-Token": os_token, "Accept": "application/json"}
 
         try:

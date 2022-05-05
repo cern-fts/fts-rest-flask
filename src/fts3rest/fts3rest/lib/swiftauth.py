@@ -59,9 +59,9 @@ def get_os_token(user_dn, access_token, cloud_storage, project_id):
     return cloudcredential
 
 
-def refresh_os_token(job, se_url, cnt):
+def refresh_os_token(job, se_url, id_count):
     storage_name = "SWIFT:" + se_url[se_url.rfind('/') + 1:]
-    os_project_id = job.os_project_id.split(':')[cnt]
+    os_project_id = job.os_project_id.split(':')[id_count]
 
     credential_cache = (
         Session.query(CloudCredentialCache)
