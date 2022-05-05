@@ -160,6 +160,11 @@ class SwiftConnector(Connector):
                                                                 cred["os_token"],
                                                                 cred["project_id"])
         if cloud_credential:
+            cloud_storage = Session.query(CloudStorage).get('SWIFT:' + parsed.hostname)
+            if not swiftauth.verified_swift_project_user(cloud_storage, cloud_credential):
+                raise BadRequest(
+                    "Cloud user does not have access to the required Swift project"
+                )
             try:
                 Session.merge(CloudCredentialCache(**cloud_credential))
                 Session.commit()
