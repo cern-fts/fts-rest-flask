@@ -117,62 +117,37 @@ class OIDCmanager:
         )
         return response
 
-    def generate_refresh_token(self, issuer, access_token):
+    def generate_refresh_token(self, issuer, token, audience=None, scope=None):
         """
-        Exchange an access token for a refresh token
+        Exchange an access token for a refresh token.
+        If the scopes are specified, ensure "offline_access" is part of the claim.
+        If the audience is not specified, use the client ID.
         :param issuer: issuer of the access token
-        :param access_token:
+        :param audience: audience of the access token
+        :param scope: scope string of the access token
+        :param token: the access token
         :return: refresh token
         :raise Exception: If refresh token cannot be obtained
         """
-        log.debug("enter generate_refresh_token")
         client = self.clients[issuer]
         body = {
             "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
             "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
-            "subject_token": access_token,
-            "scope": "offline_access openid profile",
-            "audience": client.client_id,
-        }
-        try:
-            response = client.do_any(
-                Message,
-                request_args=body,
-                endpoint=client.provider_info["token_endpoint"],
-                body_type="json",
-                method="POST",
-                authn_method="client_secret_basic",
-            )
-            response = response.json()
-            log.debug("response: {}".format(response))
-            refresh_token = response["refresh_token"]
-            log.debug("refresh_token_response::: {}".format(refresh_token))
-        except Exception as ex:
-            log.warning("Exception during refresh token request: {}".format(ex))
-            raise Exception("Exception during refresh token request")
-        log.debug("refresh_token_response::: {}".format(refresh_token))
-        return refresh_token
-
-    def request_token_exchange(self, issuer, access_token, scope=None, audience=None):
-        """
-        Do a token exchange request
-        :param issuer: issuer of the access token
-        :param access_token: token to exchange
-        :param scope: string containing scopes separated by space
-        :param audience: the token audience
-        :return: provider response in json
-        :raise Exception: if request fails
-        """
-        client = self.clients[issuer]
-        body = {
-            "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-            "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
-            "subject_token": access_token,
+            "subject_token": token,
         }
         if scope:
             body["scope"] = scope
-        if audience:
-            body["audience"] = audience
+            if "offline_access" not in scope:
+                body["scope"] += " offline_access"
+        if audience is None:
+            audience = client.client_id
+        body["audience"] = audience
+
+        log.debug(
+            'generate_refresh_token: issuer={} audience={} scope="{}"'.format(
+                issuer, audience, scope
+            )
+        )
 
         try:
             response = client.do_any(
@@ -184,27 +159,19 @@ class OIDCmanager:
                 authn_method="client_secret_basic",
             )
             response = response.json()
-            log.debug("response: {}".format(response))
+            log.debug("generate_refresh_token response::: {}".format(response))
+            access_token = response.get("access_token", token)
+            refresh_token = response.get("refresh_token")
         except Exception as ex:
-            log.warning("Exception during token exchange: {}".format(ex))
-            raise Exception("Exception during token exchange")
-        return response
-
-    def generate_token_with_scope(self, issuer, access_token, scope, audience=None):
-        """
-        Exchange an access token for another access token with the specified scope
-        :param issuer: issuer of the access token
-        :param access_token:
-        :param scope: string containing scopes separated by space
-        :param audience: the token audience
-        :return: new access token and optional refresh_token
-        :raise Exception: If token cannot be obtained
-        """
-        response = self.request_token_exchange(
-            issuer, access_token, scope=scope, audience=audience
-        )
-        access_token = response["access_token"]
-        refresh_token = response.get("refresh_token", None)
+            log.warning("Exception during refresh token request: {}".format(ex))
+            raise Exception("Exception during refresh token request")
+        if refresh_token is None:
+            errmsg = "No refresh token returned during token exchange"
+            if scope is None:
+                errmsg += '. Is "offline_access" scope included?'
+            elif "offline_access" not in scope:
+                errmsg += '. Token must contain "offline_access" scope!'
+            raise Exception(errmsg)
         return access_token, refresh_token
 
     def refresh_access_token(self, credential):
