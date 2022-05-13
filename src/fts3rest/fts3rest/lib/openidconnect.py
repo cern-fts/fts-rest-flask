@@ -165,6 +165,10 @@ class OIDCmanager:
         except Exception as ex:
             log.warning("Exception during refresh token request: {}".format(ex))
             raise Exception("Exception during refresh token request")
+        if refresh_token is None:
+            raise Exception(
+                "Refresh token exchange response did not return refresh token"
+            )
         return access_token, refresh_token
 
     def refresh_access_token(self, credential):
