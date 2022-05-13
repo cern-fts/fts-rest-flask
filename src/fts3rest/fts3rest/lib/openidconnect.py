@@ -136,15 +136,15 @@ class OIDCmanager:
             "subject_token": token,
         }
         if scope:
-            if "offline_access" not in scope:
-                scope += " offline_access"
             body["scope"] = scope
+            if "offline_access" not in scope:
+                body["scope"] += " offline_access"
         if audience is None:
             audience = client.client_id
         body["audience"] = audience
 
         log.debug(
-            "generate_refresh_token: issuer={} audience={} scope={}".format(
+            'generate_refresh_token: issuer={} audience={} scope="{}"'.format(
                 issuer, audience, scope
             )
         )
@@ -166,9 +166,12 @@ class OIDCmanager:
             log.warning("Exception during refresh token request: {}".format(ex))
             raise Exception("Exception during refresh token request")
         if refresh_token is None:
-            raise Exception(
-                "Refresh token exchange response did not return refresh token"
-            )
+            errmsg = "No refresh token returned during token exchange"
+            if scope is None:
+                errmsg += '. Is "offline_access" scope included?'
+            elif "offline_access" not in scope:
+                errmsg += '. Token must contain "offline_access" scope!'
+            raise Exception(errmsg)
         return access_token, refresh_token
 
     def refresh_access_token(self, credential):
