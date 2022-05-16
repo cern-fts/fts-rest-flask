@@ -66,11 +66,11 @@ def do_authentication(credentials, env, config):
     try:
         _handle_credential_storing(res_provider, credentials, authn)
     except Exception as ex:
-        log.warning("Error obtaining refresh token: {}".format(str(ex)))
-        raise InvalidCredentials("Error obtaining refresh tokens: {}".format(str(ex)))
+        log.warning("Error obtaining refresh token: {}".format(ex))
+        raise InvalidCredentials("Error obtaining refresh tokens: {}".format(ex))
 
     # Override get_granted_level_for to allow filtering by scope claim
-    setattr(credentials, "oauth2_scope", authn.scope)
+    setattr(credentials, "oauth2_scope", " ".join(authn.scope) if authn.scope else None)
     setattr(
         credentials,
         "get_granted_level_for_overriden",
@@ -91,9 +91,10 @@ def _build_vo_from_token_auth(credentials, token_auth):
                 group = group[1:]
             if group not in credentials.vos:
                 credentials.vos.append(group)
-        credentials.voms_cred.extend(token_auth.groups)
     else:
         credentials.vos.append(_build_vo_from_issuer(token_auth.issuer))
+    if token_auth.scope is not None:
+        credentials.voms_cred.extend(token_auth.scope)
 
 
 def _build_vo_from_issuer(issuer):
@@ -128,13 +129,14 @@ def _handle_credential_storing(resource_provider, credentials, token_auth):
     )
     # Delete expired credential
     if credential_db and credential_db.expired():
-        log.debug(
+        log.info(
             "Deleting expired credential dlg_id={}".format(credentials.delegation_id)
         )
         try:
             Session.delete(credential_db)
             Session.commit()
-        except Exception:
+        except Exception as ex:
+            log.warning("Failed to delete expired credentials: {}".format(ex))
             Session.rollback()
         credential_db = None
     if not credential_db:
