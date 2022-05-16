@@ -82,13 +82,13 @@ class FTS3AuthMiddleware:
             log.exception(e)
             return e(environ, start_response)
         except DatabaseError as e:
-            log.error(
+            log.warning(
                 "Database error when trying to get user's credentials: %s" % str(e)
             )
             Session.remove()
             raise
         except Exception as e:
-            log.error(
+            log.warning(
                 "Unexpected error when trying to get user's credentials: %s" % str(e)
             )
             raise

@@ -233,7 +233,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                 authorization.error = "TokenProvider not supported"
                 return
         except Exception as ex:
-            log.warning("Exception during TokenProvider check: {}".format(str(ex)))
+            log.warning("Exception during TokenProvider check: {}".format(ex))
             authorization.error = str(ex)
             return
 
@@ -246,7 +246,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                 return
         except Exception as ex:
             log.warning(
-                "Exception during {} validation: {}".format(validation_method, str(ex))
+                "Exception during {} validation: {}".format(validation_method, ex)
             )
             authorization.error = str(ex)
             return
@@ -261,9 +261,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                 response = oidc_manager.introspect(credential["iss"], access_token)
                 scope = self._scope_from_credential(response)
             except Exception as ex:
-                log.info(
-                    "Exception retrieving scopes via introspection: {}".format(str(ex))
-                )
+                log.info("Exception retrieving scopes via introspection: {}".format(ex))
                 pass
 
         authorization.is_oauth = True
