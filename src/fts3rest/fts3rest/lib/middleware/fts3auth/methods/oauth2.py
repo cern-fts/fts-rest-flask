@@ -70,7 +70,7 @@ def do_authentication(credentials, env, config):
         raise InvalidCredentials("Error obtaining refresh tokens: {}".format(str(ex)))
 
     # Override get_granted_level_for to allow filtering by scope claim
-    setattr(credentials, "oauth2_scope", authn.scope)
+    setattr(credentials, "oauth2_scope", " ".join(authn.scope) if authn.scope else None)
     setattr(
         credentials,
         "get_granted_level_for_overriden",
@@ -91,9 +91,10 @@ def _build_vo_from_token_auth(credentials, token_auth):
                 group = group[1:]
             if group not in credentials.vos:
                 credentials.vos.append(group)
-        credentials.voms_cred.extend(token_auth.groups)
     else:
         credentials.vos.append(_build_vo_from_issuer(token_auth.issuer))
+    if token_auth.scope is not None:
+        credentials.voms_cred.extend(token_auth.scope)
 
 
 def _build_vo_from_issuer(issuer):

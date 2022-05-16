@@ -358,8 +358,10 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
     def _scope_from_credential(self, credential):
         scope = credential.get("scope")
+        if isinstance(scope, str):
+            scope = scope.split()
         if isinstance(scope, list):
-            scope = " ".join(scope)
+            scope.sort()
         return scope
 
     def _should_validate_offline(self):

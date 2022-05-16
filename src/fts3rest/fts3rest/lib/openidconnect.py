@@ -136,7 +136,7 @@ class OIDCmanager:
             "subject_token": token,
         }
         if scope:
-            body["scope"] = scope
+            body["scope"] = " ".join(scope)
             if "offline_access" not in scope:
                 body["scope"] += " offline_access"
         if audience is None:
@@ -144,7 +144,7 @@ class OIDCmanager:
         body["audience"] = audience
 
         log.debug(
-            'generate_refresh_token: issuer={} audience={} scope="{}"'.format(
+            "generate_refresh_token: issuer={} audience={} scope={}".format(
                 issuer, audience, scope
             )
         )
@@ -170,7 +170,7 @@ class OIDCmanager:
             if scope is None:
                 errmsg += '. Is "offline_access" scope included?'
             elif "offline_access" not in scope:
-                errmsg += '. Token must contain "offline_access" scope!'
+                errmsg += ". Token must contain offline_access scope!"
             raise Exception(errmsg)
         return access_token, refresh_token
 
