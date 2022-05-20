@@ -49,6 +49,7 @@ DEFAULT_PARAMS = {
     "ipv4": False,
     "ipv6": False,
     "buffer_size": None,
+    "strict_copy": False,
 }
 
 
@@ -305,6 +306,12 @@ class JobSubmitter(Base):
             type=int,
             help="TCP buffer size (expressed in bytes) that will be used for the given transfer job",
         )
+        self.opt_parser.add_option(
+            "--strict-copy",
+            dest="strict_copy",
+            action="store_true",
+            help="disable all checks, just copy the file",
+        )
 
     def validate(self):
         self.checksum = None
@@ -412,6 +419,7 @@ class JobSubmitter(Base):
             s3alternate=self.options.s3alternate,
             target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
+            strict_copy=self.options.strict_copy,
         )
 
     def _do_submit(self, context):
