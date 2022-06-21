@@ -21,6 +21,7 @@ Requires:       python36-requests
 Requires:       python36-flask
 Requires:       python36-dateutil
 Requires:       python36-jwt
+Obsoletes:      fts-rest
 
 # from mysqlclient:
 Requires:       python3-devel
