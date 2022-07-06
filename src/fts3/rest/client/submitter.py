@@ -36,7 +36,7 @@ class Submitter:
             job["staging"] = staging
         if transfers:
             job["files"] = transfers
-            if "checksum" in kwargs:
+            if "checksum" in job["params"]:
                 for f in job["files"]:
                     if "checksum" not in f:
                         f["checksum"] = job["params"]["checksum"]
