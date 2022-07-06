@@ -54,13 +54,14 @@ DEFAULT_PARAMS = {
 
 
 def _metadata(data):
-    if data is not None:
-        try:
-            return json.loads(data)
-        except Exception:
-            return str(data)
-    else:
+    if data is None:
         return None
+    if isinstance(data, dict):
+        return data
+    try:
+        return json.loads(data)
+    except Exception:
+        return str(data)
 
 
 class JobSubmitter(Base):
