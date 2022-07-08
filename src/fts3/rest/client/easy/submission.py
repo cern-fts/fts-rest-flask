@@ -61,6 +61,7 @@ def new_transfer(
     checksum="ADLER32",
     filesize=None,
     metadata=None,
+    staging_metadata=None,
     activity=None,
     selection_strategy="auto",
 ):
@@ -73,7 +74,8 @@ def new_transfer(
         checksum:           Checksum
         filesize:           File size
         metadata:           Metadata to bind to the transfer
-        selection_strategy: selection Strategy to implement for multiple replica Jobs
+        staging_metadata:   Staging Metadata to bind to the bringonline operation
+        selection_strategy: Selection Strategy to implement for multiple replica Jobs
 
     Returns:
         An initialized transfer
@@ -88,6 +90,8 @@ def new_transfer(
         transfer["filesize"] = filesize
     if metadata:
         transfer["metadata"] = metadata
+    if staging_metadata:
+        transfer["staging_metadata"] = staging_metadata
     if activity:
         transfer["activity"] = activity
     if selection_strategy:
@@ -231,12 +235,12 @@ def new_staging_job(
         Creates a new dictionary representing a staging job
 
     Args:
-        files:  Array of surls to stage. Each item can be either a string or a dictionary with keys surl and metadata
+        files:             Array of surls to stage. Each item can be either a string or a dictionary with keys surl and metadata
         bring_online:      Bring online timeout
         copy_pin_lifetime: Pin lifetime
         source_spacetoken: Source space token
-        spacetoken: Deletion spacetoken
-        metadata:   Metadata to bind to the job
+        spacetoken:        Deletion spacetoken
+        metadata:          Metadata to bind to the job
         priority:          Job priority
         id_generator:      Job id generator algorithm
         sid:               Specific id given by the client
@@ -254,13 +258,21 @@ def new_staging_job(
         if isinstance(trans, dict):
             surl = trans["surl"]
             meta = trans["metadata"]
+            staging_meta = trans["staging_metadata"]
         elif isinstance(trans, str):
             surl = trans
             meta = None
         else:
             raise AttributeError("Unexpected input type %s" % type(files))
 
-        transfers.append(new_transfer(source=surl, destination=surl, metadata=meta))
+        transfers.append(
+            new_transfer(
+                source=surl,
+                destination=surl,
+                metadata=meta,
+                staging_metadata=staging_meta,
+            )
+        )
 
     params = dict(
         source_spacetoken=source_spacetoken,
