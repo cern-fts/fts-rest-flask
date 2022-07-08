@@ -93,21 +93,15 @@ def validate_url(url):
         raise ValueError("Missing host (%s)" % url.geturl())
 
 
-def validate_staging_metadata(metadata):
-    if isinstance(metadata, dict):
-        return metadata
-    try:
-        return json.loads(metadata)
-    except:
-        raise ValueError("Staging metadata not in JSON format")
-
-
-def metadata(data):
+def metadata(data, require_dict=False, name_hint=None):
     if isinstance(data, dict):
         return data
     try:
         return json.loads(data)
     except:
+        if require_dict:
+            metadata_name = name_hint if name_hint is not None else "Metadata"
+            raise ValueError("{} not in JSON format".format(metadata_name))
         return {"label": str(data)}
 
 

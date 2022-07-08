@@ -181,7 +181,11 @@ class JobBuilder:
                 else generate_hashed_id(),
             )
             if f["staging_metadata"] != None:
-                f["staging_metadata"] = validate_staging_metadata(f["staging_metadata"])
+                f["staging_metadata"] = metadata(
+                    f["staging_metadata"],
+                    require_dict=True,
+                    name_hint="Staging metadata",
+                )
             if f["file_metadata"] != None:
                 f["file_metadata"] = metadata(f["file_metadata"])
             self.files.append(f)
