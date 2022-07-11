@@ -36,7 +36,7 @@ $ yum install -y fts-rest-server
 ```
 
 Configuring the server is done via the following two configuration files:
-- `/etc/fts3/ftsrestconfig`
+- `/etc/fts3/fts3restconfig`
 - `/etc/htpd/conf.d/fts3rest.conf`
 
 ## Development

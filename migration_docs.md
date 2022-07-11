@@ -238,7 +238,7 @@ Already integrated in this document. But it need to be updated.
 - Mako templates migrated by compiling them with the library. The most important difference between Pylons and Flask is that Pylons uses Mako templates and Flask uses Jinja2 templates (we are talking about HTML templates). Fortunately I was able to configure Mako's engine in Flask and so I didn't have to translate the templates.
 - Pylon's controller classes are now Flask's view functions. When a controller class had __init__ code and was subclassed, it was been converted to a view class. See for example fts3rest/fts3rest/controllers/delegation.py
 - Migrated Pylon's webob exceptions to Flask's werkzeug exceptions
-- Renamed fts3config to ftsrestconfig. The problem is fts3config is installed by fts-server, which means that every time the configuration options for fts-rest need a change, the fts-server package has to be updated. This is unnecessary coupling, so now fts-rest has its own independent configuration file.
+- Renamed fts3config to fts3restconfig. The problem is fts3config is installed by fts-server, which means that every time the configuration options for fts-rest need a change, the fts-server package has to be updated. This is unnecessary coupling, so now fts-rest has its own independent configuration file.
 
 ## API Documentation
 The file controllers/api.py contains code for the api documentation and is not trivial to migrate. We'll need to find a way to migrate documentation. It should be written in the code and then converted to markdown or html with a publickly available tool. Currently the endpoints are documented with decorators that have not been migrated. See also https://its.cern.ch/jira/browse/FTS-1618 and https://its.cern.ch/jira/browse/FTS-1554. 

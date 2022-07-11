@@ -80,7 +80,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
 cp -r fts3rest/fts3rest %{buildroot}%{python3_sitelib}
 cp fts3rest/fts3rest.wsgi %{buildroot}%{_libexecdir}/fts3rest
 cp fts3rest/fts3rest.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/fts3rest.conf
-cp fts3rest/ftsrestconfig %{buildroot}%{_sysconfdir}/fts3
+cp fts3rest/fts3restconfig %{buildroot}%{_sysconfdir}/fts3
 cp fts3rest/fts-rest.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/fts-rest
 
 # Create fts3 user and group
@@ -118,7 +118,7 @@ fi
 %files
 %license LICENSE
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
-%config(noreplace) %{_sysconfdir}/fts3/ftsrestconfig
+%config(noreplace) %{_sysconfdir}/fts3/fts3restconfig
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-rest
 %{python3_sitelib}/fts3rest/
 %attr(0755,fts3,fts3) /var/log/fts3rest
