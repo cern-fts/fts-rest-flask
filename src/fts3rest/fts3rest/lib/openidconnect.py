@@ -139,9 +139,8 @@ class OIDCmanager:
             body["scope"] = " ".join(scope)
             if "offline_access" not in scope:
                 body["scope"] += " offline_access"
-        if audience is None:
-            audience = client.client_id
-        body["audience"] = audience
+        if audience:
+            body["audience"] = audience
 
         log.debug(
             "generate_refresh_token: issuer={} audience={} scope={}".format(

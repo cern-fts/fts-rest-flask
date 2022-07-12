@@ -69,8 +69,11 @@ def do_authentication(credentials, env, config):
         log.warning("Error obtaining refresh token: {}".format(ex))
         raise InvalidCredentials("Error obtaining refresh tokens: {}".format(ex))
 
-    # Override get_granted_level_for to allow filtering by scope claim
+    # Extend UserCredentials object with OAuth2 specific fields
     setattr(credentials, "oauth2_scope", " ".join(authn.scope) if authn.scope else None)
+    setattr(credentials, "wlcg_profile", authn.wlcg_profile)
+
+    # Override get_granted_level_for to allow filtering by scope claim
     setattr(
         credentials,
         "get_granted_level_for_overriden",

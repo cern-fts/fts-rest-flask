@@ -170,6 +170,7 @@ class FTS3ResourceAuthorization(ResourceAuthorization):
     expiry = None
     scope = None
     groups = None
+    wlcg_profile = False
 
 
 class FTS3OAuth2ResourceProvider(ResourceProvider):
@@ -200,8 +201,8 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             raise ValueError("Invalid token authorization object!")
 
         audience = None
-        # Hardcoded audience for tokens that contain "wlcg.groups" claim
-        if authorization.groups is not None:
+        # Hardcoded audience for WLCG tokens
+        if authorization.wlcg_profile:
             audience = "https://wlcg.cern.ch/jwt/v1/any"
 
         (access_token, refresh_token) = oidc_manager.generate_refresh_token(
@@ -271,6 +272,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         authorization.expiry = credential["exp"]
         authorization.scope = scope
         authorization.groups = credential.get("wlcg.groups")
+        authorization.wlcg_profile = "wlcg.ver" in credential
         authorization.token = access_token
         authorization.expires_in = (
             datetime.utcfromtimestamp(credential["exp"]) - datetime.utcnow()
