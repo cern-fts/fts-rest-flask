@@ -83,7 +83,7 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
         raise ValueError(
             "Database type '%s' is not recognized" % fts3cfg["fts3.DbType"]
         )
-    # SQLAlquemy configuration
+    # SQLAlchemy configuration
     try:
         for name, value in parser.items("sqlalchemy"):
             fts3cfg["sqlalchemy." + name] = value
