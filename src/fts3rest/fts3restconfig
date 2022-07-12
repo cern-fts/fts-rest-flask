@@ -28,6 +28,7 @@ Alias =
 #MonitoringMessaging = False
 # Enable or disable publishing of user DNs (recommended false)
 #MonitoringPublishDN = False
+
 # Directory where the internal FTS3 messages are written
 #MessagingDirectory = /var/lib/fts3
 
