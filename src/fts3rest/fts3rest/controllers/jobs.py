@@ -54,7 +54,7 @@ def profile_request(func):
         request_path = request.path
         response = func(*args, **kwargs)
         response_status_code = response.status_code
-        log.info(f"PATH:{request_path} | VO:{vo} | TYPE:{request_type} | RESPONSE_STATUS:{response_status_code}")
+        log.info(f"[profiling::jobs] vo={vo} method={request_type} response_status={response_status_code} path={request_path}")
         return response
     return wrapper
 
