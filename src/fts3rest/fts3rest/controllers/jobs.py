@@ -42,10 +42,12 @@ log = logging.getLogger(__name__)
 Operations on jobs and transfers
 """
 
+
 def profile_request(func):
     """
     Wraps request to get relevant parameters, log them for fluent bit to pick them up.
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         user = request.environ["fts3.User.Credentials"]
@@ -54,8 +56,11 @@ def profile_request(func):
         request_path = request.path
         response = func(*args, **kwargs)
         response_status_code = response.status_code
-        log.info(f"[profiling::jobs] vo={vo} method={request_type} response_status={response_status_code} path={request_path}")
+        log.info(
+            f"[profiling::jobs] vo={vo} method={request_type} response_status={response_status_code} path={request_path}"
+        )
         return response
+
     return wrapper
 
 
