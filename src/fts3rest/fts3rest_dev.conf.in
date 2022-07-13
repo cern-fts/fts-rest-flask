@@ -43,7 +43,7 @@ Listen 8446
         Require all granted
     </Directory>
 
-    WSGIDaemonProcess ftsrest processes=2 threads=15 user=ftsflask group=ftsflask \
+    WSGIDaemonProcess ftsrest processes=2 threads=15 user=fts3 group=fts3 \
     python-home=%%PROJECT_DIR%%/%%VENV%% \
     python-path=%%PROJECT_DIR%%/src:%%PROJECT_DIR%%/src/fts3rest
 
