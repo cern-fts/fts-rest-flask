@@ -36,7 +36,7 @@ $ yum install -y fts-rest-server
 ```
 
 Configuring the server is done via the following two configuration files:
-- `/etc/fts3/ftsrestconfig`
+- `/etc/fts3/fts3restconfig`
 - `/etc/htpd/conf.d/fts3rest.conf`
 
 ## Development
@@ -116,7 +116,7 @@ The project uses [pip-tools][9] to manage dependencies:
 
 The `pipcompile.sh` script is provided to help set up a development environment:
 ```shell
-$ virtualeRenv
+$ virtualenv venv
 $ source venv/bin/activate
 (venv) $ pip install --upgrade pip
 (venv) $ pip install pip-tools
@@ -147,7 +147,7 @@ Example on Centos 7 with locally installed `mariadb`:
 $ wget https://gitlab.cern.ch/fts/fts3/-/raw/v3.11.0/src/db/schema/mysql/fts-schema-7.0.0.sql
 $ mysql -u root --execute "CREATE DATABASE ftsflask;"
 $ mysql -u root --execute "CREATE USER 'fts3'@'%';"
-$ mysql -u root --execute "GRANT ALL PRIVILEGES ON ftsflask.* TO 'fts3'@'%' IDENTIFIED BY 'fsflaskpass';"
+$ mysql -u root --execute "GRANT ALL PRIVILEGES ON ftsflask.* TO 'fts3'@'%' IDENTIFIED BY 'ftsflaskpass';"
 $ mysql -u fts3 --password=ftsflaskpass ftsflask
 MariaDB [ftsflask]> source fts-schema-7.0.0.sql
 ```
@@ -175,9 +175,8 @@ for the client and server: `fts-rest-client.sh` and `fts-rest-server.sh`.
 
 The following example shows how to build server packages:
 ```shell
-$ rpmdev-setuptree
-$ ./packaging/fts-rest-server.sh
-$ tree "${HOME}/rpmbuild/RPMS"
+$ ./packaging/server/fts-rest-server.sh
+$ tree "build/server/RPMS"
 ```
 
 ## Useful links

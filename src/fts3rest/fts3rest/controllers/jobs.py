@@ -750,13 +750,13 @@ def submit():
 
     if len(populated.files):
         log.info(
-            "Job %s submitted with %d transfers"
-            % (populated.job_id, len(populated.files))
+            "Job %s submitted: transfers=%d vo=%s"
+            % (populated.job_id, len(populated.files), user.vos[0])
         )
     elif len(populated.datamanagement):
         log.info(
-            "Job %s submitted with %d data management operations"
-            % (populated.job_id, len(populated.datamanagement))
+            "Job %s submitted: dm_operations=%d vo=%s"
+            % (populated.job_id, len(populated.datamanagement), user.vos[0])
         )
 
     return {"job_id": populated.job_id}

@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        1.0.0
+Version:        3.12.0
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -8,6 +8,7 @@ URL:            https://fts.web.cern.ch/
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3
+BuildRequires:  python3-rpm-macros
 Requires:       python3
 Requires:       httpd
 Requires:       httpd-devel
@@ -20,6 +21,7 @@ Requires:       python36-requests
 Requires:       python36-flask
 Requires:       python36-dateutil
 Requires:       python36-jwt
+Obsoletes:      fts-rest
 
 # from mysqlclient:
 Requires:       python3-devel
@@ -54,6 +56,7 @@ File Transfer Service (FTS) -- Python3 HTTP API Server
 Summary:        SELinux support for FTS-REST
 Group:          Applications/Internet
 Requires:       %{name} = %{version}-%{release}
+Obsoletes:      fts-rest-selinux
 
 %description selinux
 SELinux support for the FTS HTTP API Server
@@ -77,16 +80,21 @@ mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
 cp -r fts3rest/fts3rest %{buildroot}%{python3_sitelib}
 cp fts3rest/fts3rest.wsgi %{buildroot}%{_libexecdir}/fts3rest
 cp fts3rest/fts3rest.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/fts3rest.conf
-cp fts3rest/ftsrestconfig %{buildroot}%{_sysconfdir}/fts3
+cp fts3rest/fts3restconfig %{buildroot}%{_sysconfdir}/fts3
 cp fts3rest/fts-rest.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/fts-rest
 
 # Create fts3 user and group
 %pre
 getent group fts3 >/dev/null || groupadd -r fts3
 getent passwd fts3 >/dev/null && usermod -a -G apache fts3
+# For an unknown reason SELinux does not allow useradd with -m to create home directory
 getent passwd fts3 >/dev/null || \
-    useradd -r -m -g fts3 -G apache -d /var/log/fts3 -s /sbin/nologin \
+    useradd -r -g fts3 -G apache -d /var/log/fts3 -s /sbin/nologin \
     -c "File Transfer Service user" fts3
+if [ ! -d /var/log/fts3 ] ; then
+mkdir /var/log/fts3
+chown fts3:fts3 /var/log/fts3
+fi
 exit 0
 
 # SELinux scriptlets
@@ -110,7 +118,7 @@ fi
 %files
 %license LICENSE
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/fts3rest.conf
-%config(noreplace) %{_sysconfdir}/fts3/ftsrestconfig
+%config(noreplace) %{_sysconfdir}/fts3/fts3restconfig
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-rest
 %{python3_sitelib}/fts3rest/
 %attr(0755,fts3,fts3) /var/log/fts3rest
@@ -119,11 +127,10 @@ fi
 %files selinux
 
 %changelog
-* Thu Oct 15 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 1.0
-- First production-grade release
-* Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.2
-- Pre-release improvements
-* Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-2
-- Set SELinux httpd_execmem on
-* Tue May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
-- First server package release
+* Thu Jul 14 2021 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3-12.0
+- First production release of FTS-REST-FLASK (Python3)
+- Compatibility with MySQL8.0
+- Support for tape REST API
+- OC11/GDPR compliance with regards to VO names
+- OAuth2 token refactoring
+- Full migration to Gitlab-CI

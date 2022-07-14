@@ -1,0 +1,9 @@
+fts-rest-server:
+  #image: gitlab-registry.cern.ch/fts/fts-rest-flask:latest
+  build: .
+  volumes:
+    - /etc/fts3:/etc/fts3
+    - /etc/grid-security:/etc/grid-security
+  entrypoint: /usr/sbin/apachectl -DFOREGROUND
+  ports:
+    - "8446:8446"

@@ -36,7 +36,7 @@ class Submitter:
             job["staging"] = staging
         if transfers:
             job["files"] = transfers
-            if "checksum" in kwargs:
+            if "checksum" in job["params"]:
                 for f in job["files"]:
                     if "checksum" not in f:
                         f["checksum"] = job["params"]["checksum"]
@@ -51,6 +51,11 @@ class Submitter:
                     if "metadata" not in f:
                         f["metadata"] = job["params"]["file_metadata"]
                 del job["params"]["file_metadata"]
+            if "staging_metadata" in job["params"]:
+                for f in job["files"]:
+                    if "staging_metadata" not in f:
+                        f["staging_metadata"] = job["params"]["staging_metadata"]
+                del job["params"]["staging_metadata"]
 
         return json.dumps(job, indent=2)
 

@@ -111,3 +111,10 @@ class ActivityShare(Base):
     vo = Column(String(100), primary_key=True)
     activity_share = Column(Json(1024))
     active = Column(Flag(negative="off", positive="on"), default="on")
+
+
+class Gridmap(Base):
+    __tablename__ = "t_gridmap"
+
+    dn = Column(String(255), primary_key=True)
+    vo = Column(String(100))

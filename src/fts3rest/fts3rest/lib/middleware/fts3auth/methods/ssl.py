@@ -16,8 +16,8 @@
 from urllib.parse import unquote_plus
 
 from fts3rest.lib.middleware.fts3auth.credentials import (
+    gridmap_vo,
     vo_from_fqan,
-    build_vo_from_dn,
     generate_delegation_id,
 )
 
@@ -74,7 +74,8 @@ def do_authentication(credentials, env, config=None):
         )
     # If no vo information is available, build a 'virtual vo' for this user
     if not credentials.vos and credentials.user_dn:
-        credentials.vos.append(build_vo_from_dn(credentials.user_dn))
+        vo = gridmap_vo(credentials.user_dn)
+        credentials.vos.append(vo if vo else credentials.delegation_id)
     credentials.method = "certificate"
     # If the user's DN matches the host DN, then grant all
     host_dn = env.get("SSL_SERVER_S_DN", None)

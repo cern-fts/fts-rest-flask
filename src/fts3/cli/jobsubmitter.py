@@ -15,7 +15,6 @@
 
 from datetime import timedelta
 import json
-import logging
 import sys
 import time
 
@@ -30,6 +29,7 @@ DEFAULT_PARAMS = {
     "reuse": False,
     "job_metadata": None,
     "file_metadata": None,
+    "staging_metadata": None,
     "filesize": None,
     "gridftp": None,
     "spacetoken": None,
@@ -50,17 +50,19 @@ DEFAULT_PARAMS = {
     "ipv4": False,
     "ipv6": False,
     "buffer_size": None,
+    "strict_copy": False,
 }
 
 
 def _metadata(data):
-    if data is not None:
-        try:
-            return json.loads(data)
-        except Exception:
-            return str(data)
-    else:
+    if data is None:
         return None
+    if isinstance(data, dict):
+        return data
+    try:
+        return json.loads(data)
+    except Exception:
+        return str(data)
 
 
 class JobSubmitter(Base):
@@ -176,6 +178,9 @@ class JobSubmitter(Base):
             "--file-metadata", dest="file_metadata", help="file metadata."
         )
         self.opt_parser.add_option(
+            "--staging-metadata", dest="staging_metadata", help="staging metadata."
+        )
+        self.opt_parser.add_option(
             "--file-size", dest="file_size", type="long", help="file size (in Bytes)"
         )
         self.opt_parser.add_option(
@@ -223,7 +228,6 @@ class JobSubmitter(Base):
         self.opt_parser.add_option(
             "--dst-file-report",
             dest="dst_file_report",
-            default=False,
             action="store_true",
             help="report on the destination tape file if it already exists and overwrite is off.",
         )
@@ -306,6 +310,12 @@ class JobSubmitter(Base):
             type=int,
             help="TCP buffer size (expressed in bytes) that will be used for the given transfer job",
         )
+        self.opt_parser.add_option(
+            "--strict-copy",
+            dest="strict_copy",
+            action="store_true",
+            help="disable all checks, just copy the file",
+        )
 
     def validate(self):
         self.checksum = None
@@ -372,6 +382,7 @@ class JobSubmitter(Base):
         # JSONify metadata
         params["job_metadata"] = _metadata(params["job_metadata"])
         params["file_metadata"] = _metadata(params["file_metadata"])
+        params["staging_metadata"] = _metadata(params["staging_metadata"])
         return params
 
     def _prepare_options(self):
@@ -396,6 +407,7 @@ class JobSubmitter(Base):
             source_spacetoken=self.options.source_token,
             fail_nearline=self.options.fail_nearline,
             file_metadata=self.options.file_metadata,
+            staging_metadata=self.options.staging_metadata,
             filesize=self.options.file_size,
             gridftp=self.options.gridftp_params,
             job_metadata=self.options.job_metadata,
@@ -413,6 +425,7 @@ class JobSubmitter(Base):
             s3alternate=self.options.s3alternate,
             target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
+            strict_copy=self.options.strict_copy,
         )
 
     def _do_submit(self, context):
@@ -431,13 +444,22 @@ class JobSubmitter(Base):
 
         submitter = Submitter(context)
 
-        supports_overwrite_hop = int(context.endpoint_info["core"]["major"]) > 3 or (
-            int(context.endpoint_info["core"]["major"]) == 3
-            and int(context.endpoint_info["core"]["minor"]) >= 12
-        )
+        supports_overwrite_hop = True
+
+        try:
+            core = context.endpoint_info.get("core")
+            if core is not None:
+                major = core["major"]
+                minor = core["minor"]
+                supports_overwrite_hop = int(major) > 3 or (
+                    int(major) == 3 and int(minor) >= 12
+                )
+        except Exception:
+            pass  # Print compatibility warning only when fully confident
+
         if self.params["overwrite_hop"] and not supports_overwrite_hop:
             self.logger.warning(
-                "overwrite-hop is only availabe after server version 3.12.0"
+                "overwrite-hop is only available for FTS Server >= 3.12.0"
             )
 
         job_id = submitter.submit(transfers=self.transfers, params=self.params)

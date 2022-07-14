@@ -21,7 +21,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def fts3_config_load(path="/etc/fts3/ftsrestconfig", test=False):
+def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
     """
     Read the configuration from the FTS3 configuration file
     """
@@ -83,7 +83,7 @@ def fts3_config_load(path="/etc/fts3/ftsrestconfig", test=False):
         raise ValueError(
             "Database type '%s' is not recognized" % fts3cfg["fts3.DbType"]
         )
-    # SQLAlquemy configuration
+    # SQLAlchemy configuration
     try:
         for name, value in parser.items("sqlalchemy"):
             fts3cfg["sqlalchemy." + name] = value
