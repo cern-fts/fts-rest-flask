@@ -127,11 +127,10 @@ fi
 %files selinux
 
 %changelog
-* Thu Oct 15 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 1.0
-- First production-grade release
-* Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.2
-- Pre-release improvements
-* Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-2
-- Set SELinux httpd_execmem on
-* Tue May 19 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
-- First server package release
+* Thu Jul 14 2021 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3-12.0
+- First production release of FTS-REST-FLASK (Python3)
+- Compatibility with MySQL8.0
+- Support for tape REST API
+- OC11/GDPR compliance with regards to VO names
+- OAuth2 token refactoring
+- Full migration to Gitlab-CI
