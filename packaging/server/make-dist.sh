@@ -16,7 +16,7 @@ cp LICENSE "build/server/${DIST}"
 cp -r src/fts3rest "build/server/${DIST}"
 
 # Create tarball
-tar -C "build/server/" -cvzf "build/server/${DIST}.tar.gz" "${DIST}"
+tar -C "build/server/" -cvzf "build/server/${DIST}.tar.gz" --exclude="__pycache__" --exclude="*.pyc" "${DIST}"
 rm -rf "build/server/${DIST}"
 
 if [[ -z ${SILENT} ]]; then
