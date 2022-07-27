@@ -127,7 +127,7 @@ fi
 %files selinux
 
 %changelog
-* Thu Jul 14 2021 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3-12.0
+* Thu Jul 14 2021 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.0-1
 - First production release of FTS-REST-FLASK (Python3)
 - Compatibility with MySQL8.0
 - Support for tape REST API
