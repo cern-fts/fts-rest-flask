@@ -31,7 +31,6 @@ mkdir -p %{buildroot}%{_sysconfdir}/fts3
 cp src/cli/fts3client.cfg %{buildroot}%{_sysconfdir}/fts3
 %py3_install
 
-
 %files
 %license LICENSE
 %{python3_sitelib}/fts3/
@@ -44,9 +43,3 @@ cp src/cli/fts3client.cfg %{buildroot}%{_sysconfdir}/fts3
 - First official release
 * Wed Jan 26 2022 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.0-rc1
 - First official release candidate
-* Thu Oct 15 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 1.0
-- First production-grade release
-* Tue Oct 13 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.2
-- Pre-release improvements
-* Mon May 18 2020 Carles Garcia Cabot <carles.garcia.cabot@cern.ch> - 0.1-1
-- First package release
