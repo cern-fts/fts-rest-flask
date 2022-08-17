@@ -163,7 +163,7 @@ class OIDCmanager:
             refresh_token = response.get("refresh_token")
         except Exception as ex:
             log.warning("Exception during refresh token request: {}".format(ex))
-            raise Exception("Exception during refresh token request")
+            raise Exception("Exception during refresh token request: {}".format(ex))
         if refresh_token is None:
             errmsg = "No refresh token returned during token exchange"
             if scope is None:
