@@ -2,26 +2,7 @@
 
 <div class="container">
 	<h1>Cloud storage</h1>
-
-    <p>
-        FTS3 currently supports two types of cloud storage: S3 and Dropbox.<br/>
-        However, the way of configuring differs.
-    </p>
-
-    <h4>Configuring S3 endpoint</h4>
-    <ol>
-        <li>Register the S3 storage</li>
-        <ul>
-            <li>The name should have the form S3:hostname (i.e. S3:s3.example.com)</li>
-            <li>Access token = &lt;access key&gt;, access secret = &lt;secret key&gt;</li>
-            <li>Leave request fields empty. App key and secret are not used</li>
-        </ul>
-        <li>Grant access to a set of VO roles and/or users</li>
-        <ul>
-            <li>Empty user with a value in VO roles grant access to all members from that VO</li>
-        </ul>
-    </ol>
-
+<br>
 
     <h4>Configuring Dropbox</h4>
     <p>
@@ -53,14 +34,6 @@
             </div>
             <div class="panel-body">
                 <div class="form-inline">
-                    <div class="form-group">
-                        <label class="control-label">App key (for Dropbox)</label>
-                        <input name="app-key" type="text" class="form-control" value="{{ app_key }}"/>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label">App secret key (for Dropbox)</label>
-                        <input name="app-secret" type="text" class="form-control" value="{{ app_secret }}"/>
-                    </div>
                 </div>
             </div>
             <table class="table">
@@ -142,25 +115,63 @@
     <form class="panel panel-success" id="add-cloud-frm">
         <div class="panel-heading">
             <h3 class="panel-title">
-                Add a new cloud storage
+                Select the type to add a new cloud storage:
+                <select>
+                    <option value="s3">S3 endpoint</option>
+                    <option value="gCloud">GCloud endpoint</option>
+                    <option value="swift">Swift endpoint</option>
+                </select>
             </h3>
+            <div class="s3 endpoint">You have selected: <strong> S3 endpoint</strong> </div>
+            <div class="gCloud endpoint">You have selected: <strong> GCloud endpoint</strong> </div>
+            <div class="swift endpoint">You have selected: <strong> Swift endpoint</strong> </div>
         </div>
-        <div class="panel-body">
+        <div class="panel-body s3 endpoint">
             <div class="form-group">
                 <label class="control-label">Name</label>
                 <input name="storage-name" type="text" class="form-control"/>
             </div>
             <div class="form-group">
-                <label class="control-label">Service API</label>
-                <input name="service-api" type="text" class="form-control"/>
+                <label class="control-label">Access key</label>
+                <input name="access-key" type="text" class="form-control"/>
             </div>
             <div class="form-group">
-                <label class="control-label">App key (for Dropbox)</label>
-                <input name="app-key" type="text" class="form-control"/>
+                <label class="control-label">Secret key</label>
+                <input name="secret-key" type="text" class="form-control" />
             </div>
             <div class="form-group">
-                <label class="control-label">App secret key (from Dropbox)</label>
-                <input name="app-secret" type="text" class="form-control"/>
+                <input name="alternate" type="checkbox" class="checkboxes"/>
+                <label class="control-label" >Alternate</label>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Region</label>
+                <input name="region" type="text" class="form-control"/>
+            </div>
+            <input type="submit" class="btn btn-info" value="Add">
+        </div>
+        <div class="panel-body gCloud endpoint">
+            <div class="form-group">
+                <label class="control-label">Name</label>
+                <input name="storage-name" type="text" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <label class="control-label">JSON input</label>
+                <input name="json-input" type="file"/>
+            </div>
+            <input type="submit" class="btn btn-info" value="Add">
+        </div>
+        <div class="panel-body swift endpoint">
+            <div class="form-group">
+                <label class="control-label">Name</label>
+                <input name="storage-name" type="text" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <label class="control-label">OS Project ID</label>
+                <input name="os-project-id" type="text" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <label class="control-label">OS Token</label>
+                <input name="os-project-id" type="text" class="form-control"/>
             </div>
             <input type="submit" class="btn btn-info" value="Add">
         </div>

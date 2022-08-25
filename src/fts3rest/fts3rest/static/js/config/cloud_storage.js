@@ -199,12 +199,28 @@ function compileTemplates()
         $("#storage-entry-template").html()
     );
 }
+function selectCloudStorage() {
+    $(document).ready(function(){
+        $("select").change(function(){
+            $(this).find("option:selected").each(function(){
+                let optionValue = $(this).attr("value");
+                if(optionValue){
+                    $(".endpoint").not("." + optionValue).hide();
+                    $("." + optionValue).show();
+                } else{
+                    $(".endpoint").hide();
+                }
+            });
+        }).change();
+    });
+}
 
 /**
  * Initializes the SE view
  */
 function setupCloudStorage()
 {
+    selectCloudStorage();
     compileTemplates();
     refreshCloudStorage();
 
