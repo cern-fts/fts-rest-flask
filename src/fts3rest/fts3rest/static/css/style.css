@@ -21,3 +21,25 @@
 .panel-collapse>.panel-body {
     display: none;
 }
+
+.endpoint{
+	display: none;
+}
+
+.checkboxes label
+{
+	display: block;
+	float: right;
+	padding-right: 10px;
+	white-space: nowrap;
+}
+
+.checkboxes input
+{
+	vertical-align: middle;
+}
+
+.checkboxes label span
+{
+	vertical-align: middle;
+}
