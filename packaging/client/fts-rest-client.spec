@@ -5,15 +5,21 @@ Summary:        File Transfer Service (FTS) -- Python3 Client and CLI
 
 License:        ASL 2.0
 URL:            https://fts.web.cern.ch/
+# git clone --depth=1 --branch v3.12.0-client https://gitlab.cern.ch/fts/fts-rest-flask.git fts-rest-client-3.12.0
+# tar -C fts-rest-client-3.12.0/ -czf fts-rest-client-3.12.0.tar.gz src/cli src/fts3 LICENSE setup.py setup.cfg --transform "s|^|fts-rest-client-3.12.0/|" --show-transformed-names
 Source0:        %{name}-%{version}.tar.gz
 
-BuildRequires:  python3
-BuildRequires:  python3-rpm-macros
-BuildRequires:  python-rpm-macros
+BuildRequires:  python3-devel
+BuildRequires:  python3-setuptools
 Requires:       python3
-Requires:       python36-m2crypto
-Requires:       python36-requests
-Obsoletes:      fts-rest-cli
+Requires:       python%{python3_pkgversion}-m2crypto
+Requires:       python%{python3_pkgversion}-requests
+
+# Replace previous FTS Python2 Client package
+Provides:       python-fts = %{version}-%{release}
+Provides:       fts-rest-cli = %{version}-%{release}
+Obsoletes:      python-fts < 3.12.0
+Obsoletes:      fts-rest-cli < 3.12.0
 
 BuildArch:      noarch
 
@@ -36,6 +42,7 @@ cp src/cli/fts3client.cfg %{buildroot}%{_sysconfdir}/fts3
 %{python3_sitelib}/fts3/
 %{python3_sitelib}/fts*-*.egg-info/
 %{_bindir}/fts-rest-*
+%dir %{_sysconfdir}/fts3/
 %config(noreplace) %{_sysconfdir}/fts3/fts3client.cfg
 
 %changelog
