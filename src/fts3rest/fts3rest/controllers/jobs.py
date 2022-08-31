@@ -29,8 +29,18 @@ from fts3rest.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
 
 from fts3rest.lib.http_exceptions import *
-from fts3rest.lib.middleware.fts3auth.authorization import authorized, authorize
-from fts3rest.lib.middleware.fts3auth.constants import TRANSFER, PRIVATE, NONE, VO
+from fts3rest.lib.middleware.fts3auth.authorization import (
+    authorized,
+    authorize,
+    require_certificate,
+)
+from fts3rest.lib.middleware.fts3auth.constants import (
+    TRANSFER,
+    PRIVATE,
+    NONE,
+    VO,
+    CONFIG,
+)
 from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.msgbus import submit_state_change
@@ -320,6 +330,41 @@ def cancel_files(job_id, file_ids):
         return changed_states
     else:
         return changed_states[0]
+
+
+@require_certificate
+@authorize(CONFIG)
+@jsonify
+def force_start_files(job_id, file_ids):
+    """
+    Force start individual files - comma separated for multiple - within a job
+    """
+
+    # Session.query(File).filter(File.file_state = "SUBMITTED", File.file_id.in_(file_ids), File.job_id = job_id).update({"file_state": "FORCE_START"})
+    # msg = Session.query(File).filter(File.file_id.in_(file_ids), File.job_id = job_id).all()
+
+    file_ids = file_ids.split(",")
+    messages = []
+    try:
+        for file_id in file_ids:
+            file = Session.query(File).get(file_id)
+            if not file or file.job_id != job_id:
+                messages.append("File does not belong to the job")
+                continue
+
+            if file.file_state != "SUBMITTED":
+                messages.append(file.file_state)
+                continue
+
+            file.file_state = "FORCE_START"
+            messages.append("FORCE_START")
+            Session.merge(file)
+        Session.commit()
+    except Exception:
+        Session.rollback()
+        raise
+
+    return messages
 
 
 @profile_request

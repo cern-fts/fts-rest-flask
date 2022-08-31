@@ -105,6 +105,12 @@ def do_connect(app):
         methods=["DELETE"],
     )
     app.add_url_rule(
+        "/jobs/<job_id>/files/<file_ids>",
+        "jobs.force_start_files",
+        jobs.force_start_files,
+        methods=["PUT"],
+    )
+    app.add_url_rule(
         "/jobs/vo/<vo_name>",
         "jobs.cancel_all_by_vo",
         jobs.cancel_all_by_vo,
