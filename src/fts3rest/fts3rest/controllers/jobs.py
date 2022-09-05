@@ -332,41 +332,6 @@ def cancel_files(job_id, file_ids):
         return changed_states[0]
 
 
-@require_certificate
-@authorize(CONFIG)
-@jsonify
-def force_start_files(job_id, file_ids):
-    """
-    Force start individual files - comma separated for multiple - within a job
-    """
-
-    # Session.query(File).filter(File.file_state = "SUBMITTED", File.file_id.in_(file_ids), File.job_id = job_id).update({"file_state": "FORCE_START"})
-    # msg = Session.query(File).filter(File.file_id.in_(file_ids), File.job_id = job_id).all()
-
-    file_ids = file_ids.split(",")
-    messages = []
-    try:
-        for file_id in file_ids:
-            file = Session.query(File).get(file_id)
-            if not file or file.job_id != job_id:
-                messages.append("File does not belong to the job")
-                continue
-
-            if file.file_state != "SUBMITTED":
-                messages.append(file.file_state)
-                continue
-
-            file.file_state = "FORCE_START"
-            messages.append("FORCE_START")
-            Session.merge(file)
-        Session.commit()
-    except Exception:
-        Session.rollback()
-        raise
-
-    return messages
-
-
 @profile_request
 @jsonify
 def cancel_all_by_vo(vo_name):
