@@ -68,6 +68,7 @@ def set_cloud_storage():
         app_key=input_dict.get("app_key", None),
         app_secret=input_dict.get("app_secret", None),
         service_api_url=input_dict.get("service_api_url", None),
+        cloud_type=input_dict.get("cloud_type", None),
     )
     try:
         Session.merge(storage)

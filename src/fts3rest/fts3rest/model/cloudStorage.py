@@ -11,9 +11,9 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from sqlalchemy import Column, String, ForeignKey
-
+from sqlalchemy import Column, String, ForeignKey, Enum
 from .base import Base
+import enum
 
 
 class CloudStorage(Base):
@@ -23,6 +23,7 @@ class CloudStorage(Base):
     app_key = Column(String(255))
     app_secret = Column(String(255))
     service_api_url = Column(String(1024))
+    cloud_type = Column('cloud_type', Enum('S3', 'Gcloud', 'Swift'))
 
 
 class CloudStorageUser(Base):
