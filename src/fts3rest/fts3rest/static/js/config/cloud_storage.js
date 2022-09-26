@@ -26,7 +26,8 @@ function saveStorage(form)
         storage_name: form.find("input[name='storage-name']").val(),
         service_api_url: form.find("input[name='service-api']").val(),
         app_key: form.find("input[name='app-key']").val(),
-        app_secret: form.find("input[name='app-secret']").val()
+        app_secret: form.find("input[name='app-secret']").val(),
+        cloud_type: form.find("input[name='cloud-type']").val()
     };
 
     console.log(msg);
@@ -214,12 +215,37 @@ function selectCloudStorage() {
         }).change();
     });
 }
-
+/**
+* Enables dropdown visibility
+ */
+window.onload = cs_dropdown;
+function cs_dropdown(){
+    document
+    .getElementById('cs-dropdown')
+    .addEventListener('change', function () {
+        'use strict';
+        let vis = document.querySelector('.vis'),
+            target = document.getElementById(this.value);
+        if (vis !== null) {
+            vis.className = 'inv';
+        }
+        if (target !== null ) {
+            target.className = 'vis';
+        }
+});
+}
 /**
  * Initializes the SE view
  */
 function setupCloudStorage()
 {
+    // Add Handlebar custom ifCondition
+    Handlebars.registerHelper('ifCond', function(v1, v2, options) {
+  if(v1 === v2) {
+    return options.fn(this);
+  }
+  return options.inverse(this);
+});
     selectCloudStorage();
     compileTemplates();
     refreshCloudStorage();

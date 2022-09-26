@@ -29,10 +29,11 @@
                         <th></th>
                         <th>User</th>
                         <th>VO roles</th>
-                        <th>Access token</th>
-                        <th>Access secret</th>
-                        <th>Request token</th>
-                        <th>Request secret</th>
+                        {{#ifCond cloud_type "S3"}}
+                        <th>Access key</th>
+                        <th>Secret key</th>
+                        {{/ifCond}}
+
                     </tr>
                 </thead>
                 <tbody>
@@ -50,24 +51,20 @@
                             <input type="hidden" name="vo-name" value="{{vo_name}}"/>
                             {{vo_name}}
                         </td>
+                        {{#ifCond cloud_type "S3"}}
                         <td>
                             <input type="text" name="access-token" class="form-control" value="{{access_token}}"/>
                         </td>
                         <td>
                             <input type="text" name="access-secret" class="form-control" value="{{access_token_secret}}"/>
                         </td>
-                        <td>
-                            <input type="text" name="request-token" class="form-control" value="{{request_token}}"/>
-                        </td>
-                        <td>
-                            <input type="text" name="request-secret" class="form-control" value="{{request_token_secret}}"/>
-                        </td>
+                        {{/ifCond}}
                     </tr>
                     {{/each}}
                 </tbody>
                 <tbody class="frm-add-user">
                     <tr>
-                        <td>
+                        <td style="width: 1%">
                             <a><i class="glyphicon glyphicon-plus btn-add-user"></i></a>
                         </td>
                         <td>
@@ -76,18 +73,14 @@
                         <td>
                             <input name="vo-name" type="text" class="form-control" value=""/>
                         </td>
+                        {{#ifCond cloud_type "S3"}}
                         <td>
                             <input name="access-token" type="text" class="form-control" value=""/>
                         </td>
                         <td>
                             <input name="access-secret" type="text" class="form-control" value=""/>
                         </td>
-                        <td>
-                            <input name="request-token" type="text" class="form-control" value=""/>
-                        </td>
-                        <td>
-                            <input name="request-secret" type="text" class="form-control" value=""/>
-                        </td>
+                        {{/ifCond}}
                     </tr>
                 </tbody>
             </table>
@@ -98,71 +91,107 @@
         </div>
         </script>
     </div>
-
-    <form class="panel panel-success" id="add-cloud-frm">
-        <div class="panel-heading">
-            <h3 class="panel-title">
-                Select the type to add a new cloud storage:
-                <select>
-                    <option value="s3">S3 endpoint</option>
-                    <option value="gCloud">GCloud endpoint</option>
-                    <option value="swift">Swift endpoint</option>
-                </select>
-            </h3>
-            <div class="s3 endpoint">You have selected: <strong> S3 endpoint</strong> </div>
-            <div class="gCloud endpoint">You have selected: <strong> GCloud endpoint</strong> </div>
-            <div class="swift endpoint">You have selected: <strong> Swift endpoint</strong> </div>
+    <div id="add-cloudstorage">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    Add new cloud storage:
+                    <span style="float:right">
+                        <label for="cs-dropdown">Cloud Storage type</label>
+                        <select id="cs-dropdown">
+                            <option value="s3" selected>S3</option>
+                            <option value="gcloud">Gcloud</option>
+                            <option value="swift">Swift</option>
+                        </select>
+                    </span>
+                </h3>
+            </div>
+            <div class="panel-body">
+                <div class="form-inline"></div>
+            </div>
         </div>
-        <div class="panel-body s3 endpoint">
-            <div class="form-group">
-                <label class="control-label">Name</label>
-                <input name="storage-name" type="text" class="form-control"/>
-            </div>
-            <div class="form-group">
-                <label class="control-label">Access key</label>
-                <input name="access-key" type="text" class="form-control"/>
-            </div>
-            <div class="form-group">
-                <label class="control-label">Secret key</label>
-                <input name="secret-key" type="text" class="form-control" />
-            </div>
-            <div class="form-group">
-                <input name="alternate" type="checkbox" class="checkboxes"/>
-                <label class="control-label" >Alternate</label>
-            </div>
-            <div class="form-group">
-                <label class="control-label">Region</label>
-                <input name="region" type="text" class="form-control"/>
-            </div>
-            <input type="submit" class="btn btn-info" value="Add">
+        <div class="vis" id="s3">
+        <table class="table" >
+            <thead>
+            <tr>
+                <th>Storage Name</th>
+                <th>Access Secret</th>
+                <th>Secret Key</th>
+                <th>Region</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="user-entry">
+                <input type="hidden" name="cloud_type" value="{{service_api_url}}"/>
+                <td>
+                    <input name="storage-name" type="text" class="form-control" />
+                </td>
+                <td>
+                    <input type="text" name="'request-secret'" class="form-control"/>
+                </td>
+                <td>
+                    <input type="text" name="region" class="form-control"/>
+                </td>
+                <td>
+                    <label style="display: block; padding-left: 15px; text-indent: -15px; top: 1px;">
+                        <input type="checkbox" name="alternate"
+                                   style="width: 15px; height: 15px; padding: 0;margin: 0; vertical-align: center;
+                                       position: relative; top: 1px;"/>  Alternate
+                    </label>
+                </td>
+            </tr>
+            </tbody>
+        </table>
         </div>
-        <div class="panel-body gCloud endpoint">
-            <div class="form-group">
-                <label class="control-label">Name</label>
-                <input name="storage-name" type="text" class="form-control"/>
-            </div>
-            <div class="form-group">
-                <label class="control-label">JSON input</label>
-                <input name="json-input" type="file"/>
-            </div>
-            <input type="submit" class="btn btn-info" value="Add">
+        <div class="inv" id="gcloud">
+        <table class="table" >
+            <thead>
+            <tr>
+                <th>Storage Name</th>
+                <th>JSON input file</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="user-entry">
+                <td>
+                    <input name="storage-name" type="text" class="form-control" />
+                </td>
+                <td>
+                    <input type="file" name="json_file"/>
+                </td>
+            </tr>
+            </tbody>
+        </table>
         </div>
-        <div class="panel-body swift endpoint">
-            <div class="form-group">
-                <label class="control-label">Name</label>
-                <input name="storage-name" type="text" class="form-control"/>
-            </div>
-            <div class="form-group">
-                <label class="control-label">OS Project ID</label>
-                <input name="os-project-id" type="text" class="form-control"/>
-            </div>
-            <div class="form-group">
-                <label class="control-label">OS Token</label>
-                <input name="os-project-id" type="text" class="form-control"/>
-            </div>
-            <input type="submit" class="btn btn-info" value="Add">
+        <div class="inv" id="swift">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Storage Name</th>
+                <th>OS Project ID</th>
+                <th>OS Token</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="user-entry">
+                <td>
+                        <input name="storage-name" type="text" class="form-control" />
+                </td>
+                <td>
+                        <input name="os-project-id" type="text" class="form-control" />
+                </td>
+                <td>
+                        <input name="os-token" type="text" class="form-control" />
+                </td>
+            </tr>
+            </tbody>
+        </table>
         </div>
-    </form>
+        <div class="panel-footer">
+            <button class="btn btn-success btn-save">Add</button>
+        </div>
+    </div>
 </div>
 <script src="/js/config/cloud_storage.js" onload="setupCloudStorage()"></script>
 
