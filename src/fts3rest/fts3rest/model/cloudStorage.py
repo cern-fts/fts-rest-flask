@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from sqlalchemy import Column, String, ForeignKey, Enum
+from sqlalchemy import Column, String, ForeignKey, Enum, Boolean
 from .base import Base
 import enum
 
@@ -19,27 +19,60 @@ import enum
 class CloudStorage(Base):
     __tablename__ = "t_cloudStorage"
 
-    storage_name = Column(String(150), primary_key=True, name="cloudStorage_name")
-    app_key = Column(String(255))
-    app_secret = Column(String(255))
-    service_api_url = Column(String(1024))
+    cloudstorage_name = Column(String(150),
+                               primary_key=True,
+                               name="cloudStorage_name")
+
     cloud_type = Column('cloud_type', Enum('S3', 'Gcloud', 'Swift'))
+
+
+class CloudStorageS3(Base):
+    __tablename__ = "t_cloudStorage_s3"
+
+    cloudStorage_name = Column(String(150),
+                               # ForeignKey("t_cloudStorage.cloudStorage_name"),
+                               primary_key=True,
+                               name="cloudStorage_name")
+
+    alternate = Column(Boolean, default=False)
+    region = Column(String(255))
+
+
+class CloudStorageGcloud(Base):
+    __tablename__ = "t_cloudStorage_gcloud"
+
+    cloudStorage_name = Column(String(150),
+                               # ForeignKey("t_cloudStorage.cloudStorage_name"),
+                               primary_key=True,
+                               name="cloudStorage_name")
+
+    auth_file = Column(String(255))
+
+
+class CloudStorageSwift(Base):
+    __tablename__ = "t_cloudStorage_swift"
+
+    cloudStorage_name = Column(String(150),
+                               # ForeignKey("t_cloudStorage.cloudStorage_name"),
+                               primary_key=True,
+                               name="cloudStorage_name")
+
+    os_project_id = Column(String(255))
+    os_token = Column(String(255))
 
 
 class CloudStorageUser(Base):
     __tablename__ = "t_cloudStorageUser"
 
     user_dn = Column(String(700), primary_key=True)
-    storage_name = Column(
+    cloudStorage_name = Column(
         String(150),
         ForeignKey("t_cloudStorage.cloudStorage_name"),
         primary_key=True,
         name="cloudStorage_name",
-    )
-    access_token = Column(String(255))
-    access_token_secret = Column(String(255))
-    request_token = Column(String(255))
-    request_token_secret = Column(String(255))
+        )
+    access_key = Column(String(255))
+    secret_key = Column(String(255))
     vo_name = Column(String(100), primary_key=True)
 
     def is_access_requested(self):
