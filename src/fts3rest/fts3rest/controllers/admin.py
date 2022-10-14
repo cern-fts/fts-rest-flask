@@ -60,12 +60,12 @@ def force_start_files():
         for file_id in file_ids:
             file = Session.query(File).get(file_id)
             if not file:
-                messages.append({"fileID": file_id, "msg": "File does not exist"})
+                messages.append({"file_id": file_id, "error": "File does not exist"})
                 continue
 
             if file.file_state != "SUBMITTED":
                 messages.append(
-                    {"fileID": file_id, "msg": "File is not in SUBMITTED state"}
+                    {"file_id": file_id, "error": "File is not in SUBMITTED state"}
                 )
                 continue
 
