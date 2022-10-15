@@ -13,15 +13,17 @@ RUN yum localinstall /tmp/epel-release-7.noarch.rpm -y \
         && rm -rf /var/cache/yum
 
 # Add FTS repo
-ARG ftsrepo=https://fts-repo.web.cern.ch/fts-repo/fts3-continuous-el7.repo
+ARG ftsrepo=https://fts-repo.web.cern.ch/fts-repo/fts3-devel-el7.repo
 ADD $ftsrepo /etc/yum.repos.d/fts.repo
 
+# Add FTS Dependencies repo
+ADD "https://fts-repo.web.cern.ch/fts-repo/fts3-depend-el7.repo" /etc/yum.repos.d/fts-depend.repo
+
 # Add DMC repo
-ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-ci-el7.repo
+ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
 ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 RUN yum clean all
 
-# Enable Centos Software Collections repository
 # Enable Centos Software Collections repository
 RUN yum install -y centos-release-scl
 RUN yum clean metadata
