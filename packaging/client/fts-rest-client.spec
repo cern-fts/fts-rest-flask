@@ -33,8 +33,6 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 %py3_build
 
 %install
-mkdir -p %{buildroot}%{_sysconfdir}/fts3
-cp src/cli/fts3client.cfg %{buildroot}%{_sysconfdir}/fts3
 %py3_install
 
 %files
@@ -42,8 +40,6 @@ cp src/cli/fts3client.cfg %{buildroot}%{_sysconfdir}/fts3
 %{python3_sitelib}/fts3/
 %{python3_sitelib}/fts*-*.egg-info/
 %{_bindir}/fts-rest-*
-%dir %{_sysconfdir}/fts3/
-%config(noreplace) %{_sysconfdir}/fts3/fts3client.cfg
 
 %changelog
 * Wed Mar 30 2022 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.0-1
