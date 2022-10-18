@@ -26,7 +26,7 @@ from fts3rest.lib.middleware.fts3auth.authorization import (
     authorize,
     require_certificate,
 )
-from fts3rest.lib.middleware.fts3auth.constants import CONFIG
+from fts3rest.lib.middleware.fts3auth.constants import ADMIN, CONFIG
 from fts3rest.model.meta import Session
 
 log = logging.getLogger(__name__)
@@ -49,6 +49,8 @@ def add_authz():
     op = input_dict.get("operation")
     if not dn or not op:
         raise BadRequest("Missing dn and/or operation")
+    if op == ADMIN:
+        raise BadRequest("'%s' level can only be changed via database access" % ADMIN)
 
     try:
         authz = Session.query(AuthorizationByDn).get((dn, op))
@@ -93,8 +95,14 @@ def remove_authz():
     op = input_dict.get("operation")
     if not dn:
         raise BadRequest("Missing DN parameter")
+    if op == ADMIN:
+        raise BadRequest("'%s' level can only be changed via database access" % ADMIN)
 
-    to_be_removed = Session.query(AuthorizationByDn).filter(AuthorizationByDn.dn == dn)
+    to_be_removed = (
+        Session.query(AuthorizationByDn)
+        .filter(AuthorizationByDn.operation != ADMIN)
+        .filter(AuthorizationByDn.dn == dn)
+    )
     if op:
         to_be_removed = to_be_removed.filter(AuthorizationByDn.operation == op)
 

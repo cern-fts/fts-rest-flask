@@ -154,6 +154,7 @@ class UserCredentials:
                 "transfer": "all",
                 "deleg": "all",
                 "config": "all",
+                "admin": "all",
                 "datamanagement": "all",
             }
 
@@ -180,6 +181,10 @@ class UserCredentials:
                 % (grant.operation, self.user_dn)
             )
             granted_level[grant.operation] = "all"
+
+        if granted_level.get("admin") == "all":
+            granted_level["config"] = "all"
+            log.info('config granted to "%s" because of admin level' % self.user_dn)
 
         return granted_level
 
