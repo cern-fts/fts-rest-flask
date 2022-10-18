@@ -24,7 +24,7 @@ from fts3rest.lib.middleware.fts3auth.authorization import (
     authorize,
     require_certificate,
 )
-from fts3rest.lib.middleware.fts3auth.constants import CONFIG
+from fts3rest.lib.middleware.fts3auth.constants import ADMIN
 from fts3rest.lib.helpers.jsonify import jsonify
 
 import json
@@ -35,7 +35,7 @@ Admin Commands
 
 
 @require_certificate
-@authorize(CONFIG)
+@authorize(ADMIN)
 @jsonify
 def force_start_files():
     """
