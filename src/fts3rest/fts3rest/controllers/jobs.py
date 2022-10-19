@@ -29,8 +29,18 @@ from fts3rest.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
 
 from fts3rest.lib.http_exceptions import *
-from fts3rest.lib.middleware.fts3auth.authorization import authorized, authorize
-from fts3rest.lib.middleware.fts3auth.constants import TRANSFER, PRIVATE, NONE, VO
+from fts3rest.lib.middleware.fts3auth.authorization import (
+    authorized,
+    authorize,
+    require_certificate,
+)
+from fts3rest.lib.middleware.fts3auth.constants import (
+    TRANSFER,
+    PRIVATE,
+    NONE,
+    VO,
+    CONFIG,
+)
 from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.msgbus import submit_state_change

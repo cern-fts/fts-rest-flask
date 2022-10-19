@@ -26,7 +26,7 @@ def authorized(operation, resource_owner=None, resource_vo=None, env=None):
     Check if the user has enough privileges for a given operation
 
     Args:
-        op:             The operation to perform
+        operation:      The operation to perform
         resource_owner: Who owns the resource
         resource_vo:    VO of the owner of the resource
         env:            Environment (i.e. os.environ)
@@ -38,7 +38,7 @@ def authorized(operation, resource_owner=None, resource_vo=None, env=None):
     if env is None:
         env = request.environ
 
-    if not "fts3.User.Credentials" in env:
+    if "fts3.User.Credentials" not in env:
         return False
 
     user = env["fts3.User.Credentials"]
@@ -61,7 +61,8 @@ def authorize(op, env=None):
     Decorator to check if the user has enough privileges to perform a given operation
 
     Args:
-        op: The required operation level
+        op:  The required operation level
+        env: Environment (i.e. os.environ)
 
     Returns:
         A method that can be used to decorate the resource/method
