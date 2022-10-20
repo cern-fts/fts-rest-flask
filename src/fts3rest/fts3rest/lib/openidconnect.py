@@ -132,6 +132,7 @@ class OIDCmanager:
         client = self.clients[issuer]
         body = {
             "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+            "requested_token_type": "urn:ietf:params:oauth:token-type:refresh_token",
             "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
             "subject_token": token,
         }
@@ -161,6 +162,8 @@ class OIDCmanager:
             log.debug("generate_refresh_token response::: {}".format(response))
             access_token = response.get("access_token", token)
             refresh_token = response.get("refresh_token")
+            if access_token == refresh_token:
+                access_token = token
         except Exception as ex:
             log.warning("Exception during refresh token request: {}".format(ex))
             raise Exception("Exception during refresh token request: {}".format(ex))
@@ -183,7 +186,9 @@ class OIDCmanager:
         unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         issuer = unverified_payload["iss"]
         client = self.clients[issuer]
-        log.debug("refresh_access_token for {}".format(issuer))
+        log.debug(
+            "refresh_access_token::: issuer={} subject={}".format(issuer, credential.dn)
+        )
 
         # Prepare and make request
         refresh_session_state = rndstr(50)
