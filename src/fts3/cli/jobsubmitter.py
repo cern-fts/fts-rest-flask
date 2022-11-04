@@ -217,13 +217,13 @@ class JobSubmitter(Base):
             "--copy-pin-lifetime",
             dest="pin_lifetime",
             type="long",
-            help="pin lifetime of the copy in seconds.",
+            help="pin lifetime of the copy in seconds. This will trigger a bring online operation.",
         )
         self.opt_parser.add_option(
             "--bring-online",
             dest="bring_online",
             type="long",
-            help="bring online timeout in seconds.",
+            help="bring online timeout in seconds. This will trigger a bring online operation.",
         )
         self.opt_parser.add_option(
             "--dst-file-report",
