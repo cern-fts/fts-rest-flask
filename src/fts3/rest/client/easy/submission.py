@@ -62,6 +62,7 @@ def new_transfer(
     filesize=None,
     metadata=None,
     staging_metadata=None,
+    archive_metadata=None,
     activity=None,
     selection_strategy="auto",
 ):
@@ -75,6 +76,7 @@ def new_transfer(
         filesize:           File size
         metadata:           Metadata to bind to the transfer
         staging_metadata:   Staging Metadata to bind to the bringonline operation
+        archive_metadata:   Archive Metadata to bind to the archiving operation
         selection_strategy: Selection Strategy to implement for multiple replica Jobs
 
     Returns:
@@ -92,6 +94,8 @@ def new_transfer(
         transfer["metadata"] = metadata
     if staging_metadata:
         transfer["staging_metadata"] = staging_metadata
+    if archive_metadata:
+        transfer["archive_metadata"] = archive_metadata
     if activity:
         transfer["activity"] = activity
     if selection_strategy:

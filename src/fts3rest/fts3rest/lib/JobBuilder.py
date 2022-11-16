@@ -173,21 +173,28 @@ class JobBuilder:
                 user_filesize=safe_filesize(file_dict.get("filesize", 0)),
                 selection_strategy=file_dict.get("selection_strategy", "auto"),
                 checksum=file_dict.get("checksum", None),
-                staging_metadata=file_dict.get("staging_metadata", None),
                 file_metadata=file_dict.get("metadata", None),
+                staging_metadata=file_dict.get("staging_metadata", None),
+                archive_metadata=file_dict.get("archive_metadata", None),
                 activity=file_dict.get("activity", "default"),
                 hashed_id=shared_hashed_id
                 if shared_hashed_id
                 else generate_hashed_id(),
             )
+            if f["file_metadata"] != None:
+                f["file_metadata"] = metadata(f["file_metadata"])
             if f["staging_metadata"] != None:
                 f["staging_metadata"] = metadata(
                     f["staging_metadata"],
                     require_dict=True,
                     name_hint="Staging metadata",
                 )
-            if f["file_metadata"] != None:
-                f["file_metadata"] = metadata(f["file_metadata"])
+            if f["archive_metadata"] != None:
+                f["archive_metadata"] = metadata(
+                    f["archive_metadata"],
+                    require_dict=True,
+                    name_hint="Archive metadata",
+                )
             self.files.append(f)
 
     def _apply_selection_strategy(self):
