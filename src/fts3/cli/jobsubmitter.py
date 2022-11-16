@@ -429,7 +429,7 @@ class JobSubmitter(Base):
         )
 
     def _do_submit(self, context):
-        if not self.options.access_token:
+        if not self.options.access_token and context.has_certificate():
             delegator = Delegator(context)
             delegator.delegate(
                 timedelta(minutes=self.options.proxy_lifetime),

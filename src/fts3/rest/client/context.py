@@ -198,6 +198,9 @@ class Context(object):
             % self.endpoint_info["api"]
         )
 
+    def has_certificate(self):
+        return self.ucert and self.ukey
+
     def get_endpoint_info(self):
         return self.endpoint_info
 
