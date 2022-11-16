@@ -87,6 +87,13 @@ class Context(object):
                 ukey = "/etc/grid-security/hostkey.pem"
 
         if ucert and ukey:
+            log.debug("User certificate: %s" % ucert)
+            log.debug("User private key: %s" % ukey)
+
+            for (cert, name) in [(ucert, "Certificate"), (ukey, "Private key")]:
+                if not os.path.exists(cert):
+                    raise FileNotFoundError(name + " not found!")
+
             self.x509_list = _get_x509_list(ucert)
             self.x509 = self.x509_list[0]
             not_after = self.x509.get_not_after()
@@ -117,13 +124,8 @@ class Context(object):
             self.ucert = ucert
             self.ukey = ukey
         else:
-            self.ucert = self.ukey = None
-
-        if not self.ucert and not self.ukey:
             log.warning("No user certificate given!")
-        else:
-            log.debug("User certificate: %s" % self.ucert)
-            log.debug("User private key: %s" % self.ukey)
+            self.ucert = self.ukey = None
 
     def _set_endpoint(self, endpoint):
         self.endpoint = endpoint
