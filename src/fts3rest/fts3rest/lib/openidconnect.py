@@ -139,6 +139,26 @@ class OIDCmanager:
             "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
             "subject_token": token,
         }
+
+        # Handle custom audience from config
+        if "audience" in self.clients_config[issuer]:
+            config_audience = self.clients_config[issuer]["audience"]
+            log.debug(
+                'Using client_config_options["{}"]["audience"]={}'.format(
+                    issuer, config_audience
+                )
+            )
+            if audience is None:
+                audience = config_audience
+            else:
+                if isinstance(audience, str):
+                    audience = [audience]
+                audience.append(config_audience)
+
+        # Handle "requested_token_type" grant
+        if "no_requested_token_type" in self.clients_config[issuer]:
+            del body["requested_token_type"]
+
         if scope:
             body["scope"] = " ".join(scope)
             if "offline_access" not in scope:
