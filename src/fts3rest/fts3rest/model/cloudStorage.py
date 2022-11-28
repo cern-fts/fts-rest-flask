@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from sqlalchemy import Column, String, ForeignKey, Enum, Boolean
+from sqlalchemy import Column, String, ForeignKey, Enum, Boolean, Index
 from .base import Base
 import enum
 
@@ -73,7 +73,8 @@ class CloudStorageUser(Base):
         )
     access_key = Column(String(255))
     secret_key = Column(String(255))
-    vo_name = Column(String(100), primary_key=True)
+    vo_name = Column(String(100), primary_key=True),
+    Index('csname_userdn_voname_UNIQUE', 'cloudstorage_name', 'vo_name', 'user_dn', unique=True)
 
     def is_access_requested(self):
         return not (self.request_token is None or self.request_token_secret is None)
