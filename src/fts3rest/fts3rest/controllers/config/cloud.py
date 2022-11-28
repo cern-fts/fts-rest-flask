@@ -43,13 +43,28 @@ def get_cloud_storages():
     """
     Get a list of cloud storages registered
     """
-    storages = Session.query(CloudStorage).all()
-    for storage in storages:
+    storages_s3 = Session.query(CloudStorageS3).all()
+    for storage_s3 in storages_s3:
         users = Session.query(CloudStorageUser).filter(
-            CloudStorageUser.storage_name == storage.storage_name
-        )
-        setattr(storage, "users", list(users))
-    return storages
+            CloudStorageUser.cloudStorage_name == storage_s3.cloudStorage_name
+            )
+        setattr(storage_s3, "users", list(users))
+
+    storages_gcloud = Session.query(CloudStorageGcloud).all()
+    for storage_gcloud in storages_gcloud:
+        users = Session.query(CloudStorageUser).filter(
+            CloudStorageUser.cloudStorage_name == storage_gcloud.cloudStorage_name
+            )
+        setattr(storage_gcloud, "users", list(users))
+
+    storages_swift = Session.query(CloudStorageSwift).all()
+    for storage_swift in storages_swift:
+        users = Session.query(CloudStorageUser).filter(
+            CloudStorageUser.cloudStorage_name == storage_swift.cloudStorage_name
+            )
+        setattr(storage_swift, "users", list(users))
+
+    return storages_s3, storages_gcloud, storages_swift
 
 
 @require_certificate
@@ -76,23 +91,57 @@ def set_cloud_storage():
     except Exception:
         Session.rollback()
         raise
-    return Response(storage.storage_name, status=201)
+    return Response(storage.cloudstorage_name, status=201)
 
 
 @require_certificate
 @authorize(CONFIG)
 @jsonify
-def get_cloud_storage(storage_name):
+def get_cloud_storage_s3(cloudstorage_name):
     """
     Get a list of users registered for a given storage name
     """
-    storage = Session.query(CloudStorage).get(storage_name)
+    storage = Session.query(CloudStorageS3).get(cloudstorage_name)
     if not storage:
         raise NotFound("The storage does not exist")
 
     users = Session.query(CloudStorageUser).filter(
-        CloudStorageUser.storage_name == storage_name
-    )
+        CloudStorageUser.cloudStorage_name == cloudstorage_name
+        )
+    return users
+
+
+@require_certificate
+@authorize(CONFIG)
+@jsonify
+def get_cloud_storage_gcloud(cloudstorage_name):
+    """
+    Get a list of users registered for a given storage name
+    """
+    storage = Session.query(CloudStorageGcloud).get(cloudstorage_name)
+    if not storage:
+        raise NotFound("The storage does not exist")
+
+    users = Session.query(CloudStorageUser).filter(
+        CloudStorageUser.cloudStorage_name == cloudstorage_name
+        )
+    return users
+
+
+@require_certificate
+@authorize(CONFIG)
+@jsonify
+def get_cloud_storage_swift(cloudstorage_name):
+    """
+    Get a list of users registered for a given storage name
+    """
+    storage = Session.query(CloudStorageSwift).get(cloudstorage_name)
+    if not storage:
+        raise NotFound("The storage does not exist")
+
+    users = Session.query(CloudStorageUser).filter(
+        CloudStorageUser.cloudStorage_name == cloudstorage_name
+        )
     return users
 
 
