@@ -242,7 +242,7 @@ class JobBuilder:
             )
         )
 
-        min_reuse_files = int(app.config.get("fts3.SessionReuseMinFiles", 5))
+        min_reuse_files = int(app.config.get("fts3.AutoSessionReuseMinFiles", 5))
         max_reuse_files = int(app.config.get("fts3.AutoSessionReuseMaxFiles", 1000))
         max_reuse_big_files = int(app.config.get("fts3.AutoSessionReuseMaxBigFiles", 2))
         max_size_small_file = int(

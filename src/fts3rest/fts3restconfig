@@ -41,19 +41,18 @@ Alias =
 # No enforcement if config setting is missing
 #BringOnlineAndExpirationDelta = 3d
 
-# Minimum amount of files required in a SessionReuse job
-#SessionReuseMinFiles = 5
-
 # Enable or disable AutoSessionReuse (default false)
 #AutoSessionReuse = False
+# Min number of files per session reuse
+#AutoSessionReuseMinFiles = 5
 # Max number of files per session reuse
 #AutoSessionReuseMaxFiles = 1000
-# Max small file size for session reuse in bytes (default 100MB)
-#AutoSessionReuseMaxSmallFileSize = 104857600
-# Max big file size for session reuse in bytes (default 1GB)
-#AutoSessionReuseMaxBigFileSize = 1073741824
 # Max number of big files per session reuse
 #AutoSessionReuseMaxBigFiles = 2
+# File size max limit to classify file as small, expressed in bytes (default 100MB)
+#AutoSessionReuseMaxSmallFileSize = 104857600
+# File size max limit to classify file as big, expressed in bytes (default 1GB)
+#AutoSessionReuseMaxBigFileSize = 1073741824
 
 # OAuth2 parameters
 ValidateAccessTokenOffline=True
