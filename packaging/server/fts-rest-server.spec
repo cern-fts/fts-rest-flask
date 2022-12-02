@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.12.0
+Version:        3.12.1
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -127,6 +127,11 @@ fi
 %files selinux
 
 %changelog
+* Fri Dec 02 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.1-1
+- Introduce profiling logs for HTTP requests
+- Introduce new "/admin/force-start" endpoint
+- OAuth2 token-exchange workflow improvements
+
 * Thu Jul 14 2021 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.0-1
 - First production release of FTS-REST-FLASK (Python3)
 - Compatibility with MySQL8.0
