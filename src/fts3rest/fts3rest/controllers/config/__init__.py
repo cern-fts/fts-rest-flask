@@ -38,8 +38,13 @@ def audit_configuration(action, config):
         config=config,
         action=action,
     )
-    Session.add(audit)
-    log.info(action)
+    try:
+        Session.add(audit)
+        Session.commit()
+        log.info(action)
+    except Exception as e:
+        Session.rollback()
+        log.warning("Database error during audit log: %s" % str(e))
 
 
 def validate_type(Type, key, value):

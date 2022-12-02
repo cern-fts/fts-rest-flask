@@ -22,6 +22,7 @@ class OIDCmanager:
 
     def __init__(self):
         self.clients = {}
+        self.clients_config = {}
         self.config = None
 
     def setup(self, config):
@@ -46,6 +47,8 @@ class OIDCmanager:
                 if "introspection_endpoint" not in client.provider_info:
                     log.warning("{} -- missing introspection endpoint".format(issuer))
                 self.clients[issuer] = client
+                # Store custom configuration options for this provider
+                self.clients_config[issuer] = providers_config[provider]["custom"]
             except Exception as ex:
                 log.warning("Exception registering provider: {}".format(provider))
                 log.warning(ex)
@@ -132,9 +135,30 @@ class OIDCmanager:
         client = self.clients[issuer]
         body = {
             "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+            "requested_token_type": "urn:ietf:params:oauth:token-type:refresh_token",
             "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
             "subject_token": token,
         }
+
+        # Handle custom audience from config
+        if "audience" in self.clients_config[issuer]:
+            config_audience = self.clients_config[issuer]["audience"]
+            log.debug(
+                'Using client_config_options["{}"]["audience"]={}'.format(
+                    issuer, config_audience
+                )
+            )
+            if audience is None:
+                audience = config_audience
+            else:
+                if isinstance(audience, str):
+                    audience = [audience]
+                audience.append(config_audience)
+
+        # Handle "requested_token_type" grant
+        if "no_requested_token_type" in self.clients_config[issuer]:
+            del body["requested_token_type"]
+
         if scope:
             body["scope"] = " ".join(scope)
             if "offline_access" not in scope:
@@ -161,9 +185,11 @@ class OIDCmanager:
             log.debug("generate_refresh_token response::: {}".format(response))
             access_token = response.get("access_token", token)
             refresh_token = response.get("refresh_token")
+            if access_token == refresh_token:
+                access_token = token
         except Exception as ex:
             log.warning("Exception during refresh token request: {}".format(ex))
-            raise Exception("Exception during refresh token request")
+            raise Exception("Exception during refresh token request: {}".format(ex))
         if refresh_token is None:
             errmsg = "No refresh token returned during token exchange"
             if scope is None:
@@ -183,7 +209,9 @@ class OIDCmanager:
         unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         issuer = unverified_payload["iss"]
         client = self.clients[issuer]
-        log.debug("refresh_access_token for {}".format(issuer))
+        log.debug(
+            "refresh_access_token::: issuer={} subject={}".format(issuer, credential.dn)
+        )
 
         # Prepare and make request
         refresh_session_state = rndstr(50)

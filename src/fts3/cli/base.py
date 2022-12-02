@@ -24,7 +24,7 @@ from fts3.rest.client import Context
 from fts3 import __version__ as CLIENT_VERSION
 
 
-CONFIG_FILENAMES = ["/etc/fts3/fts3client.cfg", os.path.expanduser("~/.fts3client.cfg")]
+CONFIG_FILENAME = os.path.expanduser("~/.fts3client.cfg")
 
 CONFIG_DEFAULTSECTION = "Main"
 CONFIG_DEFAULTS = {
@@ -69,7 +69,7 @@ class Base:
         config = ConfigParser(defaults=CONFIG_DEFAULTS)
 
         section = CONFIG_DEFAULTSECTION
-        config.read(CONFIG_FILENAMES)
+        config.read(CONFIG_FILENAME)
 
         # manually set the section in edge cases
         if not config.has_section("Main"):

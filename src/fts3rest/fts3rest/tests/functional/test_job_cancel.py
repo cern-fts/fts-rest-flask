@@ -430,6 +430,15 @@ class TestJobCancel(TestController):
         """
         Helper function to prepare and test created jobs for cancel tests
         """
+
+        def _map_file_state_to_job_state(file_state):
+            if file_state == "STARTED":
+                return "STAGING"
+            elif file_state == "FORCE_START":
+                return "SUBMITTED"
+            else:
+                return file_state
+
         job_ids = list()
         for i in range(len(FileActiveStates) + len(FileTerminalStates)):
             job_ids.append(self._submit(files_per_job))
@@ -437,10 +446,7 @@ class TestJobCancel(TestController):
         for state in FileActiveStates + FileTerminalStates:
             job = Session.query(Job).get(job_ids[i])
             i += 1
-            if state == "STARTED":
-                job.job_state = "STAGING"
-            else:
-                job.job_state = state
+            job.job_state = _map_file_state_to_job_state(state)
             for f in job.files:
                 f.file_state = state
             Session.merge(job)
@@ -449,9 +455,7 @@ class TestJobCancel(TestController):
         i = 0
         for state in FileActiveStates + FileTerminalStates:
             job = Session.query(Job).get(job_ids[i])
-            state_job = state
-            if state == "STARTED":
-                state_job = "STAGING"
+            state_job = _map_file_state_to_job_state(state)
             self.assertEqual(job.job_state, state_job)
             for f in job.files:
                 self.assertEqual(f.file_state, state)

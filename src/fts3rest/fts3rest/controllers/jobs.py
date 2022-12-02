@@ -21,6 +21,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import noload
 
 import logging
+import functools
 
 from fts3rest.model import Job, File, JobActiveStates, FileActiveStates
 from fts3rest.model import DataManagement, DataManagementActiveStates
@@ -28,8 +29,18 @@ from fts3rest.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
 
 from fts3rest.lib.http_exceptions import *
-from fts3rest.lib.middleware.fts3auth.authorization import authorized, authorize
-from fts3rest.lib.middleware.fts3auth.constants import TRANSFER, PRIVATE, NONE, VO
+from fts3rest.lib.middleware.fts3auth.authorization import (
+    authorized,
+    authorize,
+    require_certificate,
+)
+from fts3rest.lib.middleware.fts3auth.constants import (
+    TRANSFER,
+    PRIVATE,
+    NONE,
+    VO,
+    CONFIG,
+)
 from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.msgbus import submit_state_change
@@ -42,7 +53,29 @@ Operations on jobs and transfers
 """
 
 
+def profile_request(func):
+    """
+    Wraps request to get relevant parameters, log them for fluent bit to pick them up.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        user = request.environ["fts3.User.Credentials"]
+        vo = user.vos[0]
+        request_type = request.method
+        request_path = request.path
+        response = func(*args, **kwargs)
+        response_status_code = response.status_code
+        log.info(
+            f"[profiling::jobs] vo={vo} method={request_type} response_status={response_status_code} path={request_path}"
+        )
+        return response
+
+    return wrapper
+
+
 @authorize(TRANSFER)
+@profile_request
 @jsonify
 def index():
     """
@@ -145,6 +178,7 @@ def _get_job(job_id, env=None):
     return job
 
 
+@profile_request
 @jsonify
 def get(job_list):
     """
@@ -208,6 +242,7 @@ def get(job_list):
     return res
 
 
+@profile_request
 @jsonify
 def get_files(job_id):
     """
@@ -226,6 +261,7 @@ def get_files(job_id):
     )
 
 
+@profile_request
 @jsonify
 def cancel_files(job_id, file_ids):
     """
@@ -296,6 +332,7 @@ def cancel_files(job_id, file_ids):
         return changed_states[0]
 
 
+@profile_request
 @jsonify
 def cancel_all_by_vo(vo_name):
     """
@@ -368,6 +405,7 @@ def cancel_all_by_vo(vo_name):
     }
 
 
+@profile_request
 @jsonify
 def cancel_all():
     """
@@ -438,6 +476,7 @@ def cancel_all():
     }
 
 
+@profile_request
 @jsonify
 def get_file_retries(job_id, file_id):
     """
@@ -455,6 +494,7 @@ def get_file_retries(job_id, file_id):
     return Response(retries.all(), mimetype="application/json")
 
 
+@profile_request
 @jsonify
 def get_dm(job_id):
     """
@@ -471,6 +511,7 @@ def get_dm(job_id):
     )
 
 
+@profile_request
 @jsonify
 def get_field(job_id, field):
     """
@@ -509,6 +550,7 @@ def _multistatus(responses, expecting_multistatus=False):
     return responses
 
 
+@profile_request
 @jsonify
 def cancel(job_id_list):
     """
@@ -609,6 +651,7 @@ def cancel(job_id_list):
     return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
 
 
+@profile_request
 @jsonify
 def modify(job_id_list):
     """
@@ -682,6 +725,7 @@ def modify(job_id_list):
 
 
 @authorize(TRANSFER)
+@profile_request
 @jsonify
 def submit():
     """

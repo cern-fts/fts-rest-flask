@@ -16,7 +16,7 @@ cp LICENSE setup.py setup.cfg "build/client/${DIST}"
 cp -r src/cli src/fts3 "build/client/${DIST}/src"
 
 # Create tarball
-tar -C "build/client/" -cvzf "build/client/${DIST}.tar.gz" "${DIST}"
+tar -C "build/client/" -cvzf "build/client/${DIST}.tar.gz" --exclude="__pycache__" --exclude="*.pyc" "${DIST}"
 rm -rf "build/client/${DIST}"
 
 if [[ -z ${SILENT} ]]; then

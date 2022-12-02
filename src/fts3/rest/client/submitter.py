@@ -56,6 +56,10 @@ class Submitter:
                     if "staging_metadata" not in f:
                         f["staging_metadata"] = job["params"]["staging_metadata"]
                 del job["params"]["staging_metadata"]
+            if "archive_metadata" in job["params"]:
+                for f in job["files"]:
+                    if "archive_metadata" not in f:
+                        f["archive_metadata"] = job["params"]["archive_metadata"]
 
         return json.dumps(job, indent=2)
 

@@ -30,6 +30,7 @@ DEFAULT_PARAMS = {
     "job_metadata": None,
     "file_metadata": None,
     "staging_metadata": None,
+    "archive_metadata": None,
     "filesize": None,
     "gridftp": None,
     "spacetoken": None,
@@ -181,6 +182,9 @@ class JobSubmitter(Base):
             "--staging-metadata", dest="staging_metadata", help="staging metadata."
         )
         self.opt_parser.add_option(
+            "--archive-metadata", dest="archive_metadata", help="archive metadata."
+        )
+        self.opt_parser.add_option(
             "--file-size", dest="file_size", type="long", help="file size (in Bytes)"
         )
         self.opt_parser.add_option(
@@ -217,13 +221,13 @@ class JobSubmitter(Base):
             "--copy-pin-lifetime",
             dest="pin_lifetime",
             type="long",
-            help="pin lifetime of the copy in seconds.",
+            help="pin lifetime of the copy in seconds. This will trigger a bring online operation.",
         )
         self.opt_parser.add_option(
             "--bring-online",
             dest="bring_online",
             type="long",
-            help="bring online timeout in seconds.",
+            help="bring online timeout in seconds. This will trigger a bring online operation.",
         )
         self.opt_parser.add_option(
             "--dst-file-report",
@@ -383,6 +387,7 @@ class JobSubmitter(Base):
         params["job_metadata"] = _metadata(params["job_metadata"])
         params["file_metadata"] = _metadata(params["file_metadata"])
         params["staging_metadata"] = _metadata(params["staging_metadata"])
+        params["archive_metadata"] = _metadata(params["archive_metadata"])
         return params
 
     def _prepare_options(self):
@@ -408,6 +413,7 @@ class JobSubmitter(Base):
             fail_nearline=self.options.fail_nearline,
             file_metadata=self.options.file_metadata,
             staging_metadata=self.options.staging_metadata,
+            archive_metadata=self.options.archive_metadata,
             filesize=self.options.file_size,
             gridftp=self.options.gridftp_params,
             job_metadata=self.options.job_metadata,
@@ -429,7 +435,7 @@ class JobSubmitter(Base):
         )
 
     def _do_submit(self, context):
-        if not self.options.access_token:
+        if not self.options.access_token and context.has_certificate():
             delegator = Delegator(context)
             delegator.delegate(
                 timedelta(minutes=self.options.proxy_lifetime),

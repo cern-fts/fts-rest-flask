@@ -29,6 +29,7 @@ FileActiveStates = [
     "ARCHIVING",
     "QOS_TRANSITION",
     "QOS_REQUEST_SUBMITTED",
+    "FORCE_START",
 ]
 FileTerminalStates = ["FINISHED", "FAILED", "CANCELED"]
 # NOT_USED is not terminal, nor not-terminal
@@ -74,6 +75,7 @@ class File(Base):
     user_filesize = Column(BigInteger)
     file_metadata = Column(Json(255))
     staging_metadata = Column(Json(255))
+    archive_metadata = Column(Json(255))
     staging_start = Column(DateTime)
     staging_finished = Column(DateTime)
     selection_strategy = Column(String(255))
@@ -124,6 +126,7 @@ class ArchivedFile(Base):
     user_filesize = Column(BigInteger)
     file_metadata = Column(Json(255))
     staging_metadata = Column(Json(255))
+    archive_metadata = Column(Json(255))
     staging_start = Column(DateTime)
     staging_finished = Column(DateTime)
     selection_strategy = Column(String(255))
