@@ -197,6 +197,39 @@ class JobBuilder:
                 )
             self.files.append(f)
 
+    def _assign_complex_file_states(self):
+        """
+        Initial file states are handled when file transfers are generated.
+        This function looks for complex cases, such as those involving multihop
+        or tape-only operations
+        """
+
+        def _equal_file_surls(source, dest):
+            source = source.split("?")[0]
+            dest = dest.split("?")[0]
+            return source == dest
+
+        if self.is_multiple_replica:
+            return
+
+        if self.params["multihop"]:
+            if self.is_bringonline:
+                self.files[0]["file_state"] = "STAGING"
+            else:
+                self.files[0]["file_state"] = "SUBMITTED"
+            if (
+                len(self.files) > 1
+                and self.params["archive_timeout"] > 0
+                and _equal_file_surls(
+                    self.files[-1]["source_surl"], self.files[-1]["dest_surl"]
+                )
+            ):
+                self.files[-1]["file_state"] = "ARCHIVING"
+        elif self.params["archive_timeout"] > 0:
+            for f in self.files:
+                if _equal_file_surls(f["source_surl"], f["dest_surl"]):
+                    f["file_state"] = "ARCHIVING"
+
     def _apply_selection_strategy(self):
         """
         On multiple-replica jobs, select the adequate file to go active
@@ -440,12 +473,15 @@ class JobBuilder:
             self.job["job_type"] = "R"
             # Apply selection strategy
             self._apply_selection_strategy()
-        # For multihop + staging mark the first as STAGING
-        elif self.params["multihop"] and self.is_bringonline:
-            self.files[0]["file_state"] = "STAGING"
-        # For multihop, mark the first as SUBMITTED
-        elif self.params["multihop"]:
-            self.files[0]["file_state"] = "SUBMITTED"
+
+        self._assign_complex_file_states()
+
+        # # For multihop + staging mark the first as STAGING
+        # elif self.params["multihop"] and self.is_bringonline:
+        #     self.files[0]["file_state"] = "STAGING"
+        # # For multihop, mark the first as SUBMITTED
+        # elif self.params["multihop"]:
+        #     self.files[0]["file_state"] = "SUBMITTED"
 
         auto_session_reuse_applied = self._apply_auto_session_reuse()
         log.debug(
