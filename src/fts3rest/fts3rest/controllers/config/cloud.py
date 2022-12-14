@@ -49,6 +49,7 @@ def get_cloud_storages():
             CloudStorageUser.cloudStorage_name == storage_s3.cloudStorage_name
             )
         setattr(storage_s3, "users", list(users))
+        setattr(storage_s3, "cloud_type", "S3")
 
     storages_gcloud = Session.query(CloudStorageGcloud).all()
     for storage_gcloud in storages_gcloud:
@@ -56,6 +57,7 @@ def get_cloud_storages():
             CloudStorageUser.cloudStorage_name == storage_gcloud.cloudStorage_name
             )
         setattr(storage_gcloud, "users", list(users))
+        setattr(storage_gcloud, "cloud_type", "gcloud")
 
     storages_swift = Session.query(CloudStorageSwift).all()
     for storage_swift in storages_swift:
@@ -63,6 +65,7 @@ def get_cloud_storages():
             CloudStorageUser.cloudStorage_name == storage_swift.cloudStorage_name
             )
         setattr(storage_swift, "users", list(users))
+        setattr(storage_swift, "cloud_type", "swift")
 
     return storages_s3, storages_gcloud, storages_swift
 
