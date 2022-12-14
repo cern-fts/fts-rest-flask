@@ -134,56 +134,170 @@ function refreshCloudStorage()
     })
     .done(function(data, textStatus, jqXHR) {
         parent.empty();
-        $.each(data, function(index, storage) {
-            var div = $(template_cloud_storage_entry(storage));
+        $.each(data, function(index, storage_list) {
+            console.log(storage_list);
+            for (let i = 0; i < storage_list.length; i++) {
+                let storage = storage_list[i]
+                console.log(storage)
 
-            // Attach to the delete button
-            var deleteBtn = div.find(".btn-delete");
-            deleteBtn.click(function(event) {
-                event.preventDefault();
-                deleteStorage(storage.storage_name, div);
-            });
+                /* if type:
+                    s3 --> template_cloud_storage_s3_entry
+                    gcloud --> template_cloud_storage_gcloud_entry
+                    swift --> template_cloud_storage_swift_entry
+                */
+                if (storage.cloud_type === "S3") {
 
-            // Attach to the save button
-            var saveBtn = div.find(".btn-save");
-            saveBtn.click(function(event) {
-                event.preventDefault();
-                saveStorage(div)
-                .fail(function(jqXHR) {
-                    errorMessage(jqXHR);
-                });
-            });
+                    var div = $(template_cloud_storage_s3_entry(storage));
 
-            // Attach to add a user
-            var addUserFrm = div.find(".frm-add-user");
-            var addUserBtn = addUserFrm.find(".btn-add-user");
-            addUserBtn.click(function(event) {
-                event.preventDefault();
-                saveUser(storage.storage_name, addUserFrm)
-                .done(function(data, textStatus, jqXHR) {
-                    refreshCloudStorage();
-                })
-                .fail(function(jqXHR) {
-                    errorMessage(jqXHR);
-                });
-            });
+                    // Attach to the delete button
+                    var deleteBtn = div.find(".btn-delete");
+                    deleteBtn.click(function (event) {
+                        event.preventDefault();
+                        deleteStorage(storage.storage_name, div);
+                    });
 
-            // Attach to remove and modify a user
-            div.find(".user-entry").each(function() {
-                var tr = $(this);
-                var deleteUserBtn = tr.find(".btn-delete-user");
-                deleteUserBtn.click(function(event) {
-                    event.preventDefault();
-                    deleteUser(storage.storage_name, tr);
-                });
-                var saveUserBtn = tr.find(".btn-save-user");
-                saveUserBtn.click(function(event) {
-                    event.preventDefault();
-                    saveUser(storage.storage_name, tr)
-                });
-            });
+                    // Attach to the save button
+                    var saveBtn = div.find(".btn-save");
+                    saveBtn.click(function (event) {
+                        event.preventDefault();
+                        saveStorage(div)
+                            .fail(function (jqXHR) {
+                                errorMessage(jqXHR);
+                            });
+                    });
 
+                    // Attach to add a user
+                    var addUserFrm = div.find(".frm-add-user");
+                    var addUserBtn = addUserFrm.find(".btn-add-user");
+                    addUserBtn.click(function (event) {
+                        event.preventDefault();
+                        saveUser(storage.storage_name, addUserFrm)
+                            .done(function (data, textStatus, jqXHR) {
+                                refreshCloudStorage();
+                            })
+                            .fail(function (jqXHR) {
+                                errorMessage(jqXHR);
+                            });
+                    });
+
+                    // Attach to remove and modify a user
+                    div.find(".user-entry").each(function () {
+                        var tr = $(this);
+                        var deleteUserBtn = tr.find(".btn-delete-user");
+                        deleteUserBtn.click(function (event) {
+                            event.preventDefault();
+                            deleteUser(storage.storage_name, tr);
+                        });
+                        var saveUserBtn = tr.find(".btn-save-user");
+                        saveUserBtn.click(function (event) {
+                            event.preventDefault();
+                            saveUser(storage.storage_name, tr)
+                        });
+                    });
+                }
+
+                if (storage.cloud_type === "gcloud") {
+
+                    var div = $(template_cloud_storage_gcloud_entry(storage));
+
+                    // Attach to the delete button
+                    var deleteBtn = div.find(".btn-delete");
+                    deleteBtn.click(function (event) {
+                        event.preventDefault();
+                        deleteStorage(storage.storage_name, div);
+                    });
+
+                    // Attach to the save button
+                    var saveBtn = div.find(".btn-save");
+                    saveBtn.click(function (event) {
+                        event.preventDefault();
+                        saveStorage(div)
+                            .fail(function (jqXHR) {
+                                errorMessage(jqXHR);
+                            });
+                    });
+
+                    // Attach to add a user
+                    var addUserFrm = div.find(".frm-add-user");
+                    var addUserBtn = addUserFrm.find(".btn-add-user");
+                    addUserBtn.click(function (event) {
+                        event.preventDefault();
+                        saveUser(storage.storage_name, addUserFrm)
+                            .done(function (data, textStatus, jqXHR) {
+                                refreshCloudStorage();
+                            })
+                            .fail(function (jqXHR) {
+                                errorMessage(jqXHR);
+                            });
+                    });
+
+                    // Attach to remove and modify a user
+                    div.find(".user-entry").each(function () {
+                        var tr = $(this);
+                        var deleteUserBtn = tr.find(".btn-delete-user");
+                        deleteUserBtn.click(function (event) {
+                            event.preventDefault();
+                            deleteUser(storage.storage_name, tr);
+                        });
+                        var saveUserBtn = tr.find(".btn-save-user");
+                        saveUserBtn.click(function (event) {
+                            event.preventDefault();
+                            saveUser(storage.storage_name, tr)
+                        });
+                    });
+                }
+                if (storage.cloud_type === "swift") {
+
+                    var div = $(template_cloud_storage_swift_entry(storage));
+
+                    // Attach to the delete button
+                    var deleteBtn = div.find(".btn-delete");
+                    deleteBtn.click(function (event) {
+                        event.preventDefault();
+                        deleteStorage(storage.storage_name, div);
+                    });
+
+                    // Attach to the save button
+                    var saveBtn = div.find(".btn-save");
+                    saveBtn.click(function (event) {
+                        event.preventDefault();
+                        saveStorage(div)
+                            .fail(function (jqXHR) {
+                                errorMessage(jqXHR);
+                            });
+                    });
+
+                    // Attach to add a user
+                    var addUserFrm = div.find(".frm-add-user");
+                    var addUserBtn = addUserFrm.find(".btn-add-user");
+                    addUserBtn.click(function (event) {
+                        event.preventDefault();
+                        saveUser(storage.storage_name, addUserFrm)
+                            .done(function (data, textStatus, jqXHR) {
+                                refreshCloudStorage();
+                            })
+                            .fail(function (jqXHR) {
+                                errorMessage(jqXHR);
+                            });
+                    });
+
+                    // Attach to remove and modify a user
+                    div.find(".user-entry").each(function () {
+                        var tr = $(this);
+                        var deleteUserBtn = tr.find(".btn-delete-user");
+                        deleteUserBtn.click(function (event) {
+                            event.preventDefault();
+                            deleteUser(storage.storage_name, tr);
+                        });
+                        var saveUserBtn = tr.find(".btn-save-user");
+                        saveUserBtn.click(function (event) {
+                            event.preventDefault();
+                            saveUser(storage.storage_name, tr)
+                        });
+                    });
+                }
             parent.append(div);
+            }
         });
     })
     .fail(function(jqXHR) {
@@ -196,8 +310,14 @@ function refreshCloudStorage()
  */
 function compileTemplates()
 {
-    template_cloud_storage_entry = Handlebars.compile(
-        $("#storage-entry-template").html()
+    template_cloud_storage_s3_entry = Handlebars.compile(
+        $("#s3-storage-entry-template").html()
+    );
+    template_cloud_storage_gcloud_entry = Handlebars.compile(
+        $("#gcloud-storage-entry-template").html()
+    );
+    template_cloud_storage_swift_entry = Handlebars.compile(
+        $("#swift-storage-entry-template").html()
     );
 }
 function selectCloudStorage() {
