@@ -62,7 +62,7 @@ class CloudStorageSwift(Base):
 
 
 class CloudStorageUser(Base):
-    __tablename__ = "t_cloudStorageUser"
+    __tablename__ = "t_cloudStorage_user"
 
     user_dn = Column(String(700), primary_key=True)
     cloudStorage_name = Column(
