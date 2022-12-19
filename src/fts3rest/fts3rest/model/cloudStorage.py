@@ -23,7 +23,7 @@ class CloudStorage(Base):
                                primary_key=True,
                                name="cloudStorage_name")
 
-    cloud_type = Column('cloud_type', Enum('S3', 'Gcloud', 'Swift'))
+    cloud_type = Column('cloud_type', Enum('S3', 'Gcloud', 'Swift'), default='S3', nullable=False)
 
 
 class CloudStorageS3(Base):
@@ -34,8 +34,8 @@ class CloudStorageS3(Base):
                                primary_key=True,
                                name="cloudStorage_name")
 
-    alternate = Column(Boolean, default=False)
-    region = Column(String(255))
+    alternate = Column(Boolean, default=False, nullable=False)
+    region = Column(String(255), nullable=False)
 
 
 class CloudStorageGcloud(Base):
@@ -46,7 +46,7 @@ class CloudStorageGcloud(Base):
                                primary_key=True,
                                name="cloudStorage_name")
 
-    auth_file = Column(String(255))
+    auth_file = Column(String(255), nullable=False)
 
 
 class CloudStorageSwift(Base):
@@ -57,8 +57,8 @@ class CloudStorageSwift(Base):
                                primary_key=True,
                                name="cloudStorage_name")
 
-    os_project_id = Column(String(255))
-    os_token = Column(String(255))
+    os_project_id = Column(String(255), nullable=False)
+    os_token = Column(String(255), nullable=False)
 
 
 class CloudStorageUser(Base):
