@@ -317,9 +317,21 @@ def do_connect(app):
         methods=["GET"],
     )
     app.add_url_rule(
-        "/config/cloud_storage",
-        "config.cloud.set_cloud_storages",
-        config.cloud.set_cloud_storage,
+        "/config/cloud_storage_s3",
+        "config.cloud.set_cloud_storage_s3",
+        config.cloud.set_cloud_storage_s3,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/config/cloud_storage_swift",
+        "config.cloud.set_cloud_storage_swift",
+        config.cloud.set_cloud_storage_swift,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/config/cloud_storage_gcloud",
+        "config.cloud.set_cloud_storage_gcloud",
+        config.cloud.set_cloud_storage_gcloud,
         methods=["POST"],
     )
     app.add_url_rule(
