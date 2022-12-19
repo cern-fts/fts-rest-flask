@@ -73,21 +73,68 @@ def get_cloud_storages():
 @require_certificate
 @authorize(CONFIG)
 @jsonify
-def set_cloud_storage():
+def set_cloud_storage_s3():
     """
     Add or modify a cloud storage entry
     """
     input_dict = get_input_as_dict(request)
-    if "storage_name" not in input_dict:
+    if "cloudstorage_name" not in input_dict:
         raise BadRequest("Missing storage name")
 
-    storage = CloudStorage(
-        storage_name=input_dict.get("storage_name"),
-        app_key=input_dict.get("app_key", None),
-        app_secret=input_dict.get("app_secret", None),
-        service_api_url=input_dict.get("service_api_url", None),
-        cloud_type=input_dict.get("cloud_type", None),
-    )
+    storage = CloudStorageS3(
+        cloudstorage_name=input_dict.get("cloudstorage_name"),
+        alternate=input_dict.get("alternate"),
+        region=input_dict.get("region"),
+        )
+    try:
+        Session.merge(storage)
+        Session.commit()
+    except Exception:
+        Session.rollback()
+        raise
+    return Response(storage.cloudstorage_name, status=201)
+
+
+@require_certificate
+@authorize(CONFIG)
+@jsonify
+def set_cloud_storage_swift():
+    """
+    Add or modify a cloud storage entry
+    """
+    input_dict = get_input_as_dict(request)
+    if "cloudstorage_name" not in input_dict:
+        raise BadRequest("Missing storage name")
+
+    storage = CloudStorageSwift(
+        cloudstorage_name=input_dict.get("cloudstorage_name"),
+        os_project_id=input_dict.get("os_project_id"),
+        os_token=input_dict.get("os_token"),
+        )
+    try:
+        Session.merge(storage)
+        Session.commit()
+    except Exception:
+        Session.rollback()
+        raise
+    return Response(storage.cloudstorage_name, status=201)
+
+
+@require_certificate
+@authorize(CONFIG)
+@jsonify
+def set_cloud_storage_gcloud():
+    """
+    Add or modify a cloud storage entry
+    """
+    input_dict = get_input_as_dict(request)
+    if "cloudstorage_name" not in input_dict:
+        raise BadRequest("Missing storage name")
+
+    storage = CloudStorageSwift(
+        cloudstorage_name=input_dict.get("cloudstorage_name"),
+        auth_file=input_dict.get("os_project_id"),
+        )
     try:
         Session.merge(storage)
         Session.commit()
