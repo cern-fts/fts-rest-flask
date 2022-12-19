@@ -73,7 +73,7 @@ class CloudStorageUser(Base):
         )
     access_key = Column(String(255))
     secret_key = Column(String(255))
-    vo_name = Column(String(100), primary_key=True),
+    vo_name = Column(String(100), primary_key=True)
     Index('csname_userdn_voname_UNIQUE', 'cloudstorage_name', 'vo_name', 'user_dn', unique=True)
 
     def is_access_requested(self):
