@@ -82,7 +82,7 @@ def set_cloud_storage_s3():
         raise BadRequest("Missing storage name")
 
     storage = CloudStorageS3(
-        cloudstorage_name=input_dict.get("cloudstorage_name"),
+        cloudStorage_name=input_dict.get("cloudstorage_name"),
         alternate=input_dict.get("alternate"),
         region=input_dict.get("region"),
         )
@@ -92,7 +92,7 @@ def set_cloud_storage_s3():
     except Exception:
         Session.rollback()
         raise
-    return Response(storage.cloudstorage_name, status=201)
+    return Response(storage.cloudStorage_name, status=201)
 
 
 @require_certificate
@@ -105,9 +105,8 @@ def set_cloud_storage_swift():
     input_dict = get_input_as_dict(request)
     if "cloudstorage_name" not in input_dict:
         raise BadRequest("Missing storage name")
-
     storage = CloudStorageSwift(
-        cloudstorage_name=input_dict.get("cloudstorage_name"),
+        cloudStorage_name=input_dict.get("cloudstorage_name"),
         os_project_id=input_dict.get("os_project_id"),
         os_token=input_dict.get("os_token"),
         )
@@ -117,7 +116,7 @@ def set_cloud_storage_swift():
     except Exception:
         Session.rollback()
         raise
-    return Response(storage.cloudstorage_name, status=201)
+    return Response(storage.cloudStorage_name, status=201)
 
 
 @require_certificate
@@ -132,7 +131,7 @@ def set_cloud_storage_gcloud():
         raise BadRequest("Missing storage name")
 
     storage = CloudStorageSwift(
-        cloudstorage_name=input_dict.get("cloudstorage_name"),
+        cloudStorage_name=input_dict.get("cloudstorage_name"),
         auth_file=input_dict.get("os_project_id"),
         )
     try:
@@ -141,7 +140,7 @@ def set_cloud_storage_gcloud():
     except Exception:
         Session.rollback()
         raise
-    return Response(storage.cloudstorage_name, status=201)
+    return Response(storage.cloudStorage_name, status=201)
 
 
 @require_certificate
