@@ -126,13 +126,15 @@ def set_cloud_storage_gcloud():
     """
     Add or modify a cloud storage entry
     """
-    input_dict = get_input_as_dict(request)
-    if "cloudstorage_name" not in input_dict:
+
+    input_cloudstorage_name = request.form['cloudstorage_name']
+    input_auth_file = request.files['auth_file']
+    if "input_cloudstorage_name" is None:
         raise BadRequest("Missing storage name")
 
-    storage = CloudStorageSwift(
-        cloudStorage_name=input_dict.get("cloudstorage_name"),
-        auth_file=input_dict.get("os_project_id"),
+    storage = CloudStorageGcloud(
+        cloudStorage_name=input_cloudstorage_name,
+        auth_file=input_auth_file.read(),
         )
     try:
         Session.merge(storage)

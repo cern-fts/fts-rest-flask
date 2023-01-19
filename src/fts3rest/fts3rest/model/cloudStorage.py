@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from sqlalchemy import Column, String, ForeignKey, Enum, Boolean, Index
+from sqlalchemy import Column, String, ForeignKey, Enum, Boolean, Index, BLOB
 from .base import Base
 import enum
 
@@ -46,8 +46,7 @@ class CloudStorageGcloud(Base):
                                primary_key=True,
                                name="cloudStorage_name")
 
-    auth_file = Column(String(255), nullable=False)
-
+    auth_file = Column(BLOB)
 
 class CloudStorageSwift(Base):
     __tablename__ = "t_cloudStorage_swift"
