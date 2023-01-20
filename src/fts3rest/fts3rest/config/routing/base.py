@@ -353,9 +353,21 @@ def do_connect(app):
         methods=["GET"],
     )
     app.add_url_rule(
-        "/config/cloud_storage/<storage_name>",
-        "config.cloud.remove_cloud_storage",
-        config.cloud.remove_cloud_storage,
+        "/config/cloud_storage_s3/<cloudstorage_name>",
+        "config.cloud.remove_cloud_storage_s3",
+        config.cloud.remove_cloud_storage_s3,
+        methods=["DELETE"],
+    )
+    app.add_url_rule(
+        "/config/cloud_storage_gcloud/<cloudstorage_name>",
+        "config.cloud.remove_cloud_storage_gcloud",
+        config.cloud.remove_cloud_storage_gcloud,
+        methods=["DELETE"],
+    )
+    app.add_url_rule(
+        "/config/cloud_storage_swift/<cloudstorage_name>",
+        "config.cloud.remove_cloud_storage_swift",
+        config.cloud.remove_cloud_storage_swift,
         methods=["DELETE"],
     )
     app.add_url_rule(

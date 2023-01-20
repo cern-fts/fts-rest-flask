@@ -198,17 +198,63 @@ def get_cloud_storage_swift(cloudstorage_name):
 
 @require_certificate
 @authorize(CONFIG)
-def remove_cloud_storage(storage_name):
+def remove_cloud_storage_s3(cloudstorage_name):
     """
     Remove a registered cloud storage
     """
-    storage = Session.query(CloudStorage).get(storage_name)
+    storage = Session.query(CloudStorageS3).get(cloudstorage_name)
     if not storage:
         raise NotFound("The storage does not exist")
 
     try:
         Session.query(CloudStorageUser).filter(
-            CloudStorageUser.storage_name == storage_name
+            CloudStorageUser.cloudStorage_name == cloudstorage_name
+        ).delete()
+        Session.delete(storage)
+        Session.commit()
+    except Exception:
+        Session.rollback()
+        raise
+
+    return Response([""], status=204)
+
+
+@require_certificate
+@authorize(CONFIG)
+def remove_cloud_storage_gcloud(cloudstorage_name):
+    """
+    Remove a registered cloud storage
+    """
+    storage = Session.query(CloudStorageGcloud).get(cloudstorage_name)
+    if not storage:
+        raise NotFound("The storage does not exist")
+
+    try:
+        Session.query(CloudStorageUser).filter(
+            CloudStorageUser.cloudStorage_name == cloudstorage_name
+        ).delete()
+        Session.delete(storage)
+        Session.commit()
+    except Exception:
+        Session.rollback()
+        raise
+
+    return Response([""], status=204)
+
+
+@require_certificate
+@authorize(CONFIG)
+def remove_cloud_storage_swift(cloudstorage_name):
+    """
+    Remove a registered cloud storage
+    """
+    storage = Session.query(CloudStorageSwift).get(cloudstorage_name)
+    if not storage:
+        raise NotFound("The storage does not exist")
+
+    try:
+        Session.query(CloudStorageUser).filter(
+            CloudStorageUser.cloudStorage_name == cloudstorage_name
         ).delete()
         Session.delete(storage)
         Session.commit()
