@@ -59,6 +59,11 @@ def get_cloud_storages():
         setattr(storage_gcloud, "users", list(users))
         setattr(storage_gcloud, "cloud_type", "gcloud")
 
+        if getattr(storage_gcloud,'auth_file') is None:
+            setattr(storage_gcloud, "auth_file", False)
+        else:
+            setattr(storage_gcloud, "auth_file", True)
+
     storages_swift = Session.query(CloudStorageSwift).all()
     for storage_swift in storages_swift:
         users = Session.query(CloudStorageUser).filter(
