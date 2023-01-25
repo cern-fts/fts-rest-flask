@@ -86,7 +86,7 @@
             </table>
             <div class="panel-footer">
                 <button class="btn btn-success btn-save">Save</button>
-                <button class="btn btn-danger btn-delete">Delete</button>
+                <button class="btn btn-danger btn-delete-s3">Delete</button>
             </div>
         </div>
         </script>
@@ -94,11 +94,16 @@
             <div class="panel panel-info panel-gcloud">
 
             <input type="hidden" name="storage-name" value="{{cloudStorage_name}}"/>
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    {{cloudStorage_name}}
-                </h3>
-            </div>
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Gcloud_via_API
+                        <span style="position:relative; top:50%; left:77%;">
+                        <button type="button" class="btn btn-default btn-sm">
+                            <span class="glyphicon glyphicon-floppy-disk"></span> Authentication file
+                        </button>
+                    </span>
+                    </h3>
+                </div>
             <div class="panel-body">
                 <div class="form-inline">
                 </div>
@@ -145,7 +150,7 @@
             </table>
             <div class="panel-footer">
                 <button class="btn btn-success btn-save">Save</button>
-                <button class="btn btn-danger btn-delete">Delete</button>
+                <button class="btn btn-danger btn-delete-Gcloud">Delete</button>
             </div>
         </div>
         </script>
@@ -205,7 +210,7 @@
             </table>
             <div class="panel-footer">
                 <button class="btn btn-success btn-save">Save</button>
-                <button class="btn btn-danger btn-delete">Delete</button>
+                <button class="btn btn-danger btn-delete-Swift">Delete</button>
             </div>
         </div>
         </script>
@@ -215,7 +220,7 @@
             <div class="panel-heading">
                 <h3 class="panel-title">
                     Add new cloud storage:
-                    <span style="float:right">
+                    <span style="position:relative; top:50%; left:63%;">
                         <label for="cs-dropdown">Cloud Storage type</label>
                         <select id="cs-dropdown">
                             <option value="s3" selected>S3</option>
@@ -226,7 +231,7 @@
                 </h3>
             </div>
             <div class="panel-body">
-                <div class="form-inline"></div>
+                <div class="form-inline-S3"></div>
             </div>
         </div>
         <div class="vis" id="s3">
@@ -234,20 +239,14 @@
             <thead>
             <tr>
                 <th>Storage Name</th>
-                <th>Access Secret</th>
-                <th>Secret Key</th>
                 <th>Region</th>
                 <th></th>
             </tr>
             </thead>
             <tbody>
             <tr class="user-entry">
-                <input type="hidden" name="cloud_type" value="{{service_api_url}}"/>
                 <td>
-                    <input name="storage-name" type="text" class="form-control" />
-                </td>
-                <td>
-                    <input type="text" name="'request-secret'" class="form-control"/>
+                    <input  type="text" name="cloudStorage_name_s3" class="form-control" />
                 </td>
                 <td>
                     <input type="text" name="region" class="form-control"/>
@@ -274,10 +273,10 @@
             <tbody>
             <tr class="user-entry">
                 <td>
-                    <input name="storage-name" type="text" class="form-control" />
+                    <input name="cloudStorage_name" type="text" class="form-control" />
                 </td>
                 <td>
-                    <input type="file" name="json_file"/>
+                    <input type="file" name="auth_file"/>
                 </td>
             </tr>
             </tbody>
@@ -295,7 +294,7 @@
             <tbody>
             <tr class="user-entry">
                 <td>
-                        <input name="storage-name" type="text" class="form-control" />
+                        <input name="cloudStorage-name" type="text" class="form-control" />
                 </td>
                 <td>
                         <input name="os-project-id" type="text" class="form-control" />

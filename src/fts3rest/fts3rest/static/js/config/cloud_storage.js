@@ -20,14 +20,12 @@ var template_cloud_storage_entry = null;
 /**
  * Save a new storage, or change it
  */
-function saveStorage(form)
+function saveStorageS3(form)
 {
     var msg = {
-        storage_name: form.find("input[name='storage-name']").val(),
-        service_api_url: form.find("input[name='service-api']").val(),
-        app_key: form.find("input[name='app-key']").val(),
-        app_secret: form.find("input[name='app-secret']").val(),
-        cloud_type: form.find("input[name='cloud-type']").val()
+        cloudStorage_name: form.find("input[name='cloudStorage_name_s3']").val(),
+        region: form.find("input[name='region']").val(),
+        alternate: form.find("input[name='alternate']").val()
     };
 
     console.log(msg);
@@ -44,11 +42,57 @@ function saveStorage(form)
 /**
  * Delete a storage
  */
-function deleteStorage(storage_name, div)
+function deleteStorageS3(cloudStorage_name, div)
 {
     div.css("background", "#d9534f");
     $.ajax({
-        url: "/config/cloud_storage/" + encodeURIComponent(storage_name),
+        url: "/config/cloud_storage_s3/" + encodeURIComponent(cloudStorage_name),
+        type: "DELETE",
+        dataType: "json",
+        contentType: "application/json"
+    })
+    .done(function(data, textStatus, jqXHR) {
+        div.fadeOut(300, function() {div.remove();})
+    })
+    .fail(function(jqXHR) {
+        errorMessage(jqXHR);
+    })
+    .always(function() {
+        div.css("background", "#ffffff").css("transition", "background .50s ease-in-out");
+    });
+}
+
+/**
+ * Delete a storage
+ */
+function deleteStorageGcloud(cloudStorage_name, div)
+{
+    div.css("background", "#d9534f");
+    $.ajax({
+        url: "/config/cloud_storage_gcloud/" + encodeURIComponent(cloudStorage_name),
+        type: "DELETE",
+        dataType: "json",
+        contentType: "application/json"
+    })
+    .done(function(data, textStatus, jqXHR) {
+        div.fadeOut(300, function() {div.remove();})
+    })
+    .fail(function(jqXHR) {
+        errorMessage(jqXHR);
+    })
+    .always(function() {
+        div.css("background", "#ffffff").css("transition", "background .50s ease-in-out");
+    });
+}
+
+/**
+ * Delete a storage
+ */
+function deleteStorageSwift(cloudStorage_name, div)
+{
+    div.css("background", "#d9534f");
+    $.ajax({
+        url: "/config/cloud_storage_swift/" + encodeURIComponent(cloudStorage_name),
         type: "DELETE",
         dataType: "json",
         contentType: "application/json"
@@ -150,10 +194,10 @@ function refreshCloudStorage()
                     var div = $(template_cloud_storage_s3_entry(storage));
 
                     // Attach to the delete button
-                    var deleteBtn = div.find(".btn-delete");
+                    var deleteBtn = div.find(".btn-delete-s3");
                     deleteBtn.click(function (event) {
                         event.preventDefault();
-                        deleteStorage(storage.storage_name, div);
+                        deleteStorageS3(storage.cloudStorage_name, div);
                     });
 
                     // Attach to the save button
@@ -201,10 +245,10 @@ function refreshCloudStorage()
                     var div = $(template_cloud_storage_gcloud_entry(storage));
 
                     // Attach to the delete button
-                    var deleteBtn = div.find(".btn-delete");
+                    var deleteBtn = div.find(".btn-delete-Gcloud");
                     deleteBtn.click(function (event) {
                         event.preventDefault();
-                        deleteStorage(storage.storage_name, div);
+                        deleteStorageGcloud(storage.cloudStorage_name, div);
                     });
 
                     // Attach to the save button
@@ -251,10 +295,10 @@ function refreshCloudStorage()
                     var div = $(template_cloud_storage_swift_entry(storage));
 
                     // Attach to the delete button
-                    var deleteBtn = div.find(".btn-delete");
+                    var deleteBtn = div.find(".btn-delete-Swift");
                     deleteBtn.click(function (event) {
                         event.preventDefault();
-                        deleteStorage(storage.storage_name, div);
+                        deleteStorageSwift(storage.cloudStorage_name, div);
                     });
 
                     // Attach to the save button
