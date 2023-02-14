@@ -20,23 +20,65 @@ var template_cloud_storage_entry = null;
 /**
  * Save a new storage, or change it
  */
-function saveStorageS3(form)
+function saveStorageS3()
 {
+    let alternateCheckbox = document.getElementById("alternate");
     var msg = {
-        cloudStorage_name: form.find("input[name='cloudStorage_name_s3']").val(),
-        region: form.find("input[name='region']").val(),
-        alternate: form.find("input[name='alternate']").val()
+        cloudstorage_name: document.getElementById("cloudStorage_name_s3").value,
+        region:  document.getElementById("region").value,
+        alternate: alternateCheckbox.checked
     };
 
     console.log(msg);
+    if (!msg.cloudstorage_name || /^\s*$/.test(msg.cloudstorage_name)){
+        confirm("The storage name cannot be null or contain spaces");
+    }
+    else {
+        return $.ajax({
+            url: "/config/cloud_storage_s3?",
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify(msg)
+        });
+    }
+}
 
-    return $.ajax({
-        url: "/config/cloud_storage?",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        data: JSON.stringify(msg)
-    });
+function saveStorageGcloud()
+{
+    let msg = new FormData();
+    msg.append("cloudstorage_name",document.getElementById("cloudStorage_name_gcloud").value);
+    msg.append("auth_file",document.getElementById("auth_file").files[0] );
+
+    console.log(msg);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST","/config/cloud_storage_gcloud?" );
+    xhr.send(msg);
+}
+
+function saveStorageSwift()
+{
+    var msg = {
+        cloudstorage_name: document.getElementById("cloudStorage_name_swift").value,
+        os_project_id:  document.getElementById("os_project_id").value,
+        os_token:  document.getElementById("os_token").value
+    };
+    console.log(msg);
+
+    if (!msg.cloudstorage_name || /^\s*$/.test(msg.cloudstorage_name)){
+        confirm("The storage name cannot be null or contain spaces");
+    }
+    else {
+        return $.ajax({
+            url: "/config/cloud_storage_swift?",
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify(msg)
+        });
+    }
+    location.reload();
 }
 
 /**
@@ -111,15 +153,13 @@ function deleteStorageSwift(cloudStorage_name, div)
 /**
  * Save a user
  */
-function saveUser(storage_name, form)
+function saveUserS3(cloudStorage_name, form)
 {
     var msg = {
         user_dn: form.find("input[name='user-dn']").val(),
         vo_name: form.find("input[name='vo-name']").val(),
-        access_token: form.find("input[name='access-token']").val(),
-        access_token_secret: form.find("input[name='access-secret']").val(),
-        request_token: form.find("input[name='request-token']").val(),
-        request_token_secret: form.find("input[name='request-secret']").val()
+        access_key: form.find("input[name='access-key']").val(),
+        secret_key: form.find("input[name='secret-key']").val()
     };
 
     console.log(msg);
@@ -201,21 +241,21 @@ function refreshCloudStorage()
                     });
 
                     // Attach to the save button
-                    var saveBtn = div.find(".btn-save");
+                    var saveBtn = div.find(".btn-save-s3");
                     saveBtn.click(function (event) {
                         event.preventDefault();
-                        saveStorage(div)
+                        saveStorageS3(div)
                             .fail(function (jqXHR) {
                                 errorMessage(jqXHR);
                             });
                     });
 
                     // Attach to add a user
-                    var addUserFrm = div.find(".frm-add-user");
-                    var addUserBtn = addUserFrm.find(".btn-add-user");
+                    var addUserFrm = div.find(".frm-add-user-s3");
+                    var addUserBtn = addUserFrm.find(".btn-add-user-s3");
                     addUserBtn.click(function (event) {
                         event.preventDefault();
-                        saveUser(storage.storage_name, addUserFrm)
+                        saveUserS3(storage.cloudStorage_name, addUserFrm)
                             .done(function (data, textStatus, jqXHR) {
                                 refreshCloudStorage();
                             })

@@ -42,7 +42,7 @@
                 </thead>
                 <tbody>
                     {{#each users}}
-                    <tr class="user-entry">
+                    <tr class="user-entry-s3">
                         <td>
                             <a><i class="glyphicon glyphicon-trash btn-delete-user"></i></a>
                             <a><i class="glyphicon glyphicon-floppy-disk btn-save-user"></i></a>
@@ -64,10 +64,11 @@
                     </tr>
                     {{/each}}
                 </tbody>
-                <tbody class="frm-add-user">
+                <tbody class="frm-add-user-s3">
                     <tr>
                         <td style="width: 1%">
                             <a><i class="glyphicon glyphicon-plus btn-add-user"></i></a>
+                            <input type="hidden" name="cloudStorage_name" value="{{cloudStorage_name}}"/>
                         </td>
                         <td>
                             <input name="user-dn" type="text" class="form-control" value=""/>
@@ -85,7 +86,7 @@
                 </tbody>
             </table>
             <div class="panel-footer">
-                <button class="btn btn-success btn-save">Save</button>
+                <button class="btn btn-success btn-save-s3">Save</button>
                 <button class="btn btn-danger btn-delete-s3">Delete</button>
             </div>
         </div>
@@ -96,8 +97,8 @@
             <input type="hidden" name="storage-name" value="{{cloudStorage_name}}"/>
                 <div class="panel-heading">
                     <h3 class="panel-title">
-                        Gcloud_via_API
-                        <span style="position:relative; top:50%; left:77%;">
+                        {{cloudStorage_name}}
+                        <span style="position:relative; top:50%; float:right;">
                         <button type="button" class="btn btn-default btn-sm">
                             <span class="glyphicon glyphicon-floppy-disk"></span> Authentication file
                         </button>
@@ -244,16 +245,16 @@
             </tr>
             </thead>
             <tbody>
-            <tr class="user-entry">
+            <tr id="S3-form" class="cloudstorage-S3-add">
                 <td>
-                    <input  type="text" name="cloudStorage_name_s3" class="form-control" />
+                    <input  type="text" name="cloudStorage_name_s3" id="cloudStorage_name_s3" class="form-control" required />
                 </td>
                 <td>
-                    <input type="text" name="region" class="form-control"/>
+                    <input type="text" name="region" id="region" class="form-control"/>
                 </td>
                 <td>
                     <label style="display: block; padding-left: 15px; text-indent: -15px; top: 1px;">
-                        <input type="checkbox" name="alternate"
+                        <input type="checkbox" id="alternate" name="alternate"
                                    style="width: 15px; height: 15px; padding: 0;margin: 0; vertical-align: center;
                                        position: relative; top: 1px;"/>  Alternate
                     </label>
@@ -261,6 +262,9 @@
             </tr>
             </tbody>
         </table>
+                    <div class="panel-footer">
+            <button id="btn-add-S3" onclick="saveStorageS3()" class="btn btn-success btn-add">Add</button>
+        </div>
         </div>
         <div class="inv" id="gcloud">
         <table class="table" >
@@ -273,14 +277,17 @@
             <tbody>
             <tr class="user-entry">
                 <td>
-                    <input name="cloudStorage_name" type="text" class="form-control" />
+                    <input name="cloudStorage_name_gcloud" id="cloudStorage_name_gcloud" type="text" class="form-control" required />
                 </td>
                 <td>
-                    <input type="file" name="auth_file"/>
+                    <input type="file" id="auth_file" name="auth_file"/>
                 </td>
             </tr>
             </tbody>
         </table>
+                    <div class="panel-footer">
+            <button id="btn-add-Gcloud"  onclick="saveStorageGcloud()" class="btn btn-success btn-add">Add</button>
+        </div>
         </div>
         <div class="inv" id="swift">
         <table class="table">
@@ -294,20 +301,20 @@
             <tbody>
             <tr class="user-entry">
                 <td>
-                        <input name="cloudStorage-name" type="text" class="form-control" />
+                        <input name="cloudStorage_name_swift" id="cloudStorage_name_swift" type="text" class="form-control" required />
                 </td>
                 <td>
-                        <input name="os-project-id" type="text" class="form-control" />
+                        <input name="os_project_id" id="os_project_id" type="text" class="form-control" />
                 </td>
                 <td>
-                        <input name="os-token" type="text" class="form-control" />
+                        <input name="os_token" id="os_token" type="text" class="form-control" />
                 </td>
             </tr>
             </tbody>
         </table>
+                    <div class="panel-footer">
+            <input type="submit" id="btn-add-Swift" onclick="saveStorageSwift()" value="Add" class="btn btn-success btn-add" />
         </div>
-        <div class="panel-footer">
-            <button id="btn-add-S3" class="btn btn-success btn-add">Add</button>
         </div>
     </div>
 </div>
