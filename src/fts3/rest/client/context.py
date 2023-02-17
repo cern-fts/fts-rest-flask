@@ -63,7 +63,7 @@ def _get_default_proxy():
 class Context(object):
     def _read_passwd_from_stdin(self, *args, **kwargs):
         if not self.passwd:
-            self.passwd = getpass.getpass("Private key password: ")
+            self.passwd = getpass.getpass("Private key password: ").encode()
         return self.passwd
 
     def _set_x509(self, ucert, ukey):
