@@ -74,6 +74,10 @@ def _workaround_new_extension(name, value, critical=False, issuer=None, _pyfree=
         ctx = m2.x509v3_set_conf_lhash(lhash)
         _init_m2_ctx(ctx, issuer)
         x509_ext_ptr = m2.x509v3_ext_conf(lhash, ctx, name, value)
+    except X509.X509Error:
+        if not critical:
+            return None
+        raise
 
     if x509_ext_ptr is None:
         raise Exception("Could not create the X509v3 extension")
@@ -190,7 +194,8 @@ class Delegator(object):
                 critical=False,
                 issuer=self.context.x509,
             )
-            proxy.add_ext(identifier_ext)
+            if identifier_ext:
+                proxy.add_ext(identifier_ext)
 
         any_rfc_proxies = False
         # FTS-1217 Ignore the user input and select the min proxy lifetime available on the list
