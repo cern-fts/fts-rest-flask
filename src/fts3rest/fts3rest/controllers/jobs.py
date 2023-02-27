@@ -22,6 +22,7 @@ from sqlalchemy.orm import noload
 
 import logging
 import functools
+import time
 
 from fts3rest.model import Job, File, JobActiveStates, FileActiveStates
 from fts3rest.model import DataManagement, DataManagementActiveStates
@@ -767,11 +768,23 @@ def submit():
     # Insert the job
     try:
         try:
+            start_insert_job = time.perf_counter()
             Session.execute(Job.__table__.insert(), [populated.job])
+            log.info(
+                "Inserted job into database: job_id={} db_secs={}".format(
+                    populated.job_id, str(time.perf_counter() - start_insert_job)
+                )
+            )
         except IntegrityError:
             raise Conflict("The sid provided by the user is duplicated")
         if len(populated.files):
+            start_insert_files = time.perf_counter()
             Session.execute(File.__table__.insert(), populated.files)
+            log.info(
+                "Inserted files into database: job_id={} db_secs={}".format(
+                    populated.job_id, str(time.perf_counter() - start_insert_files)
+                )
+            )
         if len(populated.datamanagement):
             Session.execute(DataManagement.__table__.insert(), populated.datamanagement)
         Session.flush()
