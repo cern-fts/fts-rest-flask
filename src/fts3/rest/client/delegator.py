@@ -137,9 +137,7 @@ class Delegator(object):
         if not r:
             return None
         else:
-            expiration_time = datetime.strptime(
-                r["termination_time"], "%Y-%m-%dT%H:%M:%S"
-            )
+            expiration_time = datetime.strptime(r["termination_time"], "%Y-%m-%dT%H:%M:%S")
             return expiration_time - datetime.utcnow()
 
     def _get_proxy_request(self, delegation_id):
