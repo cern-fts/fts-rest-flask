@@ -34,7 +34,7 @@ black:
   stage: static_code_analysis
   script:
     - black --version
-    - black --check --fast --target-version py36 src/
+    - black --check --fast --diff --target-version py36 src/
 
 pylint36:
   <<: *pylint_definition
