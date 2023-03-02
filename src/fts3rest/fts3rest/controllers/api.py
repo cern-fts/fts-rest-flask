@@ -26,7 +26,7 @@ from fts3rest.lib.api.submit_schema import SubmitSchema
 from werkzeug.exceptions import NotFound
 from fts3rest.lib.helpers.jsonify import jsonify
 
-API_VERSION = dict(major=3, minor=12, patch=1)
+API_VERSION = dict(major=3, minor=12, patch=2)
 
 
 # TODO migrate correctly if necessary.

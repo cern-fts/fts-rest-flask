@@ -41,11 +41,14 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
     # DbType always lowercase
     fts3cfg["fts3.DbType"] = fts3cfg["fts3.DbType"].lower()
 
-    # Optimizer is a boolean
-    try:
-        fts3cfg["fts3.Optimizer"] = parser.getboolean("fts3", "Optimizer")
-    except NoOptionError:
-        fts3cfg["fts3.Optimizer"] = True
+    # Convert options to boolean
+    options = {"Optimizer": True, "AutoSessionReuse": False}
+
+    for key in options:
+        try:
+            fts3cfg["fts3." + key] = parser.getboolean("fts3", key)
+        except NoOptionError:
+            fts3cfg["fts3." + key] = options[key]
 
     # Put something in SiteName
     if "fts3.SiteName" not in fts3cfg:

@@ -181,15 +181,15 @@ class JobBuilder:
                 if shared_hashed_id
                 else generate_hashed_id(),
             )
-            if f["file_metadata"] != None:
+            if f["file_metadata"] is not None:
                 f["file_metadata"] = metadata(f["file_metadata"])
-            if f["staging_metadata"] != None:
+            if f["staging_metadata"] is not None:
                 f["staging_metadata"] = metadata(
                     f["staging_metadata"],
                     require_dict=True,
                     name_hint="Staging metadata",
                 )
-            if f["archive_metadata"] != None:
+            if f["archive_metadata"] is not None:
                 f["archive_metadata"] = metadata(
                     f["archive_metadata"],
                     require_dict=True,
@@ -199,7 +199,7 @@ class JobBuilder:
 
     def _apply_selection_strategy(self):
         """
-        On multiple-replica jobs, select the adecuate file to go active
+        On multiple-replica jobs, select the adequate file to go active
         """
         entry_state = "STAGING" if self.is_bringonline else "SUBMITTED"
         select_best_replica(
@@ -230,105 +230,103 @@ class JobBuilder:
 
         self.job["checksum_method"] = self.job["checksum_method"][0]
 
-    def _check_auto_session_reuse(self, job_type):
-        # If reuse is enabled, source and destination SE must be the same for all entries
-        # Ignore for multiple replica jobs!
-        min_reuse_files = int(app.config.get("fts3.SessionReuseMinFiles", 5))
-        if job_type == "Y" and (not self.job["source_se"] or not self.job["dest_se"]):
-            raise BadRequest(
-                "Reuse jobs can only contain transfers for the same source and destination storage"
-            )
+    def _apply_auto_session_reuse(self):
+        # Return early if job type is already "Session Reuse"
+        if self.job["job_type"] == "Y":
+            return False
 
-        if (
-            job_type == "Y"
-            and (self.job["source_se"] and self.job["dest_se"])
-            and len(self.files) > min_reuse_files
-        ):
-            self.job["job_type"] = "Y"
-
-        if job_type == "N" and not self.is_multiple:
-            self.job["job_type"] = "N"
-
-        auto_session_reuse = app.config.get("fts3.AutoSessionReuse", "false")
+        auto_session_reuse = app.config.get("fts3.AutoSessionReuse", False)
         log.debug(
-            "AutoSessionReuse=" + str(auto_session_reuse) + " job_type=" + str(job_type)
+            "job_type={} AutoSessionReuse={}".format(
+                self.job["job_type"], auto_session_reuse
+            )
         )
+
+        min_reuse_files = int(app.config.get("fts3.AutoSessionReuseMinFiles", 5))
         max_reuse_files = int(app.config.get("fts3.AutoSessionReuseMaxFiles", 1000))
+        max_reuse_big_files = int(app.config.get("fts3.AutoSessionReuseMaxBigFiles", 2))
         max_size_small_file = int(
             app.config.get("fts3.AutoSessionReuseMaxSmallFileSize", 104857600)
         )  # 100MB
         max_size_big_file = int(
             app.config.get("fts3.AutoSessionReuseMaxBigFileSize", 1073741824)
         )  # 1GB
-        max_big_files = int(app.config.get("fts3.AutoSessionReuseMaxBigFiles", 2))
 
-        if (
-            auto_session_reuse == "true"
-            and not self.is_multiple
+        auto_session_reuse_preconditions = (
+            auto_session_reuse
+            and not self.is_multiple_replica
             and not self.is_bringonline
-            and len(self.files) > min_reuse_files
-        ):
-            if (
-                self.job["source_se"]
-                and self.job["dest_se"]
-                and job_type is None
-                and len(self.files) > 1
-            ):
-                if len(self.files) > max_reuse_files:
-                    self.job["job_type"] = "N"
-                    log.debug(
-                        "The number of files "
-                        + str(len(self.files))
-                        + " is bigger than the auto maximum reuse files "
-                        + str(max_reuse_files)
+            and self.job["source_se"]
+            and self.job["dest_se"]
+            and 1 <= min_reuse_files <= len(self.files) <= max_reuse_files
+        )
+
+        if auto_session_reuse and not auto_session_reuse_preconditions:
+            log.debug("Skipping AutoSessionReuse: Preconditions not met")
+            return False
+
+        if auto_session_reuse_preconditions:
+            small_files = 0
+            big_files = 0
+
+            for file in self.files:
+                if 0 < file["user_filesize"] <= max_size_small_file:
+                    small_files += 1
+                elif max_size_small_file < file["user_filesize"] <= max_size_big_file:
+                    big_files += 1
+
+            if small_files + big_files < len(self.files):
+                log.debug(
+                    "Skipping AutoSessionReuse: small_files={} + big_files={} < total_files={}".format(
+                        small_files, big_files, len(self.files)
                     )
-                else:
-                    small_files = 0
-                    big_files = 0
-                    min_small_files = len(self.files) - max_big_files
-                    for file in self.files:
-                        log.debug(str(file["user_filesize"]))
-                        if (
-                            file["user_filesize"] <= max_size_small_file
-                            and file["user_filesize"] > 0
-                        ):
-                            small_files += 1
-                        else:
-                            if (
-                                file["user_filesize"] > max_size_small_file
-                                and file["user_filesize"] <= max_size_big_file
-                            ):
-                                big_files += 1
-                    if small_files > min_small_files and big_files <= max_big_files:
-                        self.job["job_type"] = "Y"
-                        log.debug(
-                            "Reuse jobs with "
-                            + str(small_files)
-                            + " small files up to "
-                            + str(len(self.files))
-                            + " total files"
-                        )
-                        # Need to reset their hashed_id so they land on the same machine
-                        shared_hashed_id = generate_hashed_id()
-                        for file in self.files:
-                            file["hashed_id"] = shared_hashed_id
+                )
+            elif big_files > max_reuse_big_files:
+                log.debug(
+                    "Skipping AutoSessionReuse: big_files={} > AutoSessionReuseMaxBigFiles={}".format(
+                        big_files, max_reuse_big_files
+                    )
+                )
+            else:
+                self.job["job_type"] = "Y"
+                log.info(
+                    "AutoSessionReuse applied: small_files={} big_files={} / total_files={}".format(
+                        small_files, big_files, len(self.files)
+                    )
+                )
+                # Reset the hashed IDs to ensure they land on the same machine
+                shared_hashed_id = generate_hashed_id()
+                for file in self.files:
+                    file["hashed_id"] = shared_hashed_id
+                return True
+        return False
+
+    def _validate_job_type_preconditions(self, unique_files):
+        if self.is_multiple_replica:
+            if self.job["job_type"] in ("H", "Y"):
+                raise BadRequest(
+                    "Can not request multiple replica job together with multihop or session reuse at the same time"
+                )
+            if unique_files > 1:
+                raise BadRequest("Multiple replica jobs must only have one unique file")
+        if self.job["job_type"] == "Y" and (
+            not self.job["source_se"] or not self.job["dest_se"]
+        ):
+            raise BadRequest(
+                "Reuse jobs must only contain transfers for the same source ad destination storage"
+            )
 
     def _populate_transfers(self, files_list):
         """
         Initializes the list of transfers
         """
 
-        job_type = None
-        log.debug("job_type=" + str(job_type) + " reuse=" + str(self.params["reuse"]))
-
+        job_type = "N"
         if self.params["multihop"]:
             job_type = "H"
-        elif self.params["reuse"] is not None:
-            if safe_flag(self.params["reuse"]):
-                job_type = "Y"
-            else:
-                job_type = "N"
-        log.debug("job_type=" + str(job_type))
+        elif safe_flag(self.params["reuse"]):
+            job_type = "Y"
+
         self.is_bringonline = (
             safe_int(self.params["copy_pin_lifetime"]) > 0
             or safe_int(self.params["bring_online"]) > 0
@@ -417,8 +415,9 @@ class JobBuilder:
         elif "credentials" in self.params:
             self.job["user_cred"] = self.params["credentials"]
 
-        # If reuse is enabled, or it is a bring online job, generate one single "hash" for all files
-        if job_type in ("H", "Y") or self.is_bringonline:
+        # Generate one single "hash" for all files for multihop, session reuse and bringonline jobs
+        # (One single hash guarantees transfers are picked up by the same staging/transfer node)
+        if self.job["job_type"] in ("H", "Y") or self.is_bringonline:
             shared_hashed_id = generate_hashed_id()
         else:
             shared_hashed_id = None
@@ -433,18 +432,11 @@ class JobBuilder:
             raise BadRequest("No valid pairs available")
 
         self._check_checksum()
+        self._set_job_source_and_destination(self.files)
+        self.is_multiple_replica, unique_files = has_multiple_options(self.files)
+        self._validate_job_type_preconditions(unique_files)
 
-        # Validate that if this is a multiple replica job, that there is one single unique file
-        self.is_multiple, unique_files = has_multiple_options(self.files)
-        if self.is_multiple:
-            # Multiple replicas can not use the reuse flag, nor multihop
-            if job_type in ("H", "Y"):
-                raise BadRequest(
-                    "Can not specify reuse and multiple replicas at the same time"
-                )
-            # Only one unique file per multiple-replica job
-            if unique_files > 1:
-                raise BadRequest("Multiple replicas jobs can only have one unique file")
+        if self.is_multiple_replica:
             self.job["job_type"] = "R"
             # Apply selection strategy
             self._apply_selection_strategy()
@@ -455,11 +447,12 @@ class JobBuilder:
         elif self.params["multihop"]:
             self.files[0]["file_state"] = "SUBMITTED"
 
-        self._set_job_source_and_destination(self.files)
-
-        self._check_auto_session_reuse(job_type)
-        if self.job["job_type"] is None:
-            self.job["job_type"] = "N"
+        auto_session_reuse_applied = self._apply_auto_session_reuse()
+        log.debug(
+            "job_type={} reuse={} AutoSessionReuse_applied={}".format(
+                self.job["job_type"], self.params["reuse"], auto_session_reuse_applied
+            )
+        )
 
     def _populate_deletion(self, deletion_dict):
         """

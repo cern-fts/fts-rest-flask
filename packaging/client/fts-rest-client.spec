@@ -1,12 +1,12 @@
 Name:           fts-rest-client
-Version:        3.12.1
+Version:        3.12.2
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 Client and CLI
 
 License:        ASL 2.0
 URL:            https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.12.1 https://gitlab.cern.ch/fts/fts-rest-flask.git fts-rest-client-3.12.1
-# tar -C fts-rest-client-3.12.1/ -czf fts-rest-client-3.12.1.tar.gz src/cli src/fts3 LICENSE setup.py setup.cfg --transform "s|^|fts-rest-client-3.12.1/|" --show-transformed-names
+# git clone --depth=1 --branch v3.12.2 https://gitlab.cern.ch/fts/fts-rest-flask.git fts-rest-client-3.12.2
+# tar -C fts-rest-client-3.12.2/ -czf fts-rest-client-3.12.2.tar.gz src/cli src/fts3 LICENSE setup.py setup.cfg --transform "s|^|fts-rest-client-3.12.2/|" --show-transformed-names
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3-devel
@@ -42,6 +42,11 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 %{_bindir}/fts-rest-*
 
 %changelog
+* Thu Mar 02 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.2-1
+- Reduce required "python3-setuptools" version (bugzilla#2164054)
+- Do not crash if "authorityKeyIdentifier" certificate extention is missing.
+  OpenSSL3 handling changed and would now throw an error
+
 * Fri Dec 02 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.1-1
 - Addition of staging and archiving metadata
 
