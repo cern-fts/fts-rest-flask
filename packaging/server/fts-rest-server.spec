@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.12.1
+Version:        3.12.2
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -127,6 +127,10 @@ fi
 %files selinux
 
 %changelog
+* Thu Mar 02 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.2-1
+- Refactoring of job submission checks, especially for AutoSessionReuse mode
+- Log time it takes to store submission into the database
+
 * Fri Dec 02 2022 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.1-1
 - Introduce profiling logs for HTTP requests
 - Introduce new "/admin/force-start" endpoint
