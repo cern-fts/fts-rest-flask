@@ -3,8 +3,30 @@
 <div class="container">
 	<h1>Cloud storage</h1>
 <br>
+<p>
+    FTS3 currently supports three types of cloud storage: <b>S3</b>, <b>Swift</b> and <b>Dropbox</b>.<br/>
+    However, the way of configuring differs.
+</p>
 
-
+<a class="cursor-pointer" data-toggle="collapse" data-target="#demo">How configure S3 endpoint</a>
+<br>
+    <div div id="demo" class="collapse">
+<ol class="bg-warning">
+    <br>
+    <li><b>Register the S3 storage:</b></li>
+    <ul>
+        <li>The name should have the form S3:hostname (i.e. S3:s3.example.com)</li>
+        <li>Access token = &lt;access key&gt;, access secret = &lt;secret key&gt;</li>
+        <li>Leave request fields empty. App key and secret are not used</li>
+    </ul>
+    <li><b>Grant access to a set of VO roles and/or users:</b></li>
+    <ul>
+        <li>Empty user with a value in VO roles grant access to all members from that VO</li>
+    </ul>
+    <br>
+</ol>
+</div>
+<br>
     <div id="storage-list">
         <script id="s3-storage-entry-template" type="text/x-handlebars-template">
         <div class="panel panel-info panel-s3">
