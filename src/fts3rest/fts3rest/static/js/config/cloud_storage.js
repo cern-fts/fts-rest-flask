@@ -18,43 +18,65 @@
 var template_cloud_storage_entry = null;
 
 /**
- * Save a new storage, or change it
+ * Save a storage S3
  */
-function saveStorageS3()
+function saveStorageS3() 
 {
-    let alternateCheckbox = document.getElementById("alternate");
-    var msg = {
-        cloudstorage_name: document.getElementById("cloudStorage_name_s3").value,
-        region:  document.getElementById("region").value,
+    let cloudStorageName = document.getElementById("cloudStorage_name_s3").value.trim();
+    if (cloudStorageName !== "" && !/\s/.test(cloudStorageName)) {
+      let alternateCheckbox = document.getElementById("alternate");
+      let msg = {
+        cloudstorage_name: cloudStorageName,
+        region: document.getElementById("region").value,
         alternate: alternateCheckbox.checked
-    };
-
-    console.log(msg);
-    if (!msg.cloudstorage_name || /^\s*$/.test(msg.cloudstorage_name)){
-        confirm("The storage name cannot be null or contain spaces");
-    }
-    else {
-        return $.ajax({
-            url: "/config/cloud_storage_s3?",
-            type: "POST",
-            dataType: "json",
-            contentType: "application/json",
-            data: JSON.stringify(msg)
+      };
+  
+      console.log(msg);
+      return $.ajax({
+        url: "/config/cloud_storage_s3?",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify(msg)
+      }).done(function(data, textStatus, jqXHR) {
+        refreshCloudStorage();
+        // Clear the input field
+        document.getElementById("cloudStorage_name_s3").value = "";
+        document.getElementById("alternate").value = "";
+        document.getElementById("region").value = "";
+      })
+        .fail(function(jqXHR) {
+          errorMessage(jqXHR);
         });
+    } else {
+      console.log("cloudstorage_name is empty or contains spaces!");
+      confirm("The storage name cannot be null or contain spaces");
     }
 }
 
-function saveStorageGcloud()
+/**
+ * Delete a storage Gcloud
+ */
+function saveStorageGcloud() 
 {
-    let msg = new FormData();
-    msg.append("cloudstorage_name",document.getElementById("cloudStorage_name_gcloud").value);
-    msg.append("auth_file",document.getElementById("auth_file").files[0] );
-
-    console.log(msg);
-
-    let xhr = new XMLHttpRequest();
-    xhr.open("POST","/config/cloud_storage_gcloud?" );
-    xhr.send(msg);
+    let cloudStorageName = document.getElementById("cloudStorage_name_gcloud").value.trim();
+    if (cloudStorageName !== "" && !/\s/.test(cloudStorageName)) {
+      let msg = new FormData();
+      msg.append("cloudstorage_name", cloudStorageName);
+      msg.append("auth_file", document.getElementById("auth_file").files[0]);
+  
+      console.log(msg);
+  
+      let xhr = new XMLHttpRequest();
+      xhr.open("POST", "/config/cloud_storage_gcloud?");
+      xhr.send(msg);
+      refreshCloudStorage();
+      // Clear the input field
+      document.getElementById("cloudStorage_name_gcloud").value = "";
+      document.getElementById("auth_file").value = null;
+    } else {
+        confirm("The storage name cannot be null or contain spaces");
+    }
 }
 
 /**
@@ -71,6 +93,9 @@ function downloadAuthFile(cloudStorage_name)
     document.body.removeChild(link);
 }
 
+/**
+ * Delete a storage Swift
+ */
 function saveStorageSwift()
 {
     var msg = {
@@ -90,17 +115,25 @@ function saveStorageSwift()
             dataType: "json",
             contentType: "application/json",
             data: JSON.stringify(msg)
+        }).done(function(data, textStatus, jqXHR) {
+            refreshCloudStorage();
+            // Clear the input field
+            document.getElementById("cloudStorage_name_swift").value = "";
+            document.getElementById("os_project_id").value = "";
+            document.getElementById("os_token").value = "";
+        })
+        .fail(function(jqXHR) {
+            errorMessage(jqXHR);
         });
     }
-    location.reload();
 }
 
 /**
- * Delete a storage
+ * Delete a storage S3
  */
 function deleteStorageS3(cloudStorage_name, div)
 {
-    div.css("background", "#d9534f");
+    // div.css("background", "#d9534f");
     $.ajax({
         url: "/config/cloud_storage_s3/" + encodeURIComponent(cloudStorage_name),
         type: "DELETE",
@@ -108,22 +141,23 @@ function deleteStorageS3(cloudStorage_name, div)
         contentType: "application/json"
     })
     .done(function(data, textStatus, jqXHR) {
-        div.fadeOut(300, function() {div.remove();})
+        // div.fadeOut(300, function() {$("#").remove();})
+        refreshCloudStorage();
     })
     .fail(function(jqXHR) {
         errorMessage(jqXHR);
-    })
-    .always(function() {
-        div.css("background", "#ffffff").css("transition", "background .50s ease-in-out");
     });
+    // .always(function() {
+    //     // div.css("background", "#ffffff").css("transition", "background .50s ease-in-out");
+    // });
 }
 
 /**
- * Delete a storage
+ * Delete a storage Gcloud
  */
 function deleteStorageGcloud(cloudStorage_name, div)
 {
-    div.css("background", "#d9534f");
+    // div.css("background", "#d9534f");
     $.ajax({
         url: "/config/cloud_storage_gcloud/" + encodeURIComponent(cloudStorage_name),
         type: "DELETE",
@@ -131,22 +165,23 @@ function deleteStorageGcloud(cloudStorage_name, div)
         contentType: "application/json"
     })
     .done(function(data, textStatus, jqXHR) {
-        div.fadeOut(300, function() {div.remove();})
+        // div.fadeOut(300, function() {div.remove();})
+        refreshCloudStorage();
     })
     .fail(function(jqXHR) {
         errorMessage(jqXHR);
-    })
-    .always(function() {
-        div.css("background", "#ffffff").css("transition", "background .50s ease-in-out");
     });
+    // .always(function() {
+    //     div.css("background", "#ffffff").css("transition", "background .50s ease-in-out");
+    // });
 }
 
 /**
- * Delete a storage
+ * Delete storage Swift
  */
 function deleteStorageSwift(cloudStorage_name, div)
 {
-    div.css("background", "#d9534f");
+    // div.css("background", "#d9534f");
     $.ajax({
         url: "/config/cloud_storage_swift/" + encodeURIComponent(cloudStorage_name),
         type: "DELETE",
@@ -154,18 +189,19 @@ function deleteStorageSwift(cloudStorage_name, div)
         contentType: "application/json"
     })
     .done(function(data, textStatus, jqXHR) {
-        div.fadeOut(300, function() {div.remove();})
+        // div.fadeOut(300, function() {div.remove();})
+        refreshCloudStorage();
     })
     .fail(function(jqXHR) {
         errorMessage(jqXHR);
-    })
-    .always(function() {
-        div.css("background", "#ffffff").css("transition", "background .50s ease-in-out");
     });
+    // .always(function() {
+    //     div.css("background", "#ffffff").css("transition", "background .50s ease-in-out");
+    // });
 }
 
 /**
- * Save a user
+ * Save a user S3
  */
 function saveUserS3(cloudStorage_name, form)
 {
@@ -177,14 +213,73 @@ function saveUserS3(cloudStorage_name, form)
     };
 
     console.log(msg);
+    if (!msg.user_dn || /^\s*$/.test(msg.user_dn)){
+        confirm("The user cannot be null or contain spaces");
+    } else if (!msg.vo_name || /^\s*$/.test(msg.vo_name)){
+        confirm("The vo_name cannot be null or contain spaces");
+    }
+    else {
+        return $.ajax({
+            url: "/config/cloud_storage/" + encodeURIComponent(cloudStorage_name),
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify(msg)
+        });
+    }
+}
 
-    return $.ajax({
-        url: "/config/cloud_storage/" + encodeURIComponent(storage_name),
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        data: JSON.stringify(msg)
-    });
+/**
+ * Save a user Gcloud
+ */
+function saveUserGcloud(cloudStorage_name, form)
+{
+    var msg = {
+        user_dn: form.find("input[name='user-dn']").val(),
+        vo_name: form.find("input[name='vo-name']").val()
+    };
+
+    if (!msg.user_dn || /^\s*$/.test(msg.user_dn)){
+        confirm("The user cannot be null or contain spaces");
+    } else if (!msg.vo_name || /^\s*$/.test(msg.vo_name)){
+        confirm("The vo_name cannot be null or contain spaces");
+    }
+    else {
+        return $.ajax({
+            url: "/config/cloud_storage/" + encodeURIComponent(cloudStorage_name),
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify(msg)
+        });
+    }
+}
+
+/**
+ * Save a user Gcloud
+ */
+function saveUserSwift(cloudStorage_name, form)
+{
+    var msg = {
+        user_dn: form.find("input[name='user-dn']").val(),
+        vo_name: form.find("input[name='vo-name']").val()
+    };
+
+    console.log(msg);
+    if (!msg.user_dn || /^\s*$/.test(msg.user_dn)){
+        confirm("The user cannot be null or contain spaces");
+    } else if (!msg.vo_name || /^\s*$/.test(msg.vo_name)){
+        confirm("The vo_name cannot be null or contain spaces");
+    }
+    else {
+        return $.ajax({
+            url: "/config/cloud_storage/" + encodeURIComponent(cloudStorage_name),
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify(msg)
+        });
+    }
 }
 
 /**
@@ -279,18 +374,18 @@ function refreshCloudStorage()
                     });
 
                     // Attach to remove and modify a user
-                    div.find(".user-entry").each(function () {
+                    div.find(".user-entry-s3").each(function () {
                         var tr = $(this);
                         var deleteUserBtn = tr.find(".btn-delete-user");
                         deleteUserBtn.click(function (event) {
                             event.preventDefault();
-                            deleteUser(storage.storage_name, tr);
+                            deleteUser(storage.cloudStorage_name, tr);
                         });
-                        var saveUserBtn = tr.find(".btn-save-user");
-                        saveUserBtn.click(function (event) {
-                            event.preventDefault();
-                            saveUser(storage.storage_name, tr)
-                        });
+                        // var saveUserBtn = tr.find(".btn-save-user");
+                        // saveUserBtn.click(function (event) {
+                        //     event.preventDefault();
+                        //     saveUser(storage.storage_name, tr)
+                        // });
                     });
                 }
 
@@ -299,10 +394,17 @@ function refreshCloudStorage()
                     var div = $(template_cloud_storage_gcloud_entry(storage));
 
                     // Attach to the delete button
-                    var deleteBtn = div.find(".btn-delete-Gcloud");
+                    var deleteBtn = div.find(".btn-delete-gcloud");
                     deleteBtn.click(function (event) {
                         event.preventDefault();
                         deleteStorageGcloud(storage.cloudStorage_name, div);
+                    });
+
+                    // Attach to the download auth file button
+                    var authDwLnk = div.find(".lnk-auth-dw");
+                    authDwLnk.click(function (event) {
+                        event.preventDefault();
+                        downloadAuthFile(storage.cloudStorage_name);
                     });
 
                     // Attach to the save button
@@ -316,11 +418,11 @@ function refreshCloudStorage()
                     });
 
                     // Attach to add a user
-                    var addUserFrm = div.find(".frm-add-user");
-                    var addUserBtn = addUserFrm.find(".btn-add-user");
+                    var addUserFrm = div.find(".frm-add-user-gcloud");
+                    var addUserBtn = addUserFrm.find(".btn-add-user-gcloud");
                     addUserBtn.click(function (event) {
                         event.preventDefault();
-                        saveUser(storage.storage_name, addUserFrm)
+                        saveUserGcloud(storage.cloudStorage_name, addUserFrm)
                             .done(function (data, textStatus, jqXHR) {
                                 refreshCloudStorage();
                             })
@@ -328,20 +430,19 @@ function refreshCloudStorage()
                                 errorMessage(jqXHR);
                             });
                     });
-
                     // Attach to remove and modify a user
-                    div.find(".user-entry").each(function () {
+                    div.find(".user-entry-gcloud").each(function () {
                         var tr = $(this);
                         var deleteUserBtn = tr.find(".btn-delete-user");
                         deleteUserBtn.click(function (event) {
                             event.preventDefault();
-                            deleteUser(storage.storage_name, tr);
+                            deleteUser(storage.cloudStorage_name, tr);
                         });
-                        var saveUserBtn = tr.find(".btn-save-user");
-                        saveUserBtn.click(function (event) {
-                            event.preventDefault();
-                            saveUser(storage.storage_name, tr)
-                        });
+                        // var saveUserBtn = tr.find(".btn-save-user");
+                        // saveUserBtn.click(function (event) {
+                        //     event.preventDefault();
+                        //     saveUser(storage.storage_name, tr)
+                        // });
                     });
                 }
                 if (storage.cloud_type === "swift") {
@@ -366,11 +467,11 @@ function refreshCloudStorage()
                     });
 
                     // Attach to add a user
-                    var addUserFrm = div.find(".frm-add-user");
-                    var addUserBtn = addUserFrm.find(".btn-add-user");
+                    var addUserFrm = div.find(".frm-add-user-swift");
+                    var addUserBtn = addUserFrm.find(".btn-add-user-swift");
                     addUserBtn.click(function (event) {
                         event.preventDefault();
-                        saveUser(storage.storage_name, addUserFrm)
+                        saveUserSwift(storage.cloudStorage_name, addUserFrm)
                             .done(function (data, textStatus, jqXHR) {
                                 refreshCloudStorage();
                             })
@@ -380,23 +481,27 @@ function refreshCloudStorage()
                     });
 
                     // Attach to remove and modify a user
-                    div.find(".user-entry").each(function () {
+                    div.find(".user-entry-swift").each(function () {
                         var tr = $(this);
                         var deleteUserBtn = tr.find(".btn-delete-user");
                         deleteUserBtn.click(function (event) {
                             event.preventDefault();
-                            deleteUser(storage.storage_name, tr);
+                            deleteUser(storage.cloudStorage_name, tr);
                         });
-                        var saveUserBtn = tr.find(".btn-save-user");
-                        saveUserBtn.click(function (event) {
-                            event.preventDefault();
-                            saveUser(storage.storage_name, tr)
-                        });
+                        // var saveUserBtn = tr.find(".btn-save-user");
+                        // saveUserBtn.click(function (event) {
+                        //     event.preventDefault();
+                        //     saveUser(storage.storage_name, tr)
+                        // });
                     });
                 }
             parent.append(div);
             }
         });
+        // Get the dropdown element
+        let dropdown = document.getElementById("cs-dropdown");
+        // Clear the selection
+        dropdown.selectedIndex = -1;
     })
     .fail(function(jqXHR) {
         errorMessage(jqXHR);
@@ -418,6 +523,10 @@ function compileTemplates()
         $("#swift-storage-entry-template").html()
     );
 }
+
+/**
+* Dropdown selection
+ */
 function selectCloudStorage() {
     $(document).ready(function(){
         $("select").change(function(){
@@ -433,6 +542,7 @@ function selectCloudStorage() {
         }).change();
     });
 }
+
 /**
 * Enables dropdown visibility
  */
@@ -452,6 +562,7 @@ function cs_dropdown(){
         }
 });
 }
+
 /**
  * Initializes the SE view
  */

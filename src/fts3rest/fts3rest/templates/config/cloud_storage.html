@@ -1,36 +1,36 @@
-<%include file="header.html" args="page='/config/cloud_storage', subtitle='Cloud storage configuration'"/>
+<%include file="header.html" args="page='/config/cloud_storage', subtitle='Cloud storage configuration'" />
 
 <div class="container">
-	<h1>Cloud storage</h1>
-<br>
-<p>
-    FTS3 currently supports three types of cloud storage: <b>S3</b>, <b>Swift</b> and <b>Dropbox</b>.<br/>
-    However, the way of configuring differs.
-</p>
+    <h1>Cloud storage</h1>
+    <br>
+    <p>
+        FTS3 currently supports three types of cloud storage: <b>S3</b>, <b>Swift</b> and <b>Dropbox</b>.<br />
+        However, the way of configuring differs.
+    </p>
 
-<a class="cursor-pointer" data-toggle="collapse" data-target="#demo">How configure S3 endpoint</a>
-<br>
+    <a class="cursor-pointer" data-toggle="collapse" data-target="#demo">How configure S3 endpoint</a>
+    <br>
     <div div id="demo" class="collapse">
-<ol class="bg-warning">
+        <ol class="bg-warning">
+            <br>
+            <li><b>Register the S3 storage:</b></li>
+            <ul>
+                <li>The name should have the form S3:hostname (i.e. S3:s3.example.com)</li>
+                <li>Access token = &lt;access key&gt;, access secret = &lt;secret key&gt;</li>
+                <li>Leave request fields empty. App key and secret are not used</li>
+            </ul>
+            <li><b>Grant access to a set of VO roles and/or users:</b></li>
+            <ul>
+                <li>Empty user with a value in VO roles grant access to all members from that VO</li>
+            </ul>
+            <br>
+        </ol>
+    </div>
     <br>
-    <li><b>Register the S3 storage:</b></li>
-    <ul>
-        <li>The name should have the form S3:hostname (i.e. S3:s3.example.com)</li>
-        <li>Access token = &lt;access key&gt;, access secret = &lt;secret key&gt;</li>
-        <li>Leave request fields empty. App key and secret are not used</li>
-    </ul>
-    <li><b>Grant access to a set of VO roles and/or users:</b></li>
-    <ul>
-        <li>Empty user with a value in VO roles grant access to all members from that VO</li>
-    </ul>
-    <br>
-</ol>
-</div>
-<br>
     <div id="storage-list">
         <script id="s3-storage-entry-template" type="text/x-handlebars-template">
         <div class="panel panel-info panel-s3">
-            <input type="hidden" name="storage-name" value="{{cloudStorage_name}}"/>
+            <input type="hidden" name="storage-name" id="{{cloudStorage_name}}" value="{{cloudStorage_name}}"/>
             <div class="panel-heading">
                 <h3 class="panel-title">
                     <span>{{cloudStorage_name}}</span>
@@ -55,7 +55,8 @@
                 <div class="form-inline">
                 </div>
             </div>
-            <table class="table">
+            <table class="table table-striped table-bordered">
+            <!-- <table class="table"> -->
                 <thead>
                     <tr>
                         <th></th>
@@ -67,24 +68,26 @@
                 </thead>
                 <tbody>
                     {{#each users}}
-                    <tr class="user-entry-s3">
+                    <tr class=" user-entry-s3">
                         <td>
                             <a><i class="glyphicon glyphicon-trash btn-delete-user"></i></a>
-                            <a><i class="glyphicon glyphicon-floppy-disk btn-save-user"></i></a>
+                            <!-- <a><i class="glyphicon glyphicon-floppy-disk btn-save-user"></i></a> -->
                         </td>
                         <td>
-                            <input type="text" name="user-dn" class="form-control" value="{{user_dn}}"/>
-                            <!-- {{user_dn}} -->
+                            <input type="hidden" name="user-dn" class="form-control" value="{{user_dn}}"/>
+                            {{user_dn}}
                         </td>
                         <td>
-                            <input type="text" name="vo-name" class="form-control" value="{{vo_name}}"/>
-                            <!-- {{vo_name}} -->
+                            <input type="hidden" name="vo-name" class="form-control" value="{{vo_name}}"/>
+                            {{vo_name}}
                         </td>
                         <td>
-                            <input type="text" name="access-key" class="form-control" value="{{access_key}}"/>
+                            <input type="hidden" name="access-key" class="form-control" value="{{access_key}}"/>
+                            {{access_key}}
                         </td>
                         <td>
-                            <input type="text" name="secret-key" class="form-control" value="{{secret_key}}"/>
+                            <input type="hidden" name="secret-key" class="form-control" value="{{secret_key}}"/>
+                            {{access_key}}
                         </td>
                     </tr>
                     {{/each}}
@@ -92,7 +95,7 @@
                 <tbody class="frm-add-user-s3">
                     <tr>
                         <td style="width: 1%">
-                            <a><i class="glyphicon glyphicon-plus btn-add-user"></i></a>
+                            <a><i class="glyphicon glyphicon-plus btn-add-user-s3"></i></a>
                             <input type="hidden" name="cloudStorage_name" value="{{cloudStorage_name}}"/>
                         </td>
                         <td>
@@ -111,7 +114,7 @@
                 </tbody>
             </table>
             <div class="panel-footer">
-                <button class="btn btn-success btn-save-s3">Save</button>
+                <!-- <button class="btn btn-success btn-save-s3">Save</button> -->
                 <button class="btn btn-danger btn-delete-s3">Delete</button>
             </div>
         </div>
@@ -137,7 +140,8 @@
                 <div class="form-inline">
                 </div>
             </div>
-            <table class="table">
+            <!-- <table class="table"> -->
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th></th>
@@ -147,26 +151,26 @@
                 </thead>
                 <tbody>
                     {{#each users}}
-                    <tr class="user-entry">
+                    <tr class="user-entry-gcloud">
                         <td>
                             <a><i class="glyphicon glyphicon-trash btn-delete-user"></i></a>
-                            <a><i class="glyphicon glyphicon-floppy-disk btn-save-user"></i></a>
+                            <!-- <a><i class="glyphicon glyphicon-floppy-disk btn-save-user-gcloud"></i></a> -->
                         </td>
                         <td>
-                            <input type="text" name="user-dn" class="form-control" value="{{user_dn}}"/>
-                            <!-- {{user_dn}} -->
+                            <input type="hidden" name="user-dn" class="form-control" value="{{user_dn}}"/>
+                            {{user_dn}}
                         </td>
                         <td>
-                            <input type="text" name="vo-name" class="form-control" value="{{vo_name}}"/>
-                            <!-- {{vo_name}} -->
+                            <input type="hidden" name="vo-name" class="form-control" value="{{vo_name}}"/>
+                            {{vo_name}}
                         </td>
                     </tr>
                     {{/each}}
                 </tbody>
-                <tbody class="frm-add-user">
+                <tbody class="frm-add-user-gcloud">
                     <tr>
                         <td style="width: 1%">
-                            <a><i class="glyphicon glyphicon-plus btn-add-user"></i></a>
+                            <a><i class="glyphicon glyphicon-plus btn-add-user-gcloud"></i></a>
                         </td>
                         <td>
                             <input name="user-dn" type="text" class="form-control" value=""/>
@@ -178,15 +182,13 @@
                 </tbody>
             </table>
             <div class="panel-footer">
-                <button class="btn btn-success btn-save">Save</button>
-                <button class="btn btn-danger btn-delete-Gcloud">Delete</button>
+                <!-- <button class="btn btn-success btn-save">Save</button> -->
+                <button class="btn btn-danger btn-delete-gcloud">Delete</button>
             </div>
         </div>
         </script>
         <script id="swift-storage-entry-template" type="text/x-handlebars-template">
             <div class="panel panel-info panel-swift">
-
-
             <input type="hidden" name="storage-name" value="{{cloudStorage_name}}"/>
             <div class="panel-heading">
                 <h3 class="panel-title">
@@ -200,7 +202,8 @@
                 <div class="form-inline">
                 </div>
             </div>
-            <table class="table">
+            <!-- <table class="table"> -->
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th></th>
@@ -210,10 +213,10 @@
                 </thead>
                 <tbody>
                     {{#each users}}
-                    <tr class="user-entry">
+                    <tr class="user-entry-swift">
                         <td>
                             <a><i class="glyphicon glyphicon-trash btn-delete-user"></i></a>
-                            <a><i class="glyphicon glyphicon-floppy-disk btn-save-user"></i></a>
+                            <!-- <a><i class="glyphicon glyphicon-floppy-disk btn-save-user"></i></a> -->
                         </td>
                         <td>
                             <input type="hidden" name="user-dn" value="{{user_dn}}"/>
@@ -226,10 +229,10 @@
                     </tr>
                     {{/each}}
                 </tbody>
-                <tbody class="frm-add-user">
+                <tbody class="frm-add-user-swift">
                     <tr>
                         <td style="width: 1%">
-                            <a><i class="glyphicon glyphicon-plus btn-add-user"></i></a>
+                            <a><i class="glyphicon glyphicon-plus btn-add-user-swift"></i></a>
                         </td>
                         <td>
                             <input name="user-dn" type="text" class="form-control" value=""/>
@@ -241,7 +244,7 @@
                 </tbody>
             </table>
             <div class="panel-footer">
-                <button class="btn btn-success btn-save">Save</button>
+                <!-- <button class="btn btn-success btn-save">Save</button> -->
                 <button class="btn btn-danger btn-delete-Swift">Delete</button>
             </div>
         </div>
@@ -251,11 +254,8 @@
         <div class="panel panel-success">
             <div class="panel-heading clearfix">
                 <h3 class="panel-title">
-                    <!-- <span class="col-lg-9">Add new cloud storage: </span>
-                    <span class="col"> -->
-
-                        <span>Add new cloud storage: </span>
-                        <span class="pull-right">
+                    <span>Add new cloud storage: </span>
+                    <span class="pull-right">
 
                         <label for="cs-dropdown">Cloud Storage type: </label>
                         <select id="cs-dropdown">
@@ -271,88 +271,91 @@
             </div>
         </div>
         <div class="vis" id="s3">
-        <table class="table" >
-            <thead>
-            <tr>
-                <th>Storage Name</th>
-                <th>Region</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr id="S3-form" class="cloudstorage-S3-add">
-                <td>
-                    <input  type="text" name="cloudStorage_name_s3" id="cloudStorage_name_s3" class="form-control" required />
-                </td>
-                <td>
-                    <input type="text" name="region" id="region" class="form-control"/>
-                </td>
-                <td>
-                    <label style="display: block; padding-left: 15px; text-indent: -15px; top: 1px;">
-                        <input class="form-check-label" type="checkbox" id="alternate" name="alternate"
-                                   style="width: 15px; height: 15px; padding: 0;margin: 0; vertical-align: center;
-                                       position: relative; top: 1px;"/>  Alternate
-                    </label>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-                    <div class="panel-footer">
-            <button id="btn-add-S3" onclick="saveStorageS3()" class="btn btn-info btn-add">Add</button>
-        </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Storage Name</th>
+                        <th>Region</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="S3-form" class="cloudstorage-S3-add">
+                        <td>
+                            <input type="text" name="cloudStorage_name_s3" id="cloudStorage_name_s3"
+                                class="form-control" required />
+                        </td>
+                        <td>
+                            <input type="text" name="region" id="region" class="form-control" />
+                        </td>
+                        <td>
+                            <label style="display: block; padding-left: 15px; text-indent: -15px; top: 1px;">
+                                <input class="form-check-label" type="checkbox" id="alternate" name="alternate" style="width: 15px; height: 15px; padding: 0;margin: 0; vertical-align: center;
+                                       position: relative; top: 1px;" /> Alternate
+                            </label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="panel-footer">
+                <button id="btn-add-S3" onclick="saveStorageS3();" class="btn btn-info btn-add">Add</button>
+            </div>
         </div>
         <div class="inv" id="gcloud">
-        <table class="table" >
-            <thead>
-            <tr>
-                <th>Storage Name</th>
-                <th>JSON input file</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr class="user-entry">
-                <td>
-                    <input name="cloudStorage_name_gcloud" id="cloudStorage_name_gcloud" type="text" class="form-control" required />
-                </td>
-                <td>
-                    <input type="file" id="auth_file" name="auth_file"/>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-                    <div class="panel-footer">
-            <button id="btn-add-Gcloud"  onclick="saveStorageGcloud()" class="btn btn-info btn-add">Add</button>
-        </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Storage Name</th>
+                        <th>JSON input file</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="user-entry">
+                        <td>
+                            <input name="cloudStorage_name_gcloud" id="cloudStorage_name_gcloud" type="text"
+                                class="form-control" required />
+                        </td>
+                        <td>
+                            <input type="file" id="auth_file" name="auth_file" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="panel-footer">
+                <button id="btn-add-Gcloud" onclick="saveStorageGcloud();" class="btn btn-info btn-add">Add</button>
+            </div>
         </div>
         <div class="inv" id="swift">
-        <table class="table">
-            <thead>
-            <tr>
-                <th>Storage Name</th>
-                <th>OS Project ID</th>
-                <th>OS Token</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr class="user-entry">
-                <td>
-                        <input name="cloudStorage_name_swift" id="cloudStorage_name_swift" type="text" class="form-control" required />
-                </td>
-                <td>
-                        <input name="os_project_id" id="os_project_id" type="text" class="form-control" />
-                </td>
-                <td>
-                        <input name="os_token" id="os_token" type="text" class="form-control" />
-                </td>
-            </tr>
-            </tbody>
-        </table>
-                    <div class="panel-footer">
-            <input type="submit" id="btn-add-Swift" onclick="saveStorageSwift()" value="Add" class="btn btn-info btn-add" />
-        </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Storage Name</th>
+                        <th>OS Project ID</th>
+                        <th>OS Token</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="user-entry">
+                        <td>
+                            <input name="cloudStorage_name_swift" id="cloudStorage_name_swift" type="text"
+                                class="form-control" required />
+                        </td>
+                        <td>
+                            <input name="os_project_id" id="os_project_id" type="text" class="form-control" />
+                        </td>
+                        <td>
+                            <input name="os_token" id="os_token" type="text" class="form-control" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="panel-footer">
+                <input type="submit" id="btn-add-Swift" onclick="saveStorageSwift();" value="Add"
+                    class="btn btn-info btn-add" />
+            </div>
         </div>
     </div>
 </div>
 <script src="/js/config/cloud_storage.js" onload="setupCloudStorage()"></script>
 
-<%include file="footer.html"/>
+<%include file="footer.html" />
