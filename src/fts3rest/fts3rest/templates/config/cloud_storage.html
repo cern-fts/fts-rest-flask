@@ -33,19 +33,22 @@
             <input type="hidden" name="storage-name" value="{{cloudStorage_name}}"/>
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    {{cloudStorage_name}}
-                    <span style="float:right; margin-left: 20px ">
+                    <span>{{cloudStorage_name}}</span>
+                    
+                    <div class="pull-right">
+                    <span>
                         Region: <code>{{region}}</code>
                     </span>
                     {{#if alternate}}
-                    <span style="float:right">
-                        Alternate:<code>[x]</code>
+                    <span>
+                        &emsp; Alternate: <code>[x]</code>
                     </span>
                     {{else}}
-                    <span style="float:right">
-                        Alternate:<code>[ ]</code>
+                    <span>
+                        &emsp; Alternate: <code>[ ]</code>
                     </span>
                     {{/if}}
+                </div>
                 </h3>
             </div>
             <div class="panel-body">
@@ -118,10 +121,10 @@
 
             <input type="hidden" name="storage-name" value="{{cloudStorage_name}}"/>
                 <div class="panel-heading">
-                    <h3 class="panel-title">
-                        {{cloudStorage_name}}
-                        <span style="position:relative; top:50%; float:right;">
-                        <button type="button" class="btn btn-default btn-sm">
+                    <h3 class="panel-title clearfix">
+                        <span>{{cloudStorage_name}}</span>
+                        <span class="pull-right">
+                        <button type="button" class="btn btn-default btn-sm float-right">
                             <span class="glyphicon glyphicon-floppy-disk"></span> Authentication file
                         </button>
                     </span>
@@ -238,13 +241,17 @@
         </div>
         </script>
     </div>
-    <div id="add-cloudstorage">
+    <div id="add-cloudstorage" class="panel panel-success">
         <div class="panel panel-success">
-            <div class="panel-heading">
+            <div class="panel-heading clearfix">
                 <h3 class="panel-title">
-                    Add new cloud storage:
-                    <span style="position:relative; top:50%; left:63%;">
-                        <label for="cs-dropdown">Cloud Storage type</label>
+                    <!-- <span class="col-lg-9">Add new cloud storage: </span>
+                    <span class="col"> -->
+
+                        <span>Add new cloud storage: </span>
+                        <span class="pull-right">
+
+                        <label for="cs-dropdown">Cloud Storage type: </label>
                         <select id="cs-dropdown">
                             <option value="s3" selected>S3</option>
                             <option value="gcloud">Gcloud</option>
@@ -276,7 +283,7 @@
                 </td>
                 <td>
                     <label style="display: block; padding-left: 15px; text-indent: -15px; top: 1px;">
-                        <input type="checkbox" id="alternate" name="alternate"
+                        <input class="form-check-label" type="checkbox" id="alternate" name="alternate"
                                    style="width: 15px; height: 15px; padding: 0;margin: 0; vertical-align: center;
                                        position: relative; top: 1px;"/>  Alternate
                     </label>
@@ -285,7 +292,7 @@
             </tbody>
         </table>
                     <div class="panel-footer">
-            <button id="btn-add-S3" onclick="saveStorageS3()" class="btn btn-success btn-add">Add</button>
+            <button id="btn-add-S3" onclick="saveStorageS3()" class="btn btn-info btn-add">Add</button>
         </div>
         </div>
         <div class="inv" id="gcloud">
@@ -308,7 +315,7 @@
             </tbody>
         </table>
                     <div class="panel-footer">
-            <button id="btn-add-Gcloud"  onclick="saveStorageGcloud()" class="btn btn-success btn-add">Add</button>
+            <button id="btn-add-Gcloud"  onclick="saveStorageGcloud()" class="btn btn-info btn-add">Add</button>
         </div>
         </div>
         <div class="inv" id="swift">
@@ -335,7 +342,7 @@
             </tbody>
         </table>
                     <div class="panel-footer">
-            <input type="submit" id="btn-add-Swift" onclick="saveStorageSwift()" value="Add" class="btn btn-success btn-add" />
+            <input type="submit" id="btn-add-Swift" onclick="saveStorageSwift()" value="Add" class="btn btn-info btn-add" />
         </div>
         </div>
     </div>

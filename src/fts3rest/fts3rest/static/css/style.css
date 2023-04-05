@@ -47,3 +47,6 @@
 .inv {
     display: none;
 }
+.cursor-pointer{
+	cursor: pointer;
+  }
