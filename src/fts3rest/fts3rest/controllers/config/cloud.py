@@ -14,7 +14,8 @@
 #   limitations under the License.
 import logging
 
-from flask import request, Response
+import io
+from flask import request, Response, send_file
 from werkzeug.exceptions import BadRequest, NotFound
 
 from fts3rest.model import *
@@ -182,6 +183,19 @@ def get_cloud_storage_gcloud(cloudstorage_name):
         CloudStorageUser.cloudStorage_name == cloudstorage_name
         )
     return users
+
+
+@require_certificate
+@authorize(CONFIG)
+def get_gcloud_auth_file(cloudstorage_name):
+    """
+    Get the authentication file for a given storage for Gcloud implementation
+    """
+    storage = Session.query(CloudStorageGcloud).get(cloudstorage_name)
+    if not storage:
+        raise NotFound("The storage does not exist")
+
+    return send_file(io.BytesIO(storage.auth_file), attachment_filename="auth_file.json", as_attachment=True)
 
 
 @require_certificate

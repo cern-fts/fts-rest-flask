@@ -57,6 +57,20 @@ function saveStorageGcloud()
     xhr.send(msg);
 }
 
+/**
+ * Download a Gcloud Auth file
+ */
+function downloadAuthFile(cloudStorage_name)
+{
+    var link = document.createElement('a');
+    var url = window.location.origin;
+    link.href = url + "/config/gcloud_auth_file/" + encodeURIComponent(cloudStorage_name);
+    console.log(url)
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 function saveStorageSwift()
 {
     var msg = {
