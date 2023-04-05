@@ -347,6 +347,12 @@ def do_connect(app):
         methods=["GET"],
     )
     app.add_url_rule(
+        "/config/gcloud_auth_file/<cloudstorage_name>",
+        "config.cloud.get_gcloud_auth_file",
+        config.cloud.get_gcloud_auth_file,
+        methods=["GET"],
+    )
+    app.add_url_rule(
         "/config/cloud_storage_swift/<cloudstorage_name>",
         "config.cloud.cloud_storage_swift",
         config.cloud.get_cloud_storage_swift,
