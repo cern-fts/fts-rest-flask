@@ -133,14 +133,14 @@ def set_cloud_storage_gcloud():
     Add or modify a cloud storage entry for Gcloud implementation
     """
 
-    input_cloudstorage_name = request.form['cloudstorage_name']
-    input_auth_file = request.files['auth_file']
+    input_cloudstorage_name = request.form.get('cloudstorage_name')
+    input_auth_file = request.files.get('auth_file')
     if not input_cloudstorage_name or input_cloudstorage_name.isspace():
-        raise BadRequest("The storage name cannot be null or contain spaces")
+        raise BadRequest("The storage name cannot be null or contain spaces")    
     storage = CloudStorageGcloud(
         cloudStorage_name=input_cloudstorage_name,
-        auth_file=input_auth_file.read(),
-        )
+        auth_file=input_auth_file.read() if input_auth_file is not None else None,
+    )
     try:
         Session.merge(storage)
         Session.commit()
