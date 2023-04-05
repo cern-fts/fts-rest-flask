@@ -81,7 +81,7 @@ def get_cloud_storages():
 @jsonify
 def set_cloud_storage_s3():
     """
-    Add or modify a cloud storage entry
+    Add or modify a cloud storage entry for S3 implementation
     """
     input_dict = get_input_as_dict(request)
     if "cloudstorage_name" not in input_dict:
@@ -106,7 +106,7 @@ def set_cloud_storage_s3():
 @jsonify
 def set_cloud_storage_swift():
     """
-    Add or modify a cloud storage entry
+    Add or modify a cloud storage entry for Swift implementation
     """
     input_dict = get_input_as_dict(request)
     if "cloudstorage_name" not in input_dict:
@@ -130,7 +130,7 @@ def set_cloud_storage_swift():
 @jsonify
 def set_cloud_storage_gcloud():
     """
-    Add or modify a cloud storage entry
+    Add or modify a cloud storage entry for Gcloud implementation
     """
 
     input_cloudstorage_name = request.form['cloudstorage_name']
@@ -156,7 +156,7 @@ def set_cloud_storage_gcloud():
 @jsonify
 def get_cloud_storage_s3(cloudstorage_name):
     """
-    Get a list of users registered for a given storage name
+    Get a list of users registered for a given storage name for S3 implementation
     """
     storage = Session.query(CloudStorageS3).get(cloudstorage_name)
     if not storage:
@@ -173,7 +173,7 @@ def get_cloud_storage_s3(cloudstorage_name):
 @jsonify
 def get_cloud_storage_gcloud(cloudstorage_name):
     """
-    Get a list of users registered for a given storage name
+    Get a list of users registered for a given storage name for Gcloud implementation
     """
     storage = Session.query(CloudStorageGcloud).get(cloudstorage_name)
     if not storage:
@@ -203,7 +203,7 @@ def get_gcloud_auth_file(cloudstorage_name):
 @jsonify
 def get_cloud_storage_swift(cloudstorage_name):
     """
-    Get a list of users registered for a given storage name
+    Get a list of users registered for a given storage name for Swift implementation
     """
     storage = Session.query(CloudStorageSwift).get(cloudstorage_name)
     if not storage:
@@ -219,7 +219,7 @@ def get_cloud_storage_swift(cloudstorage_name):
 @authorize(CONFIG)
 def remove_cloud_storage_s3(cloudstorage_name):
     """
-    Remove a registered cloud storage
+    Remove a registered cloud storage for S3 implementation
     """
     storage = Session.query(CloudStorageS3).get(cloudstorage_name)
     if not storage:
@@ -242,7 +242,7 @@ def remove_cloud_storage_s3(cloudstorage_name):
 @authorize(CONFIG)
 def remove_cloud_storage_gcloud(cloudstorage_name):
     """
-    Remove a registered cloud storage
+    Remove a registered cloud storage for Gcloud implementation
     """
     storage = Session.query(CloudStorageGcloud).get(cloudstorage_name)
     if not storage:
@@ -265,7 +265,7 @@ def remove_cloud_storage_gcloud(cloudstorage_name):
 @authorize(CONFIG)
 def remove_cloud_storage_swift(cloudstorage_name):
     """
-    Remove a registered cloud storage
+    Remove a registered cloud storage for Swift implementation
     """
     storage = Session.query(CloudStorageSwift).get(cloudstorage_name)
     if not storage:
