@@ -377,13 +377,13 @@ def do_connect(app):
         methods=["DELETE"],
     )
     app.add_url_rule(
-        "/config/cloud_storage/<storage_name>",
+        "/config/cloud_storage/<cloudstorage_name>",
         "config.cloud.add_user_to_cloud_storage",
         config.cloud.add_user_to_cloud_storage,
         methods=["POST"],
     )
     app.add_url_rule(
-        "/config/cloud_storage/<storage_name>/<id>",
+        "/config/cloud_storage/<cloudstorage_name>/<id>",
         "config.cloud.remove_user_from_cloud_storage",
         config.cloud.remove_user_from_cloud_storage,
         methods=["DELETE"],
