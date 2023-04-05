@@ -287,31 +287,40 @@ def remove_cloud_storage_swift(cloudstorage_name):
 @require_certificate
 @authorize(CONFIG)
 @jsonify
-def add_user_to_cloud_storage(storage_name):
+def add_user_to_cloud_storage(cloudstorage_name):
     """
     Add a user or a VO credentials to the storage
     """
-    storage = Session.query(CloudStorage).get(storage_name)
+    storage = Session.query(CloudStorage).get(cloudstorage_name)
     if not storage:
         raise NotFound("The storage does not exist")
 
     input_dict = get_input_as_dict(request)
-    if not input_dict.get("user_dn", None) and not input_dict.get("vo_name", None):
-        raise BadRequest("One of user_dn or vo_name must be specified")
-    elif input_dict.get("user_dn", None) and input_dict.get("vo_name", None):
-        raise BadRequest("Only one of user_dn or vo_name must be specified")
-
-    cuser = CloudStorageUser(
-        user_dn=input_dict.get("user_dn", ""),
-        storage_name=storage_name,
-        access_token=input_dict.get("access_key", input_dict.get("access_token", None)),
-        access_token_secret=input_dict.get(
-            "secret_key", input_dict.get("access_token_secret", None)
-        ),
-        request_token=input_dict.get("request_token"),
-        request_token_secret=input_dict.get("request_token_secret"),
-        vo_name=input_dict.get("vo_name", ""),
-    )
+    
+    if storage.cloud_type == "Gcloud":    
+        cuser = CloudStorageUser(
+            user_dn=input_dict.get("user_dn"),
+            cloudStorage_name=cloudstorage_name,
+            vo_name=input_dict.get("vo_name"),
+            secret_key="",
+            access_key= ""
+            )
+    if storage.cloud_type == "S3":    
+        cuser = CloudStorageUser(
+            user_dn=input_dict.get("user_dn"),
+            cloudStorage_name=cloudstorage_name,
+            access_key=input_dict.get("access_key"),
+            secret_key=input_dict.get("secret_key"),
+            vo_name=input_dict.get("vo_name")
+            )
+    if storage.cloud_type == "Swift":   
+        cuser = CloudStorageUser(
+            user_dn=input_dict.get("user_dn"),
+            cloudStorage_name=cloudstorage_name,
+            vo_name=input_dict.get("vo_name"),
+            secret_key="",
+            access_key= ""
+            )
 
     try:
         Session.merge(cuser)
@@ -320,25 +329,21 @@ def add_user_to_cloud_storage(storage_name):
         Session.rollback()
         raise
 
-    ret = dict(
-        storage_name=cuser.storage_name, user_dn=cuser.user_dn, vo_name=cuser.vo_name
-    )
-    return Response(ret, status=201)
-
+    return Response([""], status=201)
 
 @require_certificate
 @authorize(CONFIG)
-def remove_user_from_cloud_storage(storage_name, id):
+def remove_user_from_cloud_storage(cloudstorage_name, id):
     """
     Delete credentials for a given user/vo
     """
-    storage = Session.query(CloudStorage).get(storage_name)
+    storage = Session.query(CloudStorage).get(cloudstorage_name)
     if not storage:
         raise NotFound("The storage does not exist")
 
     users = (
         Session.query(CloudStorageUser)
-        .filter(CloudStorageUser.storage_name == storage_name)
+        .filter(CloudStorageUser.cloudStorage_name == cloudstorage_name)
         .filter((CloudStorageUser.vo_name == id) | (CloudStorageUser.user_dn == id))
     )
 
