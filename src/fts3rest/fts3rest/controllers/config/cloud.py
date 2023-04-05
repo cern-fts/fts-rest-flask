@@ -98,7 +98,7 @@ def set_cloud_storage_s3():
     except Exception:
         Session.rollback()
         raise
-    return Response(storage.cloudStorage_name, status=201)
+    return Response(storage, status=201)
 
 
 @require_certificate
@@ -122,7 +122,7 @@ def set_cloud_storage_swift():
     except Exception:
         Session.rollback()
         raise
-    return Response(storage.cloudStorage_name, status=201)
+    return Response(storage, status=201)
 
 
 @require_certificate
@@ -135,9 +135,8 @@ def set_cloud_storage_gcloud():
 
     input_cloudstorage_name = request.form['cloudstorage_name']
     input_auth_file = request.files['auth_file']
-    if "input_cloudstorage_name" is None:
-        raise BadRequest("Missing storage name")
-
+    if not input_cloudstorage_name or input_cloudstorage_name.isspace():
+        raise BadRequest("The storage name cannot be null or contain spaces")
     storage = CloudStorageGcloud(
         cloudStorage_name=input_cloudstorage_name,
         auth_file=input_auth_file.read(),
@@ -148,7 +147,7 @@ def set_cloud_storage_gcloud():
     except Exception:
         Session.rollback()
         raise
-    return Response(storage.cloudStorage_name, status=201)
+    return Response([""], status=201)
 
 
 @require_certificate
@@ -170,7 +169,7 @@ def get_cloud_storage_s3(cloudstorage_name):
 
 @require_certificate
 @authorize(CONFIG)
-@jsonify
+# @jsonify
 def get_cloud_storage_gcloud(cloudstorage_name):
     """
     Get a list of users registered for a given storage name for Gcloud implementation
@@ -231,6 +230,13 @@ def remove_cloud_storage_s3(cloudstorage_name):
         ).delete()
         Session.delete(storage)
         Session.commit()
+        
+        Session.query(CloudStorage).filter(
+            CloudStorage.cloudStorage_name == cloudstorage_name
+        ).delete()
+        Session.delete(storage)
+        Session.commit()
+        
     except Exception:
         Session.rollback()
         raise
@@ -254,6 +260,12 @@ def remove_cloud_storage_gcloud(cloudstorage_name):
         ).delete()
         Session.delete(storage)
         Session.commit()
+        
+        Session.query(CloudStorage).filter(
+            CloudStorage.cloudStorage_name == cloudstorage_name
+        ).delete()
+        Session.delete(storage)
+        Session.commit()
     except Exception:
         Session.rollback()
         raise
@@ -274,6 +286,12 @@ def remove_cloud_storage_swift(cloudstorage_name):
     try:
         Session.query(CloudStorageUser).filter(
             CloudStorageUser.cloudStorage_name == cloudstorage_name
+        ).delete()
+        Session.delete(storage)
+        Session.commit()
+        
+        Session.query(CloudStorage).filter(
+            CloudStorage.cloudStorage_name == cloudstorage_name
         ).delete()
         Session.delete(storage)
         Session.commit()
