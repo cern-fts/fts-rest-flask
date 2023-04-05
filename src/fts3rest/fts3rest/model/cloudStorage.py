@@ -19,7 +19,7 @@ import enum
 class CloudStorage(Base):
     __tablename__ = "t_cloudStorage"
 
-    cloudstorage_name = Column(String(150),
+    cloudStorage_name = Column(String(150),
                                primary_key=True,
                                name="cloudStorage_name")
 
