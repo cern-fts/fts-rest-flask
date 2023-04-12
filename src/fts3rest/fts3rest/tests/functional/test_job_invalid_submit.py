@@ -1,6 +1,5 @@
 from datetime import timedelta
 import json
-import unittest
 
 from fts3rest.tests import TestController
 
@@ -33,9 +32,7 @@ class TestJobInvalidSubmits(TestController):
         error = self.app.put(url="/jobs", params=json.dumps(job), status=400).json
 
         self.assertEqual(error["status"], "400 Bad Request")
-        self.assertEqual(
-            error["message"], "No transfers or namespace operations specified"
-        )
+        self.assertEqual(error["message"], "No transfers operations specified")
 
     def test_no_protocol(self):
         """
@@ -183,9 +180,7 @@ class TestJobInvalidSubmits(TestController):
         ).json
 
         self.assertEqual(error["status"], "400 Bad Request")
-        self.assertEqual(
-            error["message"], "No transfers or namespace operations specified"
-        )
+        self.assertEqual(error["message"], "No transfers operations specified")
 
     def test_invalid_surl(self):
         """
@@ -407,46 +402,6 @@ class TestJobInvalidSubmits(TestController):
             params=json.dumps(job),
             status=400,
         )
-
-    @unittest.skip(
-        "Deleting jobs in FTS are being decommissioned. Tests should be removed in the future."
-    )
-    def test_transfer_and_deletion(self):
-        """
-        Jobs must be either deletion or transfer, not both
-        """
-        self.setup_gridsite_environment()
-        self.push_delegation()
-
-        job = {
-            "files": [
-                {
-                    "sources": ["root://source.es/file"],
-                    "destinations": ["root://dest.ch/file"],
-                    "filesize": 1024,
-                }
-            ],
-            "delete": [
-                "root://source.es/file",
-                {"surl": "root://source.es/file2", "metadata": {"a": "b"}},
-            ],
-        }
-
-        self.app.put(url="/jobs", params=json.dumps(job), status=400)
-
-    @unittest.skip(
-        "Deleting jobs in FTS are being decommissioned. Tests should be removed in the future."
-    )
-    def test_deletion_bad_surl(self):
-        """
-        Submit a deletion job with an invalid surl
-        """
-        self.setup_gridsite_environment()
-        self.push_delegation()
-
-        job = {"delete": ["xx"]}
-
-        self.app.put(url="/jobs", params=json.dumps(job), status=400)
 
     def test_submit_reuse_different_hosts(self):
         """
