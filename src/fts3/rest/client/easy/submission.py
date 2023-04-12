@@ -121,7 +121,6 @@ def add_alternative_source(transfer, alt_source):
 
 def new_job(
     transfers=None,
-    deletion=None,
     verify_checksum=False,
     reuse=None,
     overwrite=False,
@@ -152,7 +151,6 @@ def new_job(
 
     Args:
         transfers:          Initial list of transfers
-        deletion:           Delete files
         verify_checksum:    Enable checksum verification: source, destination, both or none
         reuse:              Enable reuse (all transfers are handled by the same process)
         overwrite:          Overwrite the destinations if exist
@@ -178,8 +176,8 @@ def new_job(
     Returns:
         An initialized dictionary representing a job
     """
-    if transfers is None and deletion is None:
-        raise ClientError("Bad request: No transfers or deletion jobs are provided")
+    if transfers is None:
+        raise ClientError("Bad request: No transfer jobs are provided")
     if transfers is None:
         transfers = []
 
@@ -220,7 +218,7 @@ def new_job(
         nostreams=nostreams,
         buffer_size=buffer_size,
     )
-    job = dict(files=transfers, delete=deletion, params=params)
+    job = dict(files=transfers, params=params)
     return job
 
 
@@ -292,38 +290,6 @@ def new_staging_job(
     return job
 
 
-def new_delete_job(
-    files,
-    spacetoken=None,
-    metadata=None,
-    priority=None,
-    id_generator=JobIdGenerator.standard,
-    sid=None,
-):
-    """
-    Creates a new dictionary representing a deletion job
-
-    Args:
-        files:      Array of surls to delete. Each item can be either a string or a dictionary with keys surl and metadata
-        spacetoken: Deletion spacetoken
-        metadata:   Metadata to bind to the job
-        id_generator:    Job id generator algorithm
-        sid:    Specific id given by the client
-
-    Return
-        An initialized dictionary representing a deletion job
-    """
-    params = dict(
-        source_spacetoken=spacetoken,
-        job_metadata=metadata,
-        priority=priority,
-        id_generator=id_generator,
-        sid=sid,
-    )
-    job = dict(delete=files, params=params)
-    return job
-
-
 def submit(
     context,
     job,
@@ -350,7 +316,6 @@ def submit(
     params = job.get("params", {})
     return submitter.submit(
         transfers=job.get("files", None),
-        delete=job.get("delete", None),
         staging=job.get("staging", None),
         **params,
     )
