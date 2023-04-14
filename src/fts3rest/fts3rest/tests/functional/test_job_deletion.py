@@ -3,6 +3,7 @@ import json
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
 from fts3rest.model import Job, DataManagement
+import unittest
 
 
 class TestJobDeletion(TestController):
@@ -10,6 +11,9 @@ class TestJobDeletion(TestController):
     Test DELETE jobs
     """
 
+    @unittest.skip(
+        "Deleting jobs in FTS are being decommissioned. Tests should be removed in the future."
+    )
     def test_simple_delete(self):
         """
         Simple deletion job
@@ -55,6 +59,9 @@ class TestJobDeletion(TestController):
 
         return str(job_id)
 
+    @unittest.skip(
+        "Deleting jobs in FTS are being decommissioned. Tests should be removed in the future."
+    )
     def test_get_delete_job(self):
         """
         Submit a deletion job, get info via REST
@@ -68,6 +75,9 @@ class TestJobDeletion(TestController):
         self.assertEqual(files[0]["source_surl"], "root://source.es/file")
         self.assertEqual(files[1]["source_surl"], "root://source.es/file2")
 
+    @unittest.skip(
+        "Flask bug when static static_url_path='', OPTIONS always returns GET"
+    )
     def test_cancel_delete(self):
         """
         Submit deletion job, then cancel
@@ -88,6 +98,9 @@ class TestJobDeletion(TestController):
             self.assertIsNotNone(d.finish_time)
             self.assertIsNotNone(d.job_finished)
 
+    @unittest.skip(
+        "Deleting jobs in FTS are being decommissioned. Tests should be removed in the future."
+    )
     def test_delete_repeated(self):
         """
         Submit a deletion job with files repeated multiple times,
@@ -127,6 +140,9 @@ class TestJobDeletion(TestController):
             registered,
         )
 
+    @unittest.skip(
+        "Deleting jobs in FTS are being decommissioned. Tests should be removed in the future."
+    )
     def test_delete_file(self):
         """
         Submit a deletion job with a file:///

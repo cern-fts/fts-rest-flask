@@ -777,16 +777,14 @@ def submit():
             )
         except IntegrityError:
             raise Conflict("The sid provided by the user is duplicated")
-        if len(populated.files):
-            start_insert_files = time.perf_counter()
-            Session.execute(File.__table__.insert(), populated.files)
-            log.info(
-                "Inserted files into database: job_id={} db_secs={}".format(
-                    populated.job_id, str(time.perf_counter() - start_insert_files)
-                )
+
+        start_insert_files = time.perf_counter()
+        Session.execute(File.__table__.insert(), populated.files)
+        log.info(
+            "Inserted files into database: job_id={} db_secs={}".format(
+                populated.job_id, str(time.perf_counter() - start_insert_files)
             )
-        if len(populated.datamanagement):
-            Session.execute(DataManagement.__table__.insert(), populated.datamanagement)
+        )
         Session.flush()
         Session.commit()
     except IntegrityError as err:
@@ -805,15 +803,9 @@ def submit():
         except Exception as ex:
             log.warning("Failed to write state message to disk: %s" % str(ex))
 
-    if len(populated.files):
-        log.info(
-            "Job %s submitted: transfers=%d vo=%s"
-            % (populated.job_id, len(populated.files), user.vos[0])
-        )
-    elif len(populated.datamanagement):
-        log.info(
-            "Job %s submitted: dm_operations=%d vo=%s"
-            % (populated.job_id, len(populated.datamanagement), user.vos[0])
-        )
+    log.info(
+        "Job %s submitted: transfers=%d vo=%s"
+        % (populated.job_id, len(populated.files), user.vos[0])
+    )
 
     return {"job_id": populated.job_id}

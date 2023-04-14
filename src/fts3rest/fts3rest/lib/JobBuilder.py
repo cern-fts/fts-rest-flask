@@ -454,76 +454,6 @@ class JobBuilder:
             )
         )
 
-    def _populate_deletion(self, deletion_dict):
-        """
-        Initializes the list of deletions
-        """
-        self.job = dict(
-            job_id=self.job_id,
-            job_state="DELETE",
-            job_type=None,
-            retry=int(self.params["retry"]),
-            retry_delay=int(self.params["retry_delay"]),
-            job_params=self.params["gridftp"],
-            submit_host=socket.getfqdn(),
-            user_dn=None,
-            voms_cred=None,
-            vo_name=None,
-            cred_id=None,
-            submit_time=datetime.utcnow(),
-            priority=3,
-            space_token=self.params["spacetoken"],
-            overwrite_flag="N",
-            dst_file_report="N",
-            source_space_token=self.params["source_spacetoken"],
-            copy_pin_lifetime=-1,
-            checksum_method=None,
-            bring_online=None,
-            archive_timeout=None,
-            job_metadata=self.params["job_metadata"],
-            internal_job_params=None,
-            max_time_in_queue=self.params["max_time_in_queue"],
-        )
-
-        if "credential" in self.params:
-            self.job["user_cred"] = self.params["credential"]
-        elif "credentials" in self.params:
-            self.job["user_cred"] = self.params["credentials"]
-
-        shared_hashed_id = generate_hashed_id()
-
-        # Avoid surl duplication
-        unique_surls = []
-
-        for dm in deletion_dict:
-            if isinstance(dm, dict):
-                entry = dm
-            elif isinstance(dm, str):
-                entry = dict(surl=dm)
-            else:
-                raise ValueError("Invalid type for the deletion item (%s)" % type(dm))
-
-            surl = urlparse(entry["surl"])
-            validate_url(surl)
-
-            if surl not in unique_surls:
-                self.datamanagement.append(
-                    dict(
-                        job_id=self.job_id,
-                        vo_name=None,
-                        file_state="DELETE",
-                        source_surl=entry["surl"],
-                        source_se=get_storage_element(surl),
-                        dest_surl=None,
-                        dest_se=None,
-                        hashed_id=shared_hashed_id,
-                        file_metadata=entry.get("metadata", None),
-                    )
-                )
-                unique_surls.append(surl)
-
-        self._set_job_source_and_destination(self.datamanagement)
-
     def _set_user(self):
         """
         Set the user that triggered the action
@@ -534,8 +464,6 @@ class JobBuilder:
         self.job["vo_name"] = self.user.vos[0]
         for file in self.files:
             file["vo_name"] = self.user.vos[0]
-        for dm in self.datamanagement:
-            dm["vo_name"] = self.user.vos[0]
 
     def _add_auth_method_on_job_metadata(self):
         if (
@@ -561,12 +489,12 @@ class JobBuilder:
             files_list = kwargs.pop("files", None)
             datamg_list = kwargs.pop("delete", None)
 
-            if files_list is not None and datamg_list is not None:
-                raise BadRequest(
-                    "Simultaneous transfer and namespace operations not supported"
+            if datamg_list is not None:
+                raise MethodNotAllowed(
+                    description="Deletion jobs are no longer supported by FTS"
                 )
-            if files_list is None and datamg_list is None:
-                raise BadRequest("No transfers or namespace operations specified")
+            if files_list is None:
+                raise BadRequest("No transfers operations specified")
             id_generator = self.params.get("id_generator", "standard")
             if id_generator == "deterministic":
                 log.debug("Deterministic")
@@ -580,12 +508,9 @@ class JobBuilder:
             else:
                 self.job_id = str(uuid.uuid1())
             self.files = []
-            self.datamanagement = []
 
             if files_list is not None:
                 self._populate_transfers(files_list)
-            elif datamg_list is not None:
-                self._populate_deletion(datamg_list)
 
             self._set_user()
 
@@ -594,8 +519,6 @@ class JobBuilder:
             # Update wait_timeout and wait_timestamp if WAIT_AS is set
             if self.files:
                 apply_banning(self.files)
-            if self.datamanagement:
-                apply_banning(self.datamanagement)
 
         except ValueError as ex:
             raise BadRequest("Invalid value within the request: %s" % str(ex))
