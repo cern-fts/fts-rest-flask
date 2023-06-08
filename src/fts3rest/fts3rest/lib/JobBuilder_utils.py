@@ -93,12 +93,16 @@ def validate_url(url):
         raise ValueError("Missing host (%s)" % url.geturl())
 
 
-def metadata(data, require_dict=False, name_hint=None):
+def metadata(data, require_dict=False, name_hint=None, size_limit=1024):
+
+    metadata_obj = json.loads(json.dumps(data))
+    if len(json.dumps(metadata_obj)) > size_limit:
+        raise ValueError("Job Submission Refused, Reduce Metadata size")
     if isinstance(data, dict):
         return data
     try:
-        return json.loads(data)
-    except:
+        return metadata_obj
+    except Exception:
         if require_dict:
             metadata_name = name_hint if name_hint is not None else "Metadata"
             raise ValueError("{} not in JSON format".format(metadata_name))
