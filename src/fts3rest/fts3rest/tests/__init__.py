@@ -156,9 +156,9 @@ class TestController(TestCase):
         proxy.set_not_before(not_before)
 
         if not private_key:
-            proxy.sign(self.pkey, "sha1")
+            proxy.sign(self.pkey, "sha256")
         else:
-            proxy.sign(private_key, "sha1")
+            proxy.sign(private_key, "sha256")
 
         return proxy.as_pem() + self.cert.as_pem()
 

@@ -234,7 +234,7 @@ class Delegator(object):
 
         proxy.set_subject(proxy_subject)
         proxy.set_version(2)
-        proxy.sign(self.context.evp_key, "sha1")
+        proxy.sign(self.context.evp_key, "sha256")
 
         return proxy
 
