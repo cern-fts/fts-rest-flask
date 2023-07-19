@@ -42,6 +42,7 @@ class TestJobSubmissionMetadata(TestController):
             {"label": "This is my job metadata", "auth_method": "certificate"},
         )
 
+    # File metadata as string - Single file
     def test_file_metadata_string(self):
         """
         Submit a job specifying file metadata as string
@@ -68,4 +69,267 @@ class TestJobSubmissionMetadata(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(
             job.files[0].file_metadata, {"label": "This is my file metadata"}
+        )
+
+    # Job metadata as JSON
+    def test_job_metadata_JSON(self):
+        """
+        Submit a job specifying job metadata as JSON
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file"],
+                    "destinations": [dest_surl],
+                }
+            ],
+            "params": {
+                "job_metadata": {"label": "This is my test job metadata"},
+            },
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        job = Session.query(Job).get(job_id)
+        self.assertEqual(
+            job.job_metadata,
+            {"label": "This is my test job metadata", "auth_method": "certificate"},
+        )
+
+    # File metadata as string -  multiple entires
+    def test_file_metadata_string_m(self):
+        """
+        Submit a job specifying file metadata as string
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file1"],
+                    "destinations": [dest_surl],
+                    "metadata": "This is my file metadata",
+                },
+                {
+                    "sources": ["https://source.ch:8446/file2"],
+                    "destinations": [dest_surl],
+                    "metadata": "This is my file metadata",
+                },
+                {
+                    "sources": ["https://source.ch:8446/file3"],
+                    "destinations": [dest_surl],
+                    "metadata": "This is my file metadata",
+                },
+                {
+                    "sources": ["https://source.ch:8446/file4"],
+                    "destinations": [dest_surl],
+                    "metadata": "This is my file metadata",
+                },
+            ],
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        job = Session.query(Job).get(job_id)
+        s = len(job["files"])
+        for i in range(0, s):
+            self.assertEqual(
+                job.files[i].file_metadata, {"label": "This is my file metadata"}
+            )
+
+    # File metadata as JSON
+    def test_file_metadata_JSON(self):
+        """
+        Submit a job specifying file metadata as string
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file"],
+                    "destinations": [dest_surl],
+                    "metadata": {"label": "This is my file metadata"},
+                }
+            ],
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        job = Session.query(Job).get(job_id)
+        self.assertEqual(
+            job.files[0].file_metadata, {"label": "This is my file metadata"}
+        )
+
+    # Staging Metadata as String
+    def test_staging_metadata_string(self):
+        """
+        Sumbit a job specifying staging metadata as string
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file"],
+                    "destinations": [dest_surl],
+                    "staging_metadata": "This is my test staging metadata",
+                }
+            ],
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        )  # No job id returned
+
+    # Staging metadata as JSON
+    def testing_staging_metadata_JSON(self):
+        """
+        Submit a Job speficifying staging metadata as string
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file"],
+                    "destinations": [dest_surl],
+                    "staging_metadata": {"label": "This is my test staging metadata"},
+                }
+            ],
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        )
+        job = Session.query(Job).get(job_id)
+        self.assertEqual(
+            job.files[0].file_metadata, {"label": "This is my test staging metadata"}
+        )
+
+    # Archive metadata as string
+    def testing_archive_metadata_string(self):
+        """
+        Submit a Job speficifying staging metadata as string
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file"],
+                    "destinations": [dest_surl],
+                    "archive_metadata": "This is my test archive metadata",
+                }
+            ],
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        )  # No Job Id Returned
+
+    # Archive metadata as JSON
+    def testing_archive_metadata_JSON(self):
+        """
+        Submit a Job speficifying staging metadata as string
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file"],
+                    "destinations": [dest_surl],
+                    "archive_metadata": {"label": "This is my test archive metadata"},
+                }
+            ],
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        )
+        job = Session.query(Job).get(job_id)
+        self.assertEqual(
+            job.files[0].file_metadata, {"label": "This is my test archive metadata"}
+        )
+
+    # Staging metadata as JSON (size > 1024)
+    def testing_staging_metadata_JSON_b(self):
+        """
+        Submit a Job speficifying staging metadata as string
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file"],
+                    "destinations": [dest_surl],
+                    "staging_metadata": {
+                        "label": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Scelerisque varius morbi enim nunc faucibus a pellentesque sit. Amet purus gravida quis blandit turpis. Ut tristique et egestas quis ipsum. Nisi vitae suscipit tellus mauris a diam. Placerat orci nulla pellentesque dignissim enim sit amet venenatis. Id leo in vitae turpis. Dictum at tempor commodo ullamcorper a lacus vestibulum. Auctor eu augue ut lectus arcu bibendum. Arcu cursus vitae congue mauris rhoncus aenean. Gravida neque convallis a cras. Id porta nibh venenatis cras sed felis. Natoque penatibus et magnis dis parturient montes nascetur ridiculus. In fermentum et sollicitudin ac. Eu sem integer vitae justo eget magna fermentum iaculis. Orci sagittis eu volutpat odio facilisis mauris. Sit amet porttitor eget dolor morbi non arcu risus. Eu mi bibendum neque egestas congue quisque egestas diam in. Aliquet nibh praesent tristique magna sit amet purus. Egestas diam in arcu cursus euismod quis. Ipsum dolor sit amet consectetur. Cursus metus aliquam eleifend mi in nulla posuere. Pellentesque dignissim enim sit amet venenatis urna cursus eget nunc"
+                    },
+                }
+            ],
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        )
+
+    # Archive metadata as JSON (size > 1024)
+    def testing_archive_metadata_JSON_b(self):
+        """
+        Submit a Job speficifying staging metadata as string
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+        dest_surl = "https://dest.ch:8447/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch:8446/file"],
+                    "destinations": [dest_surl],
+                    "archive_metadata": {
+                        "label": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Scelerisque varius morbi enim nunc faucibus a pellentesque sit. Amet purus gravida quis blandit turpis. Ut tristique et egestas quis ipsum. Nisi vitae suscipit tellus mauris a diam. Placerat orci nulla pellentesque dignissim enim sit amet venenatis. Id leo in vitae turpis. Dictum at tempor commodo ullamcorper a lacus vestibulum. Auctor eu augue ut lectus arcu bibendum. Arcu cursus vitae congue mauris rhoncus aenean. Gravida neque convallis a cras. Id porta nibh venenatis cras sed felis. Natoque penatibus et magnis dis parturient montes nascetur ridiculus. In fermentum et sollicitudin ac. Eu sem integer vitae justo eget magna fermentum iaculis. Orci sagittis eu volutpat odio facilisis mauris. Sit amet porttitor eget dolor morbi non arcu risus. Eu mi bibendum neque egestas congue quisque egestas diam in. Aliquet nibh praesent tristique magna sit amet purus. Egestas diam in arcu cursus euismod quis. Ipsum dolor sit amet consectetur. Cursus metus aliquam eleifend mi in nulla posuere. Pellentesque dignissim enim sit amet venenatis urna cursus eget nunc"
+                    },
+                }
+            ],
+        }
+        job_id = self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
         )
