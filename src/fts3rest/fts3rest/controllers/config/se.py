@@ -126,7 +126,7 @@ def get_se_config():
     for opt in from_se:
         se = opt.storage
         config = response.get(se, dict())
-        link_config = dict()
+        se_info = dict()
         for attr in [
             "inbound_max_active",
             "inbound_max_throughput",
@@ -141,10 +141,10 @@ def get_se_config():
             "tpc_support",
         ]:
             if attr == "tpc_support":
-                link_config[attr] = _translate_tcp_mode(getattr(opt, attr))
+                se_info[attr] = _translate_tcp_mode(getattr(opt, attr))
             else:
-                link_config[attr] = getattr(opt, attr)
-                config["se_info"] = link_config
+                se_info[attr] = getattr(opt, attr)
+        config["se_info"] = se_info
         response[se] = config
 
     for op in from_ops:
