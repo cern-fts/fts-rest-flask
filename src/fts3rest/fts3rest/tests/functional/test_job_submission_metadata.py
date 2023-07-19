@@ -39,10 +39,9 @@ class TestJobSubmissionMetadata(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(
             job.job_metadata,
-            {"label": "This is my job metadata", "auth_method": "certificate"},
+            {"key": "This is my job metadata", "auth_method": "certificate"},
         )
 
-    # File metadata as string - Single file
     def test_file_metadata_string(self):
         """
         Submit a job specifying file metadata as string
@@ -68,10 +67,9 @@ class TestJobSubmissionMetadata(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(
-            job.files[0].file_metadata, {"label": "This is my file metadata"}
+            job.files[0].file_metadata, {"key": "This is my file metadata"}
         )
 
-    # Job metadata as JSON
     def test_job_metadata_JSON(self):
         """
         Submit a job specifying job metadata as JSON
@@ -87,7 +85,7 @@ class TestJobSubmissionMetadata(TestController):
                 }
             ],
             "params": {
-                "job_metadata": {"label": "This is my test job metadata"},
+                "job_metadata": {"key": "This is my test job metadata"},
             },
         }
         job_id = self.app.post(
@@ -100,13 +98,12 @@ class TestJobSubmissionMetadata(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(
             job.job_metadata,
-            {"label": "This is my test job metadata", "auth_method": "certificate"},
+            {"key": "This is my test job metadata", "auth_method": "certificate"},
         )
 
-    # File metadata as string -  multiple entires
-    def test_file_metadata_string_m(self):
+    def test_file_metadata_string_multiple(self):
         """
-        Submit a job specifying file metadata as string
+        Submit a job with multiple entries specifying file metadata as string
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -143,16 +140,15 @@ class TestJobSubmissionMetadata(TestController):
         ).json["job_id"]
 
         job = Session.query(Job).get(job_id)
-        s = len(job["files"])
-        for i in range(0, s):
+
+        for file in job["files"]:
             self.assertEqual(
-                job.files[i].file_metadata, {"label": "This is my file metadata"}
+                job.file.file_metadata, {"key": "This is my file metadata"}
             )
 
-    # File metadata as JSON
     def test_file_metadata_JSON(self):
         """
-        Submit a job specifying file metadata as string
+        Submit a job specifying file metadata as JSON
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -162,7 +158,7 @@ class TestJobSubmissionMetadata(TestController):
                 {
                     "sources": ["https://source.ch:8446/file"],
                     "destinations": [dest_surl],
-                    "metadata": {"label": "This is my file metadata"},
+                    "metadata": {"key": "This is my file metadata"},
                 }
             ],
         }
@@ -175,13 +171,13 @@ class TestJobSubmissionMetadata(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(
-            job.files[0].file_metadata, {"label": "This is my file metadata"}
+            job.files[0].file_metadata, {"key": "This is my file metadata"}
         )
 
-    # Staging Metadata as String
     def test_staging_metadata_string(self):
         """
-        Sumbit a job specifying staging metadata as string
+        Submit a job specifying staging metadata as string
+        note: job submission expected to fail
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -202,10 +198,9 @@ class TestJobSubmissionMetadata(TestController):
             status=400,
         )  # No job id returned
 
-    # Staging metadata as JSON
-    def testing_staging_metadata_JSON(self):
+    def test_staging_metadata_JSON(self):
         """
-        Submit a Job speficifying staging metadata as string
+        Submit a Job specifying staging metadata as JSON
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -215,7 +210,7 @@ class TestJobSubmissionMetadata(TestController):
                 {
                     "sources": ["https://source.ch:8446/file"],
                     "destinations": [dest_surl],
-                    "staging_metadata": {"label": "This is my test staging metadata"},
+                    "staging_metadata": {"key": "This is my test staging metadata"},
                 }
             ],
         }
@@ -224,16 +219,17 @@ class TestJobSubmissionMetadata(TestController):
             content_type="application/json",
             params=json.dumps(job),
             status=200,
-        )
+        ).json["job_id"]
+
         job = Session.query(Job).get(job_id)
         self.assertEqual(
-            job.files[0].file_metadata, {"label": "This is my test staging metadata"}
+            job.files[0].staging_metadata, {"key": "This is my test staging metadata"}
         )
 
-    # Archive metadata as string
-    def testing_archive_metadata_string(self):
+    def test_archive_metadata_string(self):
         """
-        Submit a Job speficifying staging metadata as string
+        Submit a Job specifying archive metadata as string
+        note: job submission expected to fail
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -254,10 +250,9 @@ class TestJobSubmissionMetadata(TestController):
             status=400,
         )  # No Job Id Returned
 
-    # Archive metadata as JSON
-    def testing_archive_metadata_JSON(self):
+    def test_archive_metadata_JSON(self):
         """
-        Submit a Job speficifying staging metadata as string
+        Submit a Job specifying archive metadata as JSON
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -267,7 +262,7 @@ class TestJobSubmissionMetadata(TestController):
                 {
                     "sources": ["https://source.ch:8446/file"],
                     "destinations": [dest_surl],
-                    "archive_metadata": {"label": "This is my test archive metadata"},
+                    "archive_metadata": {"key": "This is my test archive metadata"},
                 }
             ],
         }
@@ -276,16 +271,17 @@ class TestJobSubmissionMetadata(TestController):
             content_type="application/json",
             params=json.dumps(job),
             status=200,
-        )
+        ).json["job_id"]
+
         job = Session.query(Job).get(job_id)
         self.assertEqual(
-            job.files[0].file_metadata, {"label": "This is my test archive metadata"}
+            job.files[0].archive_metadata, {"key": "This is my test archive metadata"}
         )
 
-    # Staging metadata as JSON (size > 1024)
-    def testing_staging_metadata_JSON_b(self):
+    def test_staging_metadata_JSON_exceeding_size(self):
         """
-        Submit a Job speficifying staging metadata as string
+        Submit a Job specifying staging metadata as JSON > 1024 bytes
+        note: job submission expected to fail
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -296,7 +292,7 @@ class TestJobSubmissionMetadata(TestController):
                     "sources": ["https://source.ch:8446/file"],
                     "destinations": [dest_surl],
                     "staging_metadata": {
-                        "label": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Scelerisque varius morbi enim nunc faucibus a pellentesque sit. Amet purus gravida quis blandit turpis. Ut tristique et egestas quis ipsum. Nisi vitae suscipit tellus mauris a diam. Placerat orci nulla pellentesque dignissim enim sit amet venenatis. Id leo in vitae turpis. Dictum at tempor commodo ullamcorper a lacus vestibulum. Auctor eu augue ut lectus arcu bibendum. Arcu cursus vitae congue mauris rhoncus aenean. Gravida neque convallis a cras. Id porta nibh venenatis cras sed felis. Natoque penatibus et magnis dis parturient montes nascetur ridiculus. In fermentum et sollicitudin ac. Eu sem integer vitae justo eget magna fermentum iaculis. Orci sagittis eu volutpat odio facilisis mauris. Sit amet porttitor eget dolor morbi non arcu risus. Eu mi bibendum neque egestas congue quisque egestas diam in. Aliquet nibh praesent tristique magna sit amet purus. Egestas diam in arcu cursus euismod quis. Ipsum dolor sit amet consectetur. Cursus metus aliquam eleifend mi in nulla posuere. Pellentesque dignissim enim sit amet venenatis urna cursus eget nunc"
+                        "key": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Scelerisque varius morbi enim nunc faucibus a pellentesque sit. Amet purus gravida quis blandit turpis. Ut tristique et egestas quis ipsum. Nisi vitae suscipit tellus mauris a diam. Placerat orci nulla pellentesque dignissim enim sit amet venenatis. Id leo in vitae turpis. Dictum at tempor commodo ullamcorper a lacus vestibulum. Auctor eu augue ut lectus arcu bibendum. Arcu cursus vitae congue mauris rhoncus aenean. Gravida neque convallis a cras. Id porta nibh venenatis cras sed felis. Natoque penatibus et magnis dis parturient montes nascetur ridiculus. In fermentum et sollicitudin ac. Eu sem integer vitae justo eget magna fermentum iaculis. Orci sagittis eu volutpat odio facilisis mauris. Sit amet porttitor eget dolor morbi non arcu risus. Eu mi bibendum neque egestas congue quisque egestas diam in. Aliquet nibh praesent tristique magna sit amet purus. Egestas diam in arcu cursus euismod quis. Ipsum dolor sit amet consectetur. Cursus metus aliquam eleifend mi in nulla posuere. Pellentesque dignissim enim sit amet venenatis urna cursus eget nunc"
                     },
                 }
             ],
@@ -308,10 +304,10 @@ class TestJobSubmissionMetadata(TestController):
             status=400,
         )
 
-    # Archive metadata as JSON (size > 1024)
-    def testing_archive_metadata_JSON_b(self):
+    def test_archive_metadata_JSON_exceeding_size(self):
         """
-        Submit a Job speficifying staging metadata as string
+        Submit a Job specifying archive metadata as JSON > 1024 bytes
+        note: job submission expected to fail
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -322,7 +318,7 @@ class TestJobSubmissionMetadata(TestController):
                     "sources": ["https://source.ch:8446/file"],
                     "destinations": [dest_surl],
                     "archive_metadata": {
-                        "label": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Scelerisque varius morbi enim nunc faucibus a pellentesque sit. Amet purus gravida quis blandit turpis. Ut tristique et egestas quis ipsum. Nisi vitae suscipit tellus mauris a diam. Placerat orci nulla pellentesque dignissim enim sit amet venenatis. Id leo in vitae turpis. Dictum at tempor commodo ullamcorper a lacus vestibulum. Auctor eu augue ut lectus arcu bibendum. Arcu cursus vitae congue mauris rhoncus aenean. Gravida neque convallis a cras. Id porta nibh venenatis cras sed felis. Natoque penatibus et magnis dis parturient montes nascetur ridiculus. In fermentum et sollicitudin ac. Eu sem integer vitae justo eget magna fermentum iaculis. Orci sagittis eu volutpat odio facilisis mauris. Sit amet porttitor eget dolor morbi non arcu risus. Eu mi bibendum neque egestas congue quisque egestas diam in. Aliquet nibh praesent tristique magna sit amet purus. Egestas diam in arcu cursus euismod quis. Ipsum dolor sit amet consectetur. Cursus metus aliquam eleifend mi in nulla posuere. Pellentesque dignissim enim sit amet venenatis urna cursus eget nunc"
+                        "key": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Scelerisque varius morbi enim nunc faucibus a pellentesque sit. Amet purus gravida quis blandit turpis. Ut tristique et egestas quis ipsum. Nisi vitae suscipit tellus mauris a diam. Placerat orci nulla pellentesque dignissim enim sit amet venenatis. Id leo in vitae turpis. Dictum at tempor commodo ullamcorper a lacus vestibulum. Auctor eu augue ut lectus arcu bibendum. Arcu cursus vitae congue mauris rhoncus aenean. Gravida neque convallis a cras. Id porta nibh venenatis cras sed felis. Natoque penatibus et magnis dis parturient montes nascetur ridiculus. In fermentum et sollicitudin ac. Eu sem integer vitae justo eget magna fermentum iaculis. Orci sagittis eu volutpat odio facilisis mauris. Sit amet porttitor eget dolor morbi non arcu risus. Eu mi bibendum neque egestas congue quisque egestas diam in. Aliquet nibh praesent tristique magna sit amet purus. Egestas diam in arcu cursus euismod quis. Ipsum dolor sit amet consectetur. Cursus metus aliquam eleifend mi in nulla posuere. Pellentesque dignissim enim sit amet venenatis urna cursus eget nunc"
                     },
                 }
             ],
