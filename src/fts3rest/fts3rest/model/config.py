@@ -61,6 +61,7 @@ class Se(Base):
     inbound_max_throughput = Column(Float)
     outbound_max_active = Column(Integer)
     outbound_max_throughput = Column(Float)
+    tpc_support = Column(String(10))
 
     def __str__(self):
         return self.storage
