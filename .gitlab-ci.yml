@@ -109,6 +109,26 @@ server_rpm:
     paths:
       - artifacts/
 
+ci_cd_test:
+  stage: build
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  script:
+    - echo "GitLab CI/CD | Print all environment variables"
+    - env
+
+ci_cd_test_with_rules:
+  stage: build
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  script:
+    - echo "GitLab CI/CD | Print all environment variables"
+    - env
+  rules:
+    - if: '$CI_PROJECT_NAMESPACE != "fts"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_TAG != null'
+    - if: '$CI_COMMIT_REF_NAME != "develop" && $CI_COMMIT_TAG == null'
+      when: manual
+
 #--------------------------
 # Docker build templates
 #--------------------------
@@ -234,7 +254,6 @@ rpm_tests:
 rpms:
   <<: *publish-template_definition
   rules:
-    # Change for test commit
     - if: '$CI_PROJECT_NAMESPACE != "fts"'
       when: never
     - if: '$CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_TAG != null'
