@@ -39,7 +39,7 @@ class TestJobSubmissionMetadata(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(
             job.job_metadata,
-            {"key": "This is my job metadata", "auth_method": "certificate"},
+            {"label": "This is my job metadata", "auth_method": "certificate"},
         )
 
     def test_file_metadata_string(self):
@@ -67,7 +67,7 @@ class TestJobSubmissionMetadata(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(
-            job.files[0].file_metadata, {"key": "This is my file metadata"}
+            job.files[0].file_metadata, {"label": "This is my file metadata"}
         )
 
     def test_job_metadata_JSON(self):
@@ -142,9 +142,7 @@ class TestJobSubmissionMetadata(TestController):
         job = Session.query(Job).get(job_id)
 
         for file in job["files"]:
-            self.assertEqual(
-                job.file.file_metadata, {"key": "This is my file metadata"}
-            )
+            self.assertEqual(file.file_metadata, {"label": "This is my file metadata"})
 
     def test_file_metadata_JSON(self):
         """
