@@ -189,12 +189,13 @@ class TestJobSubmissionMetadata(TestController):
                 }
             ],
         }
-        job_id = self.app.post(
+        message = self.app.post(
             url="/jobs",
             content_type="application/json",
             params=json.dumps(job),
             status=400,
-        )  # No job id returned
+        ).json["message"]
+        self.assertIn("not in JSON format", message)
 
     def test_staging_metadata_JSON(self):
         """
