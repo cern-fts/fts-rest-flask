@@ -242,12 +242,13 @@ class TestJobSubmissionMetadata(TestController):
                 }
             ],
         }
-        job_id = self.app.post(
+        message = self.app.post(
             url="/jobs",
             content_type="application/json",
             params=json.dumps(job),
             status=400,
-        )  # No Job Id Returned
+        ).json["message"]
+        self.assertIn("not in JSON format", message)
 
     def test_archive_metadata_JSON(self):
         """
@@ -296,12 +297,13 @@ class TestJobSubmissionMetadata(TestController):
                 }
             ],
         }
-        job_id = self.app.post(
+        message = self.app.post(
             url="/jobs",
             content_type="application/json",
             params=json.dumps(job),
             status=400,
-        )
+        ).json["message"]
+        self.assertIn("exceeds size limit", message)
 
     def test_archive_metadata_JSON_exceeding_size(self):
         """
@@ -322,9 +324,10 @@ class TestJobSubmissionMetadata(TestController):
                 }
             ],
         }
-        job_id = self.app.post(
+        message = self.app.post(
             url="/jobs",
             content_type="application/json",
             params=json.dumps(job),
             status=400,
-        )
+        ).json["message"]
+        self.assertIn("exceeds size limit", message)
