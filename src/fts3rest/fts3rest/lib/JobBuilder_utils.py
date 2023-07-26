@@ -95,19 +95,21 @@ def validate_url(url):
 
 def metadata(data, require_dict=False, name_hint=None, size_limit=1024):
     try:
+
         metadata_obj = json.loads(json.dumps(data))
-        if len(json.dumps(metadata_obj)) > size_limit:
-            raise ValueError("Job Submission Refused, Reduce Metadata size")
-        if isinstance(metadata_obj, dict):
-            return metadata_obj
-        elif isinstance(metadata_obj, str):
-            if require_dict:
-                metadata_name = name_hint if name_hint is not None else "Metadata"
-                raise ValueError("{} not in JSON format".format(metadata_name))
-            return {"label": metadata_obj}
-        else:
-            raise ValueError("Metadata neither JSON nor String")
+
     except Exception:
+        raise ValueError("Parsing error : Data in unexpcted format".format(data))
+    if len(json.dumps(metadata_obj)) > size_limit:
+        raise ValueError("Job Submission Refused, metadata exceeds size limit")
+    if isinstance(metadata_obj, dict):
+        return metadata_obj
+    elif isinstance(metadata_obj, str):
+        if require_dict:
+            metadata_name = name_hint if name_hint is not None else "Metadata"
+            raise ValueError("{} not in JSON format".format(metadata_name))
+        return {"label": metadata_obj}
+    else:
         raise ValueError("Metadata neither JSON nor String")
 
 
