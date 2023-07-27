@@ -14,6 +14,9 @@ DbConnectString=localhost:3306/ftsflask
 #Leave * to authorize any VO
 AuthorizedVO=*
 
+#Job Submission Metadata Size Limit
+SubmissionMetadataSizeLimit=1024
+
 #OpenID parameters
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400

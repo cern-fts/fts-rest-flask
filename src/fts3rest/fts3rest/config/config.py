@@ -41,6 +41,11 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
     # DbType always lowercase
     fts3cfg["fts3.DbType"] = fts3cfg["fts3.DbType"].lower()
 
+    # Size_limit is an integer
+    fts3cfg["fts3.SubmissionMetadataSizeLimit"] = parser.getint(
+        "fts3", "SubmissionMetadataSizeLimit", fallback=1024
+    )
+
     # Convert options to boolean
     options = {"Optimizer": True, "AutoSessionReuse": False}
 
