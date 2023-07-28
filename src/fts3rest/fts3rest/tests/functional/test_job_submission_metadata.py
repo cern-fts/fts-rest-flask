@@ -278,9 +278,9 @@ class TestJobSubmissionMetadata(TestController):
             job.files[0].archive_metadata, {"key": "This is my test archive metadata"}
         )
 
-    def test_metadata_JSON_exceeding_size(self):
+    def test_staging_metadata_JSON_exceeding_size(self):
         """
-        Submit a Job specifying metadata as JSON > 1024 bytes
+        Submit a Job specifying staging metadata as JSON > 1024 bytes
         note: job submission expected to fail
         """
         self.setup_gridsite_environment()
@@ -304,14 +304,14 @@ class TestJobSubmissionMetadata(TestController):
             status=400,
         ).json["message"]
         self.assertIn("exceeds size limit", message)
-        SubmissionMetadataSizeLimit = self.flask_app.config[
-            "fts3.SubmissionMetadataSizeLimit"
+        StagingMetadataSizeLimit = self.flask_app.config[
+            "fts3.StagingMetadataSizeLimit"
         ]
-        self.assertIn(str(SubmissionMetadataSizeLimit), message)
+        self.assertIn(str(StagingMetadataSizeLimit), message)
 
-    def test_metadata_JSON_exceeding_custom_size(self):
+    def test_archive_metadata_JSON_exceeding_custom_size(self):
         """
-        Submit a Job specifying metadata as JSON that exceeds a  custom size from the user
+        Submit a Job specifying archive metadata as JSON that exceeds a  custom size from the user
         note: job submission expected to fail
         """
         self.setup_gridsite_environment()
@@ -329,8 +329,8 @@ class TestJobSubmissionMetadata(TestController):
             ],
         }
         self.flask_app.config["fts3.SubmissionMetadataSizeLimit"] = 512
-        SubmissionMetadataSizeLimit = self.flask_app.config[
-            "fts3.SubmissionMetadataSizeLimit"
+        ArchiveMetadataSizeLimit = self.flask_app.config[
+            "fts3.ArchiveMetadataSizeLimit"
         ]
         message = self.app.post(
             url="/jobs",
@@ -339,4 +339,4 @@ class TestJobSubmissionMetadata(TestController):
             status=400,
         ).json["message"]
         self.assertIn("exceeds size limit", message)
-        self.assertIn(str(SubmissionMetadataSizeLimit), message)
+        self.assertIn(str(ArchiveMetadataSizeLimit), message)

@@ -41,9 +41,21 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
     # DbType always lowercase
     fts3cfg["fts3.DbType"] = fts3cfg["fts3.DbType"].lower()
 
-    # Size_limit is an integer
-    fts3cfg["fts3.SubmissionMetadataSizeLimit"] = parser.getint(
-        "fts3", "SubmissionMetadataSizeLimit", fallback=1024
+    # JobMetadataSizeLimit is an integer
+    fts3cfg["fts3.JobMetadataSizeLimit"] = parser.getint(
+        "fts3", "JobMetadataSizeLimit", fallback=1024
+    )
+    # FileMetadataSizeLimit is an integer
+    fts3cfg["fts3.FileMetadataSizeLimit"] = parser.getint(
+        "fts3", "FileMetadataSizeLimit", fallback=1024
+    )
+    # StagingMetadataSizeLimit is an integer
+    fts3cfg["fts3.StagingMetadataSizeLimit"] = parser.getint(
+        "fts3", "StagingMetadataSizeLimit", fallback=1024
+    )
+    # ArchiveMetadataSizeLimit is an integer
+    fts3cfg["fts3.ArchiveMetadataSizeLimit"] = parser.getint(
+        "fts3", "ArchiveMetadataSizeLimit", fallback=1024
     )
 
     # Convert options to boolean
