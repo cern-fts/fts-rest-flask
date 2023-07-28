@@ -57,6 +57,7 @@ class Se(Base):
     udt = Column(Integer)
     debug_level = Column(Integer)
     eviction = Column(Integer)
+    skip_eviction = Column(Integer)
     inbound_max_active = Column(Integer)
     inbound_max_throughput = Column(Float)
     outbound_max_active = Column(Integer)
