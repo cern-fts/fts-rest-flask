@@ -96,9 +96,8 @@ def validate_url(url):
 def metadata(data, require_dict=False, name_hint=None, size_limit=None):
     try:
         metadata_obj = json.loads(json.dumps(data))
-
     except Exception:
-        raise ValueError("Parsing error: Metadata in unexpcted format".format(data))
+        raise ValueError("Parsing error: Metadata in unexpected format {}".format(data))
     if size_limit != 0 and size_limit is not None:
         if len(json.dumps(metadata_obj)) > size_limit:
             raise ValueError(

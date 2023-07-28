@@ -14,13 +14,13 @@ DbConnectString=localhost:3306/ftsflask
 #Leave * to authorize any VO
 AuthorizedVO=*
 
-#Submission of Job Metadata with configured Size Limit(default: 1024 bytes)
-JobMetadataSizeLimit=1024
-#Submission of File Metadata with configured Size Limit(default: 1024 bytes)
-FileMetadataSizeLimit=1024
-#Submission of Staging Metadata with configured Size Limit(default: 1024 bytes)
+#Limit Job Metadata with specified Size Limit (default: 2048 bytes)
+JobMetadataSizeLimit=2048
+#Limit File Metadata with specified Size Limit (default: 4096 bytes)
+FileMetadataSizeLimit=4096
+#Limit Staging Metadata with specified Size Limit (default: 1024 bytes)
 StagingMetadataSizeLimit=1024
-#Submission of Archive Metadata with configured Size Limit(default: 1024 bytes)
+#Limit Archive Metadata with specified Size Limit (default: 1024 bytes)
 ArchiveMetadataSizeLimit=1024
 
 #OpenID parameters
