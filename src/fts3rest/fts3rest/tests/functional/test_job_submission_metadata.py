@@ -328,7 +328,8 @@ class TestJobSubmissionMetadata(TestController):
                 }
             ],
         }
-        self.flask_app.config["fts3.SubmissionMetadataSizeLimit"] = 512
+        custom_size = 512
+        self.flask_app.config["fts3.ArchiveMetadataSizeLimit"] = custom_size
         ArchiveMetadataSizeLimit = self.flask_app.config[
             "fts3.ArchiveMetadataSizeLimit"
         ]
