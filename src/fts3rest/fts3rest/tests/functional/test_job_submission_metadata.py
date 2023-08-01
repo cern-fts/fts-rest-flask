@@ -329,10 +329,6 @@ class TestJobSubmissionMetadata(TestController):
             ],
         }
         custom_size = 512
-        self.flask_app.config["fts3.ArchiveMetadataSizeLimit"] = custom_size
-        ArchiveMetadataSizeLimit = self.flask_app.config[
-            "fts3.ArchiveMetadataSizeLimit"
-        ]
         message = self.app.post(
             url="/jobs",
             content_type="application/json",
@@ -340,4 +336,4 @@ class TestJobSubmissionMetadata(TestController):
             status=400,
         ).json["message"]
         self.assertIn("exceeds size limit", message)
-        self.assertIn(str(ArchiveMetadataSizeLimit), message)
+        self.assertIn(str(custom_size), message)
