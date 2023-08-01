@@ -385,6 +385,8 @@ class JobBuilder:
             overwrite_flag = "R"
         elif self.params["overwrite_hop"]:
             overwrite_flag = "M"
+        elif self.params["overwrite_on_disk"]:
+            overwrite_flag = "D"
         else:
             overwrite_flag = None
 

@@ -36,6 +36,7 @@ DEFAULT_PARAMS = {
     "overwrite": False,
     "overwrite_on_retry": False,
     "overwrite_hop": False,
+    "overwrite_on_disk": False,
     "dst_file_report": False,
     "reuse": None,
     "multihop": False,

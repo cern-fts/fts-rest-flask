@@ -127,6 +127,7 @@ def new_job(
     overwrite=False,
     overwrite_on_retry=False,
     overwrite_hop=False,
+    overwrite_on_disk=False,
     multihop=False,
     source_spacetoken=None,
     spacetoken=None,
@@ -158,6 +159,7 @@ def new_job(
         overwrite:          Overwrite the destinations if exist
         overwrite_on_retry: Enable overwrite files only during FTS retries
         overwrite_hop:      Overwrite all files expect final destination in a multihop job
+        overwrite_on_disk:  Enable overwrite files only if they are not on tape
         multihop:           Treat the transfer as a multihop transfer
         source_spacetoken:  Source space token
         spacetoken:         Destination space token
@@ -207,6 +209,7 @@ def new_job(
         overwrite=overwrite,
         overwrite_on_retry=overwrite_on_retry,
         overwrite_hop=overwrite_hop,
+        overwrite_on_disk=overwrite_on_disk,
         multihop=multihop,
         retry=retry,
         retry_delay=retry_delay,

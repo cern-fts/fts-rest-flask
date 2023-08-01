@@ -26,6 +26,7 @@ DEFAULT_PARAMS = {
     "overwrite": False,
     "overwrite_on_retry": False,
     "overwrite_hop": False,
+    "overwrite_on_disk": False,
     "reuse": False,
     "job_metadata": None,
     "file_metadata": None,
@@ -164,6 +165,12 @@ class JobSubmitter(Base):
             dest="overwrite_hop",
             action="store_true",
             help="overwrite all files except the destination in a multihop submission.",
+        )
+        self.opt_parser.add_option(
+            "--overwrite-on-disk",
+            dest="overwrite_on_disk",
+            action="store_true",
+            help="overwrite files only if they are not on tape.",
         )
         self.opt_parser.add_option(
             "-r",
@@ -344,6 +351,7 @@ class JobSubmitter(Base):
                     self.params["overwrite"],
                     self.params["overwrite_on_retry"],
                     self.params["overwrite_hop"],
+                    self.params["overwrite_on_disk"],
                 ]
             )
             > 1
@@ -420,6 +428,7 @@ class JobSubmitter(Base):
             overwrite=self.options.overwrite,
             overwrite_on_retry=self.options.overwrite_on_retry,
             overwrite_hop=self.options.overwrite_hop,
+            overwrite_on_disk=self.options.overwrite_on_disk,
             copy_pin_lifetime=self.options.pin_lifetime,
             reuse=self.options.reuse,
             retry=self.options.retry,
