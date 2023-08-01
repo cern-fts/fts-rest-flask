@@ -27,14 +27,14 @@ class Request:
         capath=None,
         passwd=None,
         verify=True,
-        access_token=None,
+        FTS_token=None,
         connectTimeout=30,
         timeout=30,
     ):
         self.ucert = ucert
         self.ukey = ukey
         self.passwd = passwd
-        self.access_token = access_token
+        self.FTS_token = FTS_token
         self.verify = verify
 
         if capath:
@@ -97,8 +97,8 @@ class Request:
         _headers = {"Accept": "application/json"}
         if headers:
             _headers.update(headers)
-        if self.access_token:
-            _headers["Authorization"] = "Bearer " + self.access_token
+        if self.FTS_token:
+            _headers["Authorization"] = "Bearer " + self.FTS_token
 
         auth = None
         if user and passw:
