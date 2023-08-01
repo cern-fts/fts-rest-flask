@@ -329,6 +329,7 @@ class TestJobSubmissionMetadata(TestController):
             ],
         }
         custom_size = 512
+        self.flask_app.config["fts3.ArchiveMetadataSizeLimit"] = custom_size
         message = self.app.post(
             url="/jobs",
             content_type="application/json",
