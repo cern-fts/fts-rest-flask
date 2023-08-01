@@ -43,7 +43,10 @@ class JobBuilder:
 
         # Enforce JSON type for 'job_metadata'
         if params["job_metadata"] is not None:
-            params["job_metadata"] = metadata(params["job_metadata"])
+            params["job_metadata"] = metadata(
+                params["job_metadata"],
+                size_limit=app.config["fts3.JobMetadataSizeLimit"],
+            )
 
         return params
 
@@ -182,18 +185,23 @@ class JobBuilder:
                 else generate_hashed_id(),
             )
             if f["file_metadata"] is not None:
-                f["file_metadata"] = metadata(f["file_metadata"])
+                f["file_metadata"] = metadata(
+                    f["file_metadata"],
+                    size_limit=app.config["fts3.FileMetadataSizeLimit"],
+                )
             if f["staging_metadata"] is not None:
                 f["staging_metadata"] = metadata(
                     f["staging_metadata"],
                     require_dict=True,
                     name_hint="Staging metadata",
+                    size_limit=app.config["fts3.StagingMetadataSizeLimit"],
                 )
             if f["archive_metadata"] is not None:
                 f["archive_metadata"] = metadata(
                     f["archive_metadata"],
                     require_dict=True,
                     name_hint="Archive metadata",
+                    size_limit=app.config["fts3.ArchiveMetadataSizeLimit"],
                 )
             self.files.append(f)
 

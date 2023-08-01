@@ -98,16 +98,27 @@ def validate_url(url):
         raise ValueError("Missing host (%s)" % url.geturl())
 
 
-def metadata(data, require_dict=False, name_hint=None):
-    if isinstance(data, dict):
-        return data
+def metadata(data, require_dict=False, name_hint=None, size_limit=None):
     try:
-        return json.loads(data)
-    except:
+        metadata_obj = json.loads(json.dumps(data))
+    except Exception:
+        raise ValueError("Parsing error: Metadata in unexpected format {}".format(data))
+    if size_limit > 0 and size_limit is not None:
+        if len(json.dumps(metadata_obj)) > size_limit:
+            raise ValueError(
+                "Job Submission Refused, metadata exceeds size limit of {}".format(
+                    size_limit
+                )
+            )
+    if isinstance(metadata_obj, dict):
+        return metadata_obj
+    elif isinstance(metadata_obj, str):
         if require_dict:
             metadata_name = name_hint if name_hint is not None else "Metadata"
             raise ValueError("{} not in JSON format".format(metadata_name))
-        return {"label": str(data)}
+        return {"label": metadata_obj}
+    else:
+        raise ValueError("Metadata neither JSON nor String")
 
 
 def safe_flag(flag):
