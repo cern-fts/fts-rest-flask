@@ -27,14 +27,14 @@ class Request:
         capath=None,
         passwd=None,
         verify=True,
-        access_token=None,
+        fts_token=None,
         connectTimeout=30,
         timeout=30,
     ):
         self.ucert = ucert
         self.ukey = ukey
         self.passwd = passwd
-        self.access_token = access_token
+        self.fts_token = fts_token
         self.verify = verify
 
         if capath:
@@ -97,9 +97,8 @@ class Request:
         _headers = {"Accept": "application/json"}
         if headers:
             _headers.update(headers)
-        if self.access_token:
-            _headers["Authorization"] = "Bearer " + self.access_token
-
+        if self.fts_token:
+            _headers["Authorization"] = "Bearer " + self.fts_token
         auth = None
         if user and passw:
             from requests.auth import HTTPBasicAuth
