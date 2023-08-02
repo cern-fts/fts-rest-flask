@@ -136,9 +136,9 @@ class Base:
             help="do not validate the server certificate",
         )
         self.opt_parser.add_option(
-            "--access-token",
-            dest="access_token",
-            help="OAuth2 access token (supported only by some endpoints, takes precedence)",
+            "--fts-token",
+            dest="fts_token",
+            help="FTS Token will be used to construct an identity for the connecting client",
             default=None,
         )
 
@@ -173,7 +173,7 @@ class Base:
             ukey=self.options.ukey,
             ucert=self.options.ucert,
             verify=self.options.verify,
-            access_token=self.options.access_token,
+            fts_token=self.options.fts_token,
             capath=self.options.capath,
             user_agent=user_agent,
         )
