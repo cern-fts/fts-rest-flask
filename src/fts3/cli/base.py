@@ -138,7 +138,7 @@ class Base:
         self.opt_parser.add_option(
             "--fts-token",
             dest="fts_token",
-            help="FTS Token will be used to construct an identity for the connecting client",
+            help="OAuth2 token that will be used to construct an identity for the connecting client",
             default=None,
         )
 
