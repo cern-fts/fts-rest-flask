@@ -156,7 +156,7 @@ class Context(object):
         ucert=None,
         ukey=None,
         verify=True,
-        access_token=None,
+        fts_token=None,
         no_creds=False,
         capath=None,
         request_class=Request,
@@ -172,8 +172,9 @@ class Context(object):
         if no_creds:
             self.ucert = self.ukey = self.access_token = None
         else:
-            self.access_token = access_token
-            if self.access_token:
+
+            self.fts_token = fts_token
+            if self.fts_token:
                 self.ucert = None
                 self.ukey = None
                 self.access_method = "oauth2"
@@ -186,7 +187,7 @@ class Context(object):
             self.ukey,
             passwd=self.passwd,
             verify=verify,
-            access_token=self.access_token,
+            fts_token=self.fts_token,
             capath=capath,
             connectTimeout=connectTimeout,
             timeout=timeout,
