@@ -137,7 +137,7 @@ def get_se_config():
             "se_metadata",
             "site",
             "debug_level",
-            "eviction",
+            "skip_eviction",
             "tpc_support",
         ]:
             if attr == "tpc_support":

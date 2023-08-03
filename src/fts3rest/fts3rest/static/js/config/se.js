@@ -75,7 +75,7 @@ function getSubForm(form, klass)
     subset.ipv6 = parseInt(subform.find("input[name='ipv6']").val());
     subset.udt = parseInt(subform.find("input[name='udt']").val());
     subset.debug_level = parseInt(subform.find("input[name='debug_level']").val());
-    subset.eviction = parseInt(subform.find("input[name='eviction']").val());
+    subset.skip_eviction = parseInt(subform.find("input[name='skip_eviction']").val());
     subset.tpc_support = subform.find("select[name='tpc_support']").val();
     return subset;
 }
