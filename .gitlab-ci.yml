@@ -216,17 +216,14 @@ rpm_tests:
 
 .publish-template: &publish-template_definition
   stage: publish
-  image: gitlab-registry.cern.ch/eos/gitlab-eos/cc7:latest
+  image: gitlab-registry.cern.ch/eos/gitlab-eos/alma9:latest
   dependencies:
     - client_rpm
     - server_rpm
   script:
-    - yum install -y python sssd-client sudo createrepo
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
-    - eosfusebind
     - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/RPMS/*/*.rpm artifacts/SRPMS/*
-    - sleep 60
   tags:
     - docker-privileged-xl
   retry: 2
