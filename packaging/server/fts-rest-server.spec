@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.12.2
+Version:        3.12.3
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -127,6 +127,12 @@ fi
 %files selinux
 
 %changelog
+* Tue Aug 08 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.3
+- Disable deletion submissions via the FTS-REST
+- Refuse FTS job submissions if archive/staging metadata exceeds configurable size
+- Allow configuring the TPC role per Storage Endpoint
+- Turn configurable eviction flag into skip-eviction
+
 * Thu Mar 02 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.2-1
 - Refactoring of job submission checks, especially for AutoSessionReuse mode
 - Log time it takes to store submission into the database
