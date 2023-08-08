@@ -36,6 +36,20 @@ Grid storage configuration
 """
 
 
+def _translate_tcp_mode(mode):
+    if mode == "FULL":
+        supported_mode = "Full support"
+    elif mode == "PULL":
+        supported_mode = "Pull only"
+    elif mode == "PUSH":
+        supported_mode = "Push only"
+    elif mode == "NONE":
+        supported_mode = "Not supported"
+    else:
+        supported_mode = None
+    return supported_mode
+
+
 @authorize(CONFIG)
 @jsonify
 def set_se_config():
@@ -112,7 +126,7 @@ def get_se_config():
     for opt in from_se:
         se = opt.storage
         config = response.get(se, dict())
-        link_config = dict()
+        se_info = dict()
         for attr in [
             "inbound_max_active",
             "inbound_max_throughput",
@@ -123,10 +137,14 @@ def get_se_config():
             "se_metadata",
             "site",
             "debug_level",
-            "eviction",
+            "skip_eviction",
+            "tpc_support",
         ]:
-            link_config[attr] = getattr(opt, attr)
-            config["se_info"] = link_config
+            if attr == "tpc_support":
+                se_info[attr] = _translate_tcp_mode(getattr(opt, attr))
+            else:
+                se_info[attr] = getattr(opt, attr)
+        config["se_info"] = se_info
         response[se] = config
 
     for op in from_ops:

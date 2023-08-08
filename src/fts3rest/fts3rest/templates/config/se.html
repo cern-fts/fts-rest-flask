@@ -55,8 +55,19 @@
 									<input id="debug_level_hidden" class="form-control" name="debug_level" type="number" min="0" max="3" value="{{se_info.debug_level}}"/>
 								</div>
 								<div class="form-group">
-									<label>Eviction</label>
-									<input id="eviction_hidden" class="form-control" type="number" name="eviction" value="{{se_info.eviction}}" min="0" max="1"/>
+									<label>Skip Eviction</label>
+									<input id="skip_eviction_hidden" class="form-control" type="number" name="skip_eviction" value="{{se_info.skip_eviction}}" min="0" max="1"/>
+								</div>
+								<div class="from-group">
+									<label>TCP Support</label>
+
+									<select id="tpc_support_hidden" name="tpc_support" class="form-control">
+										<option value="test" hidden selected>{{se_info.tpc_support}}</option>
+										<option value="FULL">Full support</option>
+										<option value="PULL">Pull only</option>
+										<option value="PUSH">Push only</option>
+										<option value="NONE">Not supported</option>
+									</select>
 								</div>
 							</div>
 						</div>
@@ -192,11 +203,24 @@
 								type="number" min="0" max="3"/>
 							</div>
 							<div class="form-group">
-								<label for="eviction"> Eviction <i
+								<label for="skip_eviction"> Eviction <i
 									class="glyphicon glyphicon-question-sign"
-									title="If set, after a successful transfer, FTS3 will evict the source file from the endpoint. Enable only on endpoints that support eviction (e.g.: CTA)"></i>
+									title="If set, after a successful transfer, FTS3 will not evict the source file from the endpoint."></i>
 								</label> 
-								<input class="form-control" name="eviction" id="eviction" type="number" min="0" max="1"/> 
+								<input class="form-control" name="skip_eviction" id="skip_eviction" type="number" min="0" max="1"/>
+							</div>
+							<div class="form-group">
+								<label for="tpc_support">TPC support <i
+										class="glyphicon glyphicon-question-sign"
+										title="Configure supported Third-Party-Copy modes. If not set defaults to full TPC support"></i>
+								</label>
+								<select id="tpc_support" name="tpc_support" class="form-control">
+									<option value="" disabled selected>Select supported mode</option>
+									<option value="FULL">Full support</option>
+									<option value="PULL">Pull only</option>
+									<option value="PUSH">Push only</option>
+									<option value="NONE">Not supported</option>
+								</select>
 							</div>
 						</div>
 					</div>
@@ -223,18 +247,21 @@
 								class="glyphicon glyphicon-plus"></i>
 							</a></td>
 							<td><input type="text" id="se-add-field-vo" name="vo"
-								class="form-control" pattern="^[^\s]+$" title="Space is not allowed"/></td>
-								<td><select id="operation" name="operation" class="form-control">
+									   class="form-control" pattern="^[^\s]+$" title="Space is not allowed"/>
+							</td>
+							<td><select id="operation" name="operation" class="form-control">
 									<option value="delete">Delete</option>
 									<option value="staging">Staging</option>
-								</select></td>
-								<td><input id="limit" type="number" name="limit" class="form-control" min="0"/>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+								</select>
+							</td>
+							<td><input id="limit" type="number" name="limit"
+									   class="form-control" min="0"/>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
+		</div>
 		</div>
 		<div class="panel-footer">
 			<button type="submit" class="btn btn-primary">Add</button>

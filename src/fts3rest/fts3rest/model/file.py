@@ -143,6 +143,8 @@ class FileRetryLog(Base):
     attempt = Column(Integer, primary_key=True)
     datetime = Column(DateTime)
     reason = Column(String(2048))
+    transfer_host = Column(String(255))
+    log_file = Column(String(2048))
 
     def __str__(self):
         return "[%d:%d] %s" % (int(self.file_id), int(self.attempt), self.reason)

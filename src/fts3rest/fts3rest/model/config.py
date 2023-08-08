@@ -57,10 +57,12 @@ class Se(Base):
     udt = Column(Integer)
     debug_level = Column(Integer)
     eviction = Column(Integer)
+    skip_eviction = Column(Integer)
     inbound_max_active = Column(Integer)
     inbound_max_throughput = Column(Float)
     outbound_max_active = Column(Integer)
     outbound_max_throughput = Column(Float)
+    tpc_support = Column(String(10))
 
     def __str__(self):
         return self.storage

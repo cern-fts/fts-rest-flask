@@ -14,6 +14,16 @@ DbConnectString =
 # Leave * to authorize any VO
 AuthorizedVO = *
 
+#For each metadata size limit, if size_limit = 0, no limit checks are performed upon job submission
+#Limit Job Metadata with specified Size Limit (default: 2048 bytes)
+JobMetadataSizeLimit = 2048
+#Limit File Metadata with specified Size Limit (default: 4096 bytes)
+FileMetadataSizeLimit = 4096
+#Limit Staging Metadata with specified Size Limit (default: 1024 bytes)
+StagingMetadataSizeLimit = 1024
+#Limit Archive Metadata with specified Size Limit (default: 1024 bytes)
+ArchiveMetadataSizeLimit = 1024
+
 # The alias used for the FTS endpoint
 # Note: will be published in the FTS Transfers Dashboard
 Alias =
