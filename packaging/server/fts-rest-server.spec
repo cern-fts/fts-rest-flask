@@ -12,37 +12,36 @@ BuildRequires:  python3-rpm-macros
 Requires:       python3
 Requires:       httpd
 Requires:       httpd-devel
-Requires:       rh-python36-mod_wsgi
+Requires:       python3-mod_wsgi
 Requires:       gridsite
 Requires:       gfal2-python3
 Requires:       gfal2-plugin-mock
-Requires:       python36-m2crypto
-Requires:       python36-requests
-Requires:       python36-flask
-Requires:       python36-dateutil
-Requires:       python36-jwt
+Requires:       python3-m2crypto
+Requires:       python3-requests
+Requires:       python3-flask
+Requires:       python3-dateutil
+Requires:       python3-jwt
 Obsoletes:      fts-rest
+Requires:       python3-sqlalchemy >= 1.1.15
+Requires:       python3-mysqlclient
+Requires:       python3-jwcrypto
+Requires:       python3-typing-extensions
+Requires:       python3-dirq
 
 # from jwcrypto
-Requires:       python36-cryptography
+Requires:       python3-cryptography
 # from oic
-Requires:       python36-defusedxml
-Requires:       python36-pycryptodomex
+Requires:       python3-defusedxml
+Requires:       python3-pycryptodomex
 # from mako
-Requires:       python36-markupsafe
+Requires:       python3-markupsafe
 
 ### The packages below are not found in community repos and will have to be packaged by us
 # from oic (pyjwkest may require six, future...)
 Requires:       pyjwkest
 Requires:       Beaker
-Requires:       typing_extensions
-Requires:       SQLAlchemy >= 1.1.15
-Obsoletes:      python36-sqlalchemy
 Requires:       Mako
-Requires:       mysqlclient
-Requires:       jwcrypto
 Requires:       oic
-Requires:       dirq
 
 BuildArch:      noarch
 
