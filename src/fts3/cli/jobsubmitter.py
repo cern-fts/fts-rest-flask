@@ -320,6 +320,16 @@ class JobSubmitter(Base):
             action="store_true",
             help="disable all checks, just copy the file",
         )
+        self.opt_parser.add_option(
+            "--access-src-token",
+            dest="source_tokens",
+            help="The access token for source for a transfer submission via fts token",
+        )
+        self.opt_parser.add_option(
+            "--access-dst-token",
+            dest="destination_tokens",
+            help="The access token for destination for a transfer submission via fts token",
+        )
 
     def validate(self):
         self.checksum = None
@@ -334,6 +344,36 @@ class JobSubmitter(Base):
             else:
                 self.logger.critical("Too many parameters")
                 sys.exit(1)
+
+        if self.options.ucert is None:
+            if self.options.fts_token is not None:
+                if len([self.options.source_tokens]) != len([self.source]):
+                    raise ValueError(
+                        "The number of source tokens doesn't match the number of sources. Please specify a source token for each source."
+                    )
+                if len([self.options.destination_tokens]) != len([self.destination]):
+                    raise ValueError(
+                        "The number of destination tokens doesn't match the number of destinations. Please specify a destination token for each destination."
+                    )
+                if self.options.source_tokens is None:
+                    raise ValueError(
+                        "Source token doesn't exist. Please specify a source token."
+                    )
+                if self.options.destination_tokens is None:
+                    raise ValueError(
+                        "Destination token doesn't exist. Please specify a destination token for each destination."
+                    )
+            else:
+                raise ValueError("Please specify an FTS token.")
+        else:
+            if any(
+                [
+                    self.options.fts_token,
+                    self.options.source_tokens,
+                    self.options.destination_tokens,
+                ]
+            ):
+                raise ValueError("Cannot use tokens and certificates together.")
 
         self._prepare_options()
         if self.params["ipv4"] and self.params["ipv6"]:
@@ -365,7 +405,14 @@ class JobSubmitter(Base):
                 self.logger.critical("Could not find any transfers")
                 sys.exit(1)
         else:
-            return [{"sources": [self.source], "destinations": [self.destination]}]
+            return [
+                {
+                    "sources": [self.source],
+                    "destinations": [self.destination],
+                    "source_tokens": [self.options.source_tokens],
+                    "destination_tokens": [self.options.destination_tokens],
+                }
+            ]
 
     def _build_params(self, **kwargs):
         params = dict()
@@ -382,7 +429,6 @@ class JobSubmitter(Base):
         for k, v in kwargs.items():
             if v is not None:
                 params[k] = v
-
         # JSONify metadata
         params["job_metadata"] = _metadata(params["job_metadata"])
         params["file_metadata"] = _metadata(params["file_metadata"])
