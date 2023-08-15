@@ -335,13 +335,13 @@ class JobSubmitter(Base):
             help="SciTag flow label (value must be in the [65, 65535] range)",
         )
         self.opt_parser.add_option(
-            "--access-src-token",
-            dest="source_tokens",
+            "--src-access-token",
+            dest="src_access_token",
             help="The access token for source for a transfer submission via fts token",
         )
         self.opt_parser.add_option(
-            "--access-dst-token",
-            dest="destination_tokens",
+            "--dst-access-token",
+            dest="dst_access_token",
             help="The access token for destination for a transfer submission via fts token",
         )
 
@@ -358,12 +358,6 @@ class JobSubmitter(Base):
             else:
                 self.logger.critical("Too many parameters")
                 sys.exit(1)
-
-        # Neither the certificate nor the fts token is present
-        if self.options.ucert is None and self.options.fts_token is None:
-            self.opt_parser.error(
-                "Please speficify either the certificate or fts token for the transfer"
-            )
 
         # Both the certificate and the fts token is present
         if self.options.ucert and any(
@@ -447,8 +441,8 @@ class JobSubmitter(Base):
                 {
                     "sources": [self.source],
                     "destinations": [self.destination],
-                    "source_tokens": [self.options.source_tokens],
-                    "destination_tokens": [self.options.destination_tokens],
+                    "source_tokens": [self.options.src_access_tokens],
+                    "destination_tokens": [self.options.dst_access_tokens],
                 }
             ]
 
