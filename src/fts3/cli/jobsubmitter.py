@@ -391,14 +391,14 @@ class JobSubmitter(Base):
                 destinations = file_content.get("destinations", [])
                 source_tokens = file_content.get("source_tokens", [])
                 destination_tokens = file_content.get("destination_tokens", [])
-            if len(sources) != len(source_tokens):
-                self.opt_parser.error(
-                    "Please specify source access token for each source"
-                )
-            if len(destinations) != len(destination_tokens):
-                self.opt_parser.error(
-                    "Please specify destination access token for each destination"
-                )
+                if len(sources) != len(source_tokens):
+                    self.opt_parser.error(
+                        "Please specify source access token for each source"
+                    )
+                if len(destinations) != len(destination_tokens):
+                    self.opt_parser.error(
+                        "Please specify destination access token for each destination"
+                    )
 
         if self.params["ipv4"] and self.params["ipv6"]:
             self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
@@ -441,8 +441,8 @@ class JobSubmitter(Base):
                 {
                     "sources": [self.source],
                     "destinations": [self.destination],
-                    "source_tokens": [self.options.src_access_tokens],
-                    "destination_tokens": [self.options.dst_access_tokens],
+                    "source_tokens": [self.options.src_access_token],
+                    "destination_tokens": [self.options.dst_access_token],
                 }
             ]
 
