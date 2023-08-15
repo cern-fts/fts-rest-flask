@@ -30,7 +30,7 @@ Listen 8446
     LogFormat "%a %l %u %t \"%r\" %>s %b %D"
     TransferLog logs/fts3rest_access_log
 
-    LoadModule wsgi_module /opt/rh/httpd24/root/etc/httpd/modules/mod_rh-python36-wsgi.so
+    LoadModule wsgi_module /etc/httpd/modules/mod_wsgi_python3.so
 
     WSGIScriptAlias / %%PROJECT_DIR%%/src/fts3rest/fts3rest.wsgi
     # Note that it is highly recommended that the WSGI application script file in
