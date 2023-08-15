@@ -101,6 +101,22 @@ client_rpm:
     paths:
       - artifacts/
 
+client_rpm_alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  stage: build
+  script:
+    - dnf install -y git rpm-build tree dnf-utils
+    - ./packaging/client/fts-rest-client.sh
+    - mkdir alma9/
+    - cp -r build/client/RPMS build/client/SRPMS alma9/
+    - tree alma9/
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
+  artifacts:
+    when: on_success
+    paths:
+      - alma9/
+
 server_rpm:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
