@@ -348,20 +348,19 @@ class JobSubmitter(Base):
         # Both the access and the fts token is present
         if self.options.access_token and any(
             [
-                self.options.fts_token,
                 self.options.src_access_token,
                 self.options.dst_access_token,
             ]
         ):
             self.opt_parser.error(
-                "Cannot use both '--access-token' and '--fts-token' simultaneously. (prefer new token handles)"
+                "Cannot use both '--access-token' and '--src/dst-access-token' simultaneously. (prefer new token handles i.e. with --fts-token)"
             )
 
         # Compatibility for access token
         if self.options.access_token:
-            self.options.fts_token = (
-                self.options.src_access_token
-            ) = self.options.dst_access_token = self.options.access_token
+            self.options.src_access_token = (
+                self.options.dst_access_token
+            ) = self.options.access_token
 
         # Both the certificate and the fts token is present
         if self.options.ucert and any(
@@ -379,11 +378,11 @@ class JobSubmitter(Base):
         if self.options.fts_token:
             if self.options.src_access_token is None:
                 self.opt_parser.error(
-                    "Source token doesn't exist. Please specify a source token."
+                    "Source token doesn't exist. Please specify a source access token"
                 )
             if self.options.dst_access_token is None:
                 self.opt_parser.error(
-                    "Destination token doesn't exist. Please specify a destination token for each destination."
+                    "Destination token doesn't exist. Please specify a destination access token"
                 )
 
         self._prepare_options()
