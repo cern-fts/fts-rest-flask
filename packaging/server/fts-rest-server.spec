@@ -9,32 +9,39 @@ Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3
 BuildRequires:  python3-rpm-macros
+
 Requires:       python3
 Requires:       httpd
 Requires:       httpd-devel
-Requires:       python3-mod_wsgi
 Requires:       gridsite
 Requires:       gfal2-python3
 Requires:       gfal2-plugin-mock
-Requires:       python3-m2crypto
-Requires:       python3-requests
-Requires:       python3-flask
-Requires:       python3-dateutil
-Requires:       python3-jwt
+Requires:       python%{python3_pkgversion}-m2crypto
+Requires:       python%{python3_pkgversion}-requests
+Requires:       python%{python3_pkgversion}-flask
+Requires:       python%{python3_pkgversion}-dateutil
+Requires:       python%{python3_pkgversion}-jwt
 Obsoletes:      fts-rest
-Requires:       python3-sqlalchemy >= 1.1.15
-Requires:       python3-mysqlclient
-Requires:       python3-jwcrypto
-Requires:       python3-typing-extensions
-Requires:       python3-dirq
+Requires:       python%{python3_pkgversion}-sqlalchemy >= 1.1.15
+Requires:       python%{python3_pkgversion}-mysqlclient
+Requires:       python%{python3_pkgversion}-jwcrypto
+Requires:       python%{python3_pkgversion}-typing-extensions
+Requires:       python%{python3_pkgversion}-dirq
+
+# WSGI package has a different name on RHEL7
+%if 0%{?rhel} == 7
+Requires:       rh-python36-mod_wsgi
+%else
+Requires:       python3-mod_wsgi
+%endif
 
 # from jwcrypto
-Requires:       python3-cryptography
+Requires:       python%{python3_pkgversion}-cryptography
 # from oic
-Requires:       python3-defusedxml
-Requires:       python3-pycryptodomex
+Requires:       python%{python3_pkgversion}-defusedxml
+Requires:       python%{python3_pkgversion}-pycryptodomex
 # from mako
-Requires:       python3-markupsafe
+Requires:       python%{python3_pkgversion}-markupsafe
 
 ### The packages below are not found in community repos and will have to be packaged by us
 # from oic (pyjwkest may require six, future...)
