@@ -320,6 +320,16 @@ class JobSubmitter(Base):
             action="store_true",
             help="disable all checks, just copy the file",
         )
+        self.opt_parser.add_option(
+            "--src-access-token",
+            dest="src_access_token",
+            help="The source access token in token-based transfers",
+        )
+        self.opt_parser.add_option(
+            "--dst-access-token",
+            dest="dst_access_token",
+            help="The destination access token in token-based transfers",
+        )
 
     def validate(self):
         self.checksum = None
@@ -335,7 +345,64 @@ class JobSubmitter(Base):
                 self.logger.critical("Too many parameters")
                 sys.exit(1)
 
+        # Both the access and the fts token is present
+        if self.options.access_token and any(
+            [
+                self.options.src_access_token,
+                self.options.dst_access_token,
+            ]
+        ):
+            self.opt_parser.error(
+                "Cannot use both '--access-token' and '--src/dst-access-token' simultaneously. (prefer new token handles i.e. with --fts-token)"
+            )
+
+        # Compatibility for access token
+        if self.options.access_token:
+            self.options.src_access_token = (
+                self.options.dst_access_token
+            ) = self.options.access_token
+
+        # Both the certificate and the fts token is present
+        if self.options.ucert and any(
+            [
+                self.options.fts_token,
+                self.options.src_access_token,
+                self.options.dst_access_token,
+            ]
+        ):
+            self.opt_parser.error(
+                "Cannot use both certificate and tokens simultaneously"
+            )
+
+        # The fts token is present
+        if self.options.fts_token:
+            if self.options.src_access_token is None:
+                self.opt_parser.error(
+                    "Source token doesn't exist. Please specify a source access token"
+                )
+            if self.options.dst_access_token is None:
+                self.opt_parser.error(
+                    "Destination token doesn't exist. Please specify a destination access token"
+                )
+
         self._prepare_options()
+
+        # For the case if submission is made through bulk file
+        if self.options.bulk_file:
+            for transfer in self.transfers:
+                sources = transfer.get("sources", [])
+                destinations = transfer.get("destinations", [])
+                source_tokens = transfer.get("source_tokens", [])
+                destination_tokens = transfer.get("destination_tokens", [])
+                if len(sources) != len(source_tokens):
+                    self.opt_parser.error(
+                        "Please specify source access token for each source"
+                    )
+                if len(destinations) != len(destination_tokens):
+                    self.opt_parser.error(
+                        "Please specify destination access token for each destination"
+                    )
+
         if self.params["ipv4"] and self.params["ipv6"]:
             self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
         if (
@@ -365,7 +432,14 @@ class JobSubmitter(Base):
                 self.logger.critical("Could not find any transfers")
                 sys.exit(1)
         else:
-            return [{"sources": [self.source], "destinations": [self.destination]}]
+            return [
+                {
+                    "sources": [self.source],
+                    "destinations": [self.destination],
+                    "source_tokens": [self.options.src_access_token],
+                    "destination_tokens": [self.options.dst_access_token],
+                }
+            ]
 
     def _build_params(self, **kwargs):
         params = dict()
@@ -382,7 +456,6 @@ class JobSubmitter(Base):
         for k, v in kwargs.items():
             if v is not None:
                 params[k] = v
-
         # JSONify metadata
         params["job_metadata"] = _metadata(params["job_metadata"])
         params["file_metadata"] = _metadata(params["file_metadata"])

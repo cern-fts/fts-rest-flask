@@ -136,6 +136,12 @@ class Base:
             help="do not validate the server certificate",
         )
         self.opt_parser.add_option(
+            "--access-token",
+            dest="access_token",
+            help="deprecated: OAuth2 access token (supported for limited time)",
+            default=None,
+        )
+        self.opt_parser.add_option(
             "--fts-token",
             dest="fts_token",
             help="OAuth2 token that will be used to construct an identity for the connecting client",
@@ -148,6 +154,7 @@ class Base:
             self.options.endpoint = _get_local_endpoint()
         if self.options.verbose:
             self.logger.setLevel(logging.DEBUG)
+        self._access_token_compatibility()
         self.validate()
         return self.run()
 
@@ -177,3 +184,11 @@ class Base:
             capath=self.options.capath,
             user_agent=user_agent,
         )
+
+    def _access_token_compatibility(self):
+        if self.options.access_token and self.options.fts_token:
+            self.opt_parser.error(
+                "Cannot use both '--access-token' and '--fts-token' simultaneously. (prefer new token handles)"
+            )
+        if self.options.access_token:
+            self.options.fts_token = self.options.access_token
