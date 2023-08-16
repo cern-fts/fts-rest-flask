@@ -354,10 +354,10 @@ class JobSubmitter(Base):
             ]
         ):
             self.opt_parser.error(
-                "Cannot use both old(access) and new (FTS) tokens simultaneously; submission prefrefred via FTS token"
+                "Cannot use both '--access-token' and '--fts-token' simultaneously. (prefer new token handles)"
             )
 
-        # Compability for access token
+        # Compatibility for access token
         if self.options.access_token:
             self.options.fts_token = (
                 self.options.src_access_token

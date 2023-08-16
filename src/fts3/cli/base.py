@@ -138,7 +138,7 @@ class Base:
         self.opt_parser.add_option(
             "--access-token",
             dest="access_token",
-            help="OAuth2 Access token (Outdated; Supported for limited time)",
+            help="deprecated: OAuth2 access token (supported for limited time)",
             default=None,
         )
         self.opt_parser.add_option(
