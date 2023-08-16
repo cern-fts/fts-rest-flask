@@ -136,6 +136,12 @@ class Base:
             help="do not validate the server certificate",
         )
         self.opt_parser.add_option(
+            "--access-token",
+            dest="access_token",
+            help="OAuth2 Access token (Outdated; Supported for limited time)",
+            default=None,
+        )
+        self.opt_parser.add_option(
             "--fts-token",
             dest="fts_token",
             help="OAuth2 token that will be used to construct an identity for the connecting client",
