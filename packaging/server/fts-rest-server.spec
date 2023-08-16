@@ -22,11 +22,6 @@ Requires:       python%{python3_pkgversion}-flask
 Requires:       python%{python3_pkgversion}-dateutil
 Requires:       python%{python3_pkgversion}-jwt
 Obsoletes:      fts-rest
-Requires:       python%{python3_pkgversion}-sqlalchemy >= 1.1.15
-Requires:       python%{python3_pkgversion}-mysqlclient
-Requires:       python%{python3_pkgversion}-jwcrypto
-Requires:       python%{python3_pkgversion}-typing-extensions
-Requires:       python%{python3_pkgversion}-dirq
 
 # WSGI package has a different name on RHEL7
 %if 0%{?rhel} == 7
@@ -47,8 +42,25 @@ Requires:       python%{python3_pkgversion}-markupsafe
 # from oic (pyjwkest may require six, future...)
 Requires:       pyjwkest
 Requires:       Beaker
-Requires:       Mako
 Requires:       oic
+
+# The following packages were built with a different name on RHEL7
+%if 0%{?rhel} == 7
+Requires:       typing_extensions
+Requires:       SQLAlchemy >= 1.1.15
+Obsoletes:      python36-sqlalchemy
+Requires:       mysqlclient
+Requires:       jwcrypto
+Requires:       dirq
+Requires:       Mako
+%else
+Requires:       python%{python3_pkgversion}-typing-extensions
+Requires:       python%{python3_pkgversion}-sqlalchemy >= 1.1.15
+Requires:       python%{python3_pkgversion}-mysqlclient
+Requires:       python%{python3_pkgversion}-jwcrypto
+Requires:       python%{python3_pkgversion}-dirq
+Requires:       python%{python3_pkgversion}-mako
+%endif
 
 BuildArch:      noarch
 
