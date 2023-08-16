@@ -89,7 +89,7 @@ client_rpm:
   before_script:
     - ulimit -n 1048576
   script:
-    - yum install -y git rpm-build tree
+    - yum install -y git rpm-build tree epel-rpm-macros
     - ./packaging/client/fts-rest-client.sh
     - mkdir artifacts/
     - cp -r build/client/RPMS build/client/SRPMS artifacts/
@@ -121,7 +121,7 @@ server_rpm:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   stage: build
   script:
-    - yum install -y git rpm-build tree
+    - yum install -y git rpm-build tree epel-rpm-macros
     - ./packaging/server/fts-rest-server.sh
     - mkdir artifacts/
     - cp -r build/server/RPMS build/server/SRPMS artifacts/
