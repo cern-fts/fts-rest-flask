@@ -323,12 +323,12 @@ class JobSubmitter(Base):
         self.opt_parser.add_option(
             "--src-access-token",
             dest="src_access_token",
-            help="The access token for source for a transfer submission via fts token",
+            help="The source access token in token-based transfers",
         )
         self.opt_parser.add_option(
             "--dst-access-token",
             dest="dst_access_token",
-            help="The access token for destination for a transfer submission via fts token",
+            help="The destination access token in token-based transfers",
         )
 
     def validate(self):
@@ -354,11 +354,11 @@ class JobSubmitter(Base):
             ]
         ):
             self.opt_parser.error(
-                "Both the certificate and fts token can't be used simultaneously"
+                "Cannot use both certificate and tokens simultaneously"
             )
 
         # The fts token is present
-        if self.options.fts_token is not None:
+        if self.options.fts_token:
             if self.options.src_access_token is None:
                 self.opt_parser.error(
                     "Source token doesn't exist. Please specify a source token."
@@ -370,13 +370,13 @@ class JobSubmitter(Base):
 
         self._prepare_options()
 
-        # for the case if submission os made through bulk file
+        # For the case if submission is made through bulk file
         if self.options.bulk_file:
-            for file_content in self.transfers:
-                sources = file_content.get("sources", [])
-                destinations = file_content.get("destinations", [])
-                source_tokens = file_content.get("source_tokens", [])
-                destination_tokens = file_content.get("destination_tokens", [])
+            for transfer in self.transfers:
+                sources = transfer.get("sources", [])
+                destinations = transfer.get("destinations", [])
+                source_tokens = transfer.get("source_tokens", [])
+                destination_tokens = transfer.get("destination_tokens", [])
                 if len(sources) != len(source_tokens):
                     self.opt_parser.error(
                         "Please specify source access token for each source"
