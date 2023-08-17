@@ -30,21 +30,8 @@ Requires:       rh-python36-mod_wsgi
 Requires:       python3-mod_wsgi
 %endif
 
-# from jwcrypto
-Requires:       python%{python3_pkgversion}-cryptography
-# from oic
-Requires:       python%{python3_pkgversion}-defusedxml
-Requires:       python%{python3_pkgversion}-pycryptodomex
-# from mako
-Requires:       python%{python3_pkgversion}-markupsafe
-
-### The packages below are not found in community repos and will have to be packaged by us
-# from oic (pyjwkest may require six, future...)
-Requires:       pyjwkest
-Requires:       Beaker
-Requires:       oic
-
-# The following packages were built with a different name on RHEL7
+### The packages below are not found in CC7 community repos and were packaged by us
+### Unfortunately thy were built with a different name than their counterparts on on RHEL9
 %if 0%{?rhel} == 7
 Requires:       typing_extensions
 Requires:       SQLAlchemy >= 1.1.15
@@ -53,6 +40,19 @@ Requires:       mysqlclient
 Requires:       jwcrypto
 Requires:       dirq
 Requires:       Mako
+Requires:       pyjwkest
+Requires:       Beaker
+Requires:       oic
+
+### The following packages are dependencies of some packages build by us
+### Needed for jwcrypto:
+Requires:       python%{python3_pkgversion}-cryptography
+### Needed for oic
+Requires:       python%{python3_pkgversion}-defusedxml
+Requires:       python%{python3_pkgversion}-pycryptodomex
+### Needed for mako
+Requires:       python%{python3_pkgversion}-markupsafe
+
 %else
 Requires:       python%{python3_pkgversion}-typing-extensions
 Requires:       python%{python3_pkgversion}-sqlalchemy >= 1.1.15
@@ -60,6 +60,12 @@ Requires:       python%{python3_pkgversion}-mysqlclient
 Requires:       python%{python3_pkgversion}-jwcrypto
 Requires:       python%{python3_pkgversion}-dirq
 Requires:       python%{python3_pkgversion}-mako
+
+### The following three packages are still not found in community repositories on RHEL9 and were build by us
+### They follow the naming convention for python packages on RHEL9
+Requires:       python%{python3_pkgversion}-pyjwkest
+Requires:       python%{python3_pkgversion}-beaker
+Requires:       python%{python3_pkgversion}-oic
 %endif
 
 BuildArch:      noarch
