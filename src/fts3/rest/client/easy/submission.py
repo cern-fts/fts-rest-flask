@@ -138,7 +138,7 @@ def new_job(
     overwrite_hop=False,
     multihop=False,
     source_spacetoken=None,
-    spacetoken=None,
+    destination_spacetoken=None,
     bring_online=None,
     dst_file_report=False,
     archive_timeout=None,
@@ -160,29 +160,29 @@ def new_job(
     Creates a new dictionary representing a job
 
     Args:
-        transfers:          Initial list of transfers
-        deletion:           Delete files
-        verify_checksum:    Enable checksum verification: source, destination, both or none
-        reuse:              Enable reuse (all transfers are handled by the same process)
-        overwrite:          Overwrite the destinations if exist
-        overwrite_on_retry: Enable overwrite files only during FTS retries
-        overwrite_hop:      Overwrite all files expect final destination in a multihop job
-        multihop:           Treat the transfer as a multihop transfer
-        source_spacetoken:  Source space token
-        spacetoken:         Destination space token
-        bring_online:       Bring online timeout
-        dst_file_report:    Report on the destination tape file if it already exists and overwrite is off
-        archive_timeout:    Archive timeout
-        copy_pin_lifetime:  Pin lifetime
-        retry:              Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
-        metadata:           Metadata to bind to the job
-        priority:           Job priority
-        max_time_in_queue:  Maximum number
-        id_generator:       Job id generator algorithm
-        sid:                Specific id given by the client
-        s3alternate:        Use S3 alternate url schema
-        nostreams:          Number of streams
-        buffer_size:        Tcp buffer size (in bytes) that will be used for the given transfer-job
+        transfers:              Initial list of transfers
+        deletion:               Delete files
+        verify_checksum:        Enable checksum verification: source, destination, both or none
+        reuse:                  Enable reuse (all transfers are handled by the same process)
+        overwrite:              Overwrite the destinations if exist
+        overwrite_on_retry:     Enable overwrite files only during FTS retries
+        overwrite_hop:          Overwrite all files expect final destination in a multihop job
+        multihop:               Treat the transfer as a multihop transfer
+        source_spacetoken:      Source space token
+        destination_spacetoken: Destination space token
+        bring_online:           Bring online timeout
+        dst_file_report:        Report on the destination tape file if it already exists and overwrite is off
+        archive_timeout:        Archive timeout
+        copy_pin_lifetime:      Pin lifetime
+        retry:                  Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
+        metadata:               Metadata to bind to the job
+        priority:               Job priority
+        max_time_in_queue:      Maximum number
+        id_generator:           Job id generator algorithm
+        sid:                    Specific id given by the client
+        s3alternate:            Use S3 alternate url schema
+        nostreams:              Number of streams
+        buffer_size:            Tcp buffer size (in bytes) that will be used for the given transfer-job
 
     Returns:
         An initialized dictionary representing a job
@@ -206,7 +206,7 @@ def new_job(
     params = dict(
         verify_checksum=verify_checksum,
         reuse=reuse,
-        spacetoken=spacetoken,
+        destination_spacetoken=destination_spacetoken,
         bring_online=bring_online,
         dst_file_report=dst_file_report,
         archive_timeout=archive_timeout,
@@ -238,7 +238,7 @@ def new_staging_job(
     bring_online=None,
     copy_pin_lifetime=None,
     source_spacetoken=None,
-    spacetoken=None,
+    destination_spacetoken=None,
     metadata=None,
     priority=None,
     id_generator=JobIdGenerator.standard,
@@ -248,15 +248,15 @@ def new_staging_job(
         Creates a new dictionary representing a staging job
 
     Args:
-        files:             Array of surls to stage. Each item can be either a string or a dictionary with keys surl and metadata
-        bring_online:      Bring online timeout
-        copy_pin_lifetime: Pin lifetime
-        source_spacetoken: Source space token
-        spacetoken:        Deletion spacetoken
-        metadata:          Metadata to bind to the job
-        priority:          Job priority
-        id_generator:      Job id generator algorithm
-        sid:               Specific id given by the client
+        files:                  Array of surls to stage. Each item can be either a string or a dictionary with keys surl and metadata
+        bring_online:           Bring online timeout
+        copy_pin_lifetime:      Pin lifetime
+        source_spacetoken:      Source space token
+        destination_spacetoken: Destination spacetoken
+        metadata:               Metadata to bind to the job
+        priority:               Job priority
+        id_generator:           Job id generator algorithm
+        sid:                    Specific id given by the client
 
     Returns:
         An initialized dictionary representing a staging job
@@ -289,7 +289,7 @@ def new_staging_job(
 
     params = dict(
         source_spacetoken=source_spacetoken,
-        spacetoken=spacetoken,
+        destination_spacetoken=destination_spacetoken,
         bring_online=bring_online,
         copy_pin_lifetime=copy_pin_lifetime,
         job_metadata=metadata,
@@ -313,11 +313,11 @@ def new_delete_job(
     Creates a new dictionary representing a deletion job
 
     Args:
-        files:      Array of surls to delete. Each item can be either a string or a dictionary with keys surl and metadata
-        spacetoken: Deletion spacetoken
-        metadata:   Metadata to bind to the job
-        id_generator:    Job id generator algorithm
-        sid:    Specific id given by the client
+        files:        Array of surls to delete. Each item can be either a string or a dictionary with keys surl and metadata
+        spacetoken:   Deletion spacetoken
+        metadata:     Metadata to bind to the job
+        id_generator: Job id generator algorithm
+        sid:          Specific id given by the client
 
     Return
         An initialized dictionary representing a deletion job
