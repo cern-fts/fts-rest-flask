@@ -40,7 +40,7 @@ DEFAULT_PARAMS = {
     "reuse": None,
     "multihop": False,
     "source_spacetoken": "",
-    "spacetoken": "",
+    "destination_spacetoken": "",
     "retry": 0,
     "retry_delay": 0,
     "priority": 3,
