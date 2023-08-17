@@ -42,7 +42,10 @@ paramSchema = {
             "type": ["boolean", "null"],
             "title": "If set to true, srm sessions will be reused",
         },
-        "spacetoken": {"type": ["string", "null"], "title": "Destination space token"},
+        "destination_spacetoken": {
+            "type": ["string", "null"],
+            "title": "Destination space token",
+        },
         "bring_online": {
             "type": ["integer", "null"],
             "title": "Bring online operation timeout",

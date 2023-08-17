@@ -192,14 +192,14 @@ class JobSubmitter(Base):
         )
         self.opt_parser.add_option(
             "-t",
-            "--dest-token",
-            dest="destination_token",
+            "--destination-spacetoken",
+            dest="destination_spacetoken",
             help="the destination space token or its description.",
         )
         self.opt_parser.add_option(
             "-S",
-            "--source-token",
-            dest="source_token",
+            "--source-spacetoken",
+            dest="source_spacetoken",
             help="the source space token or its description.",
         )
         self.opt_parser.add_option(
@@ -481,8 +481,8 @@ class JobSubmitter(Base):
             archive_timeout=self.options.archive_timeout,
             timeout=self.options.timeout,
             verify_checksum=checksum_mode[0],
-            spacetoken=self.options.destination_token,
-            source_spacetoken=self.options.source_token,
+            destination_spacetoken=self.options.destination_spacetoken,
+            source_spacetoken=self.options.source_spacetoken,
             fail_nearline=self.options.fail_nearline,
             file_metadata=self.options.file_metadata,
             staging_metadata=self.options.staging_metadata,
