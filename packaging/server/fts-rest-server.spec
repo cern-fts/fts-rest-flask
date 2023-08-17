@@ -23,9 +23,6 @@ Requires:       python36-dateutil
 Requires:       python36-jwt
 Obsoletes:      fts-rest
 
-# from mysqlclient:
-Requires:       python3-devel
-Requires:       mysql-devel
 # from jwcrypto
 Requires:       python36-cryptography
 # from oic
