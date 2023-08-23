@@ -125,6 +125,22 @@ server_rpm:
     paths:
       - artifacts/
 
+server_rpm_alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  stage: build
+  script:
+    - yum install -y git rpm-build tree dnf-utils
+    - ./packaging/server/fts-rest-server.sh
+    - mkdir alma9/
+    - cp -r build/server/RPMS build/server/SRPMS alma9/
+    - tree alma9/
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
+  artifacts:
+    when: on_success
+    paths:
+      - alma9/
+
 #--------------------------
 # Docker build templates
 #--------------------------
