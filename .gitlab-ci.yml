@@ -175,6 +175,24 @@ docker_build:
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
 
+docker_build_alma9:
+  stage: docker
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - CACHE="false";
+    - DMC_REPO="https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo";
+    - DESTINATION="gitlab-registry.cern.ch/fts/fts-rest-flask:alma9-ci"
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --dockerfile .gitlab-ci/docker/Dockerfile-ci-alma9 --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
+  retry: 1
+  needs:
+    - job: server_rpm_alma9
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "alma9_playground"
+
 docker_tag:
   <<: *kaniko_build-template
   variables:
