@@ -262,6 +262,26 @@ rpm_tests:
   variables:
     FTS3TESTCONFIG: /usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig
 
+rpm_tests_alma9:
+  stage: tests
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  services:
+    - name: mysql:latest
+      alias: mysqldb
+  script:
+    - dnf install -y mariadb python3-pytest epel-release
+    - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/testing/fts-depend/el9/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
+    - dnf localinstall --nogpgcheck -y alma9/RPMS/*/*.rpm
+    - ./.gitlab-ci/setup-db.sh
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
+    - pytest-3 -x /usr/lib/python3.9/site-packages/fts3rest/tests/functional/
+  dependencies:
+    - server_rpm_alma9
+  needs:
+    - server_rpm_alma9
+  variables:
+    FTS3TESTCONFIG: /usr/lib/python3.9/site-packages/fts3rest/tests/fts3testconfig
+
 #--------------------------
 # Publish templates
 #--------------------------
