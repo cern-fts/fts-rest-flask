@@ -28,6 +28,9 @@ RUN dnf clean metadata
 # Install FTS-REST-Server packages
 RUN dnf install -y fts-rest-server fts-rest-server-selinux --enablerepo=crb
 
+# Generate self signed host certificate
+RUN /usr/libexec/httpd-ssl-gencerts
+
 # Expose ports
 EXPOSE 8446
 
