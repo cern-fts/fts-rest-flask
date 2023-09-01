@@ -241,7 +241,7 @@ rpm_tests:
     - cat "$repo_passwd" | kinit "$repo_user"
     - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/RPMS/*/*.rpm artifacts/SRPMS/*
   tags:
-    - docker-privileged
+    - docker-privileged-xl
   retry: 2
 
 #--------------------------
