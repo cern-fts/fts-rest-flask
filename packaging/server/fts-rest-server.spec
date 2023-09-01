@@ -77,6 +77,9 @@ File Transfer Service (FTS) -- Python3 HTTP API Server
 Summary:        SELinux support for FTS-REST
 Group:          Applications/Internet
 Requires:       %{name} = %{version}-%{release}
+%if 0%{?rhel} == 9
+Requires:       policycoreutils-python-utils
+%endif
 Obsoletes:      fts-rest-selinux
 
 %description selinux
