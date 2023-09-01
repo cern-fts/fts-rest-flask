@@ -228,7 +228,7 @@ rpm_tests:
     - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/RPMS/*/*.rpm artifacts/SRPMS/*
     - sleep 60
   tags:
-    - docker-privileged
+    - docker-privileged-xl
   retry: 2
 
 #--------------------------
