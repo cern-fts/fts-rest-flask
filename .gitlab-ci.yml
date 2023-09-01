@@ -161,6 +161,7 @@ docker_tag:
   services:
     - name: mysql:latest
       alias: mysqldb
+      command: ["--default-authentication-plugin=mysql_native_password"]
   script:
     - sleep 20 # give some time for the mysql service to start
     - PY="PY${CI_JOB_NAME##*_tests}"
@@ -193,6 +194,7 @@ rpm_tests:
   services:
     - name: mysql:latest
       alias: mysqldb
+      command: ["--default-authentication-plugin=mysql_native_password"]
   script:
     - sleep 20 # give some time for the mysql service to start
     - yum install -y yum-plugin-priorities mariadb python36-pytest
