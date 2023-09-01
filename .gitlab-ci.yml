@@ -162,6 +162,7 @@ docker_tag:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
+    - sleep 20 # give some time for the mysql service to start
     - PY="PY${CI_JOB_NAME##*_tests}"
     - VENV="VENV_${CI_JOB_NAME##*_tests}"
     - source ~/.bashrc
@@ -193,6 +194,7 @@ rpm_tests:
     - name: centos/mariadb:latest
       alias: mariadb
   script:
+    - sleep 20 # give some time for the mysql service to start
     - yum install -y yum-plugin-priorities mariadb python36-pytest
     - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
     - yum localinstall --nogpgcheck -y artifacts/RPMS/*/*.rpm
