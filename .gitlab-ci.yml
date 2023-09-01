@@ -159,8 +159,8 @@ docker_tag:
 .functional_tests_template: &functional_tests_definition
   stage: tests
   services:
-    - name: centos/mariadb:latest
-      alias: mariadb
+    - name: mysql:latest
+      alias: mysqldb
   script:
     - sleep 20 # give some time for the mysql service to start
     - PY="PY${CI_JOB_NAME##*_tests}"
@@ -170,7 +170,7 @@ docker_tag:
     - python --version
     - source ${!VENV}/bin/activate
     - ./.gitlab-ci/setup-db.sh
-    - sed -i "s/DbConnectString=localhost/DbConnectString=mariadb/" $FTS3TESTCONFIG
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
     - coverage run --branch --source src/fts3rest/fts3rest/ --omit 'src/fts3rest/fts3rest/tests/*' -m pytest src/ -x
     - coverage report
   needs: []
@@ -191,15 +191,15 @@ rpm_tests:
   stage: tests
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   services:
-    - name: centos/mariadb:latest
-      alias: mariadb
+    - name: mysql:latest
+      alias: mysqldb
   script:
     - sleep 20 # give some time for the mysql service to start
     - yum install -y yum-plugin-priorities mariadb python36-pytest
     - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
     - yum localinstall --nogpgcheck -y artifacts/RPMS/*/*.rpm
     - ./.gitlab-ci/setup-db.sh
-    - sed -i "s/DbConnectString=localhost/DbConnectString=mariadb/" $FTS3TESTCONFIG
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
     - pytest-3 -x /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
   dependencies:
     - server_rpm
