@@ -20,7 +20,7 @@ from flask import request
 from werkzeug.exceptions import BadRequest
 
 from fts3rest.model import *
-from fts3rest.controllers.config import audit_configuration
+from fts3rest.controllers.config import audit_configuration, validate_type
 from fts3rest.lib.helpers.accept import accept
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.misc import get_input_as_dict
@@ -68,7 +68,7 @@ def set_se_config():
                 if not se_info:
                     se_info = Se(storage=storage)
                 for key, value in se_info_new.items():
-                    # value = validate_type(Se, key, value)
+                    value = validate_type(Se, key, value)
                     setattr(se_info, key, value)
 
                 audit_configuration(
@@ -76,28 +76,28 @@ def set_se_config():
                 )
                 Session.merge(se_info)
 
-                # Operation limits
-                operations = cfg.get("operations", None)
-                if operations:
-                    for vo, limits in operations.items():
-                        for op, limit in limits.items():
-                            limit = int(limit)
-                            new_limit = Session.query(OperationConfig).get(
-                                (vo, storage, op)
-                            )
-                            if limit > 0:
-                                if not new_limit:
-                                    new_limit = OperationConfig(
-                                        vo_name=vo, host=storage, operation=op
-                                    )
-                                new_limit.concurrent_ops = limit
-                                Session.merge(new_limit)
-                            elif new_limit:
-                                Session.delete(new_limit)
-                    audit_configuration(
-                        "set-se-limits",
-                        "Set limits for %s: %s" % (storage, json.dumps(operations)),
-                    )
+            # Operation limits
+            operations = cfg.get("operations", None)
+            if operations:
+                for vo, limits in operations.items():
+                    for op, limit in limits.items():
+                        limit = int(limit)
+                        new_limit = Session.query(OperationConfig).get(
+                            (vo, storage, op)
+                        )
+                        if limit > 0:
+                            if not new_limit:
+                                new_limit = OperationConfig(
+                                    vo_name=vo, host=storage, operation=op
+                                )
+                            new_limit.concurrent_ops = limit
+                            Session.merge(new_limit)
+                        elif new_limit:
+                            Session.delete(new_limit)
+                audit_configuration(
+                    "set-se-limits",
+                    "Set limits for %s: %s" % (storage, json.dumps(operations)),
+                )
         Session.commit()
     except (AttributeError, ValueError):
         Session.rollback()
