@@ -80,7 +80,10 @@ def set_se_config():
             operations = cfg.get("operations", None)
             if operations:
                 for vo, limits in operations.items():
+                    vo = validate_type(OperationConfig, "vo_name", vo)
                     for op, limit in limits.items():
+                        op = validate_type(OperationConfig, "operation", op)
+                        limit = validate_type(OperationConfig, "concurrent_ops", limit)
                         limit = int(limit)
                         new_limit = Session.query(OperationConfig).get(
                             (vo, storage, op)
