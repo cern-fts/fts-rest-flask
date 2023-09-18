@@ -238,3 +238,68 @@ class TestConfigSe(TestController):
         self.assertEqual(88, se.outbound_max_active)
         self.assertEqual(11, se.inbound_max_active)
         self.assertEqual(10, se.inbound_max_throughput)
+
+    def test_set_se_invalid_values(self):
+        """
+        Set SE config with invalid values
+        """
+        config = {
+            "test.cern.ch": {
+                "se_info": {
+                    "ipv6": "invalid",
+                    "outbound_max_active": 88,
+                    "inbound_max_active": 11,
+                    "inbound_max_throughput": 10,
+                },
+            }
+        }
+        response = self.app.post_json("/config/se", params=config, status=400)
+
+        self.assertEqual("Field ipv6 is expected to be int", response.json["message"])
+
+        audits = Session.query(ConfigAudit).all()
+        self.assertEqual(0, len(audits))
+
+        ops = (
+            Session.query(OperationConfig)
+            .filter(OperationConfig.host == "test.cern.ch")
+            .all()
+        )
+        self.assertEqual(0, len(ops))
+
+        se = Session.query(Se).filter(Se.storage == "test.cern.ch").all()
+        self.assertEqual(0, len(se))
+
+    def test_set_operation_invalid_values(self):
+        """
+        Set SE config with invalid values
+        """
+        config = {
+            "test.cern.ch": {
+                "operations": {
+                    "atlas": {
+                        "delete": 22,
+                        "staging": 32,
+                    },
+                    "dteam": {"staging": "invalid"},
+                },
+            }
+        }
+        response = self.app.post_json("/config/se", params=config, status=400)
+
+        self.assertEqual(
+            "Field concurrent_ops is expected to be int", response.json["message"]
+        )
+
+        audits = Session.query(ConfigAudit).all()
+        self.assertEqual(0, len(audits))
+
+        ops = (
+            Session.query(OperationConfig)
+            .filter(OperationConfig.host == "test.cern.ch")
+            .all()
+        )
+        self.assertEqual(0, len(ops))
+
+        se = Session.query(Se).filter(Se.storage == "test.cern.ch").all()
+        self.assertEqual(0, len(se))
