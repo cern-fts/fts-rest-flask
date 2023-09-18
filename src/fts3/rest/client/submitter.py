@@ -60,6 +60,7 @@ class Submitter:
                 for f in job["files"]:
                     if "archive_metadata" not in f:
                         f["archive_metadata"] = job["params"]["archive_metadata"]
+                del job["params"]["archive_metadata"]
 
         return json.dumps(job, indent=2)
 
