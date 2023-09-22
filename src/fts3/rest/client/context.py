@@ -170,7 +170,7 @@ class Context(object):
         self._set_user_agent(user_agent)
         self._set_endpoint(endpoint)
         if no_creds:
-            self.ucert = self.ukey = self.access_token = None
+            self.ucert = self.ukey = self.fts_token = None
         else:
 
             self.fts_token = fts_token
