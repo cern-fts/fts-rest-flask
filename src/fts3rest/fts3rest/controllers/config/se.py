@@ -36,20 +36,6 @@ Grid storage configuration
 """
 
 
-def _translate_tcp_mode(mode):
-    if mode == "FULL":
-        supported_mode = "Full support"
-    elif mode == "PULL":
-        supported_mode = "Pull only"
-    elif mode == "PUSH":
-        supported_mode = "Push only"
-    elif mode == "NONE":
-        supported_mode = "Not supported"
-    else:
-        supported_mode = None
-    return supported_mode
-
-
 @authorize(CONFIG)
 @jsonify
 def set_se_config():
@@ -140,10 +126,7 @@ def get_se_config():
             "skip_eviction",
             "tpc_support",
         ]:
-            if attr == "tpc_support":
-                se_info[attr] = _translate_tcp_mode(getattr(opt, attr))
-            else:
-                se_info[attr] = getattr(opt, attr)
+            se_info[attr] = getattr(opt, attr)
         config["se_info"] = se_info
         response[se] = config
 
