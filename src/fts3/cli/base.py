@@ -142,7 +142,7 @@ class Base:
             default=None,
         )
         self.opt_parser.add_option(
-            "--fts-token",
+            "--fts-access-token",
             dest="fts_token",
             help="OAuth2 token that will be used to construct an identity for the connecting client",
             default=None,
