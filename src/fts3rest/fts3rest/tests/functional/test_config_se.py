@@ -167,3 +167,33 @@ class TestConfigSe(TestController):
         self.test_get_se_config()
         self.app.delete(url="/config/se", status=400)
         self.app.delete(url="/config/se?se=test.cern.ch", status=204)
+
+    def test_invalid_tpc_role(self):
+        """
+        Configure SE with invalid TPC role
+        """
+        config = {
+            "test.cern.ch": {
+                "se_info": {
+                    "ipv6": 1,
+                    "outbound_max_active": 88,
+                    "inbound_max_active": 11,
+                    "inbound_max_throughput": 10,
+                    "tpc_support": "whatever",
+                },
+            }
+        }
+        self.app.post_json("/config/se", params=config, status=400)
+
+        audits = Session.query(ConfigAudit).all()
+        self.assertEqual(0, len(audits))
+
+        ops = (
+            Session.query(OperationConfig)
+            .filter(OperationConfig.host == "test.cern.ch")
+            .all()
+        )
+        self.assertEqual(0, len(ops))
+
+        se = Session.query(Se).filter(Se.storage == "test.cern.ch").all()
+        self.assertEqual(0, len(se))
