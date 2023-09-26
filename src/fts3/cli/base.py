@@ -143,7 +143,7 @@ class Base:
         )
         self.opt_parser.add_option(
             "--fts-access-token",
-            dest="fts_token",
+            dest="fts_access_token",
             help="OAuth2 token that will be used to construct an identity for the connecting client",
             default=None,
         )
@@ -180,15 +180,15 @@ class Base:
             ukey=self.options.ukey,
             ucert=self.options.ucert,
             verify=self.options.verify,
-            fts_token=self.options.fts_token,
+            fts_access_token=self.options.fts_access_token,
             capath=self.options.capath,
             user_agent=user_agent,
         )
 
     def _access_token_compatibility(self):
-        if self.options.access_token and self.options.fts_token:
+        if self.options.access_token and self.options.fts_access_token:
             self.opt_parser.error(
-                "Cannot use both '--access-token' and '--fts-token' simultaneously. (prefer new token handles)"
+                "Cannot use both '--access-token' and '--fts-access-token' simultaneously. (prefer new token handles)"
             )
         if self.options.access_token:
-            self.options.fts_token = self.options.access_token
+            self.options.fts_access_token = self.options.access_token
