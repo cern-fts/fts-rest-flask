@@ -36,6 +36,15 @@ Grid storage configuration
 """
 
 
+def _validate_tpc_support(key, value):
+    valid_tpc_role = ["FULL", "PULL", "PUSH", "NONE"]
+    if value not in valid_tpc_role:
+        raise BadRequest(
+            "Field %s is expected to be one of the following: %s"
+            % (key, ", ".join(valid_tpc_role))
+        )
+
+
 @authorize(CONFIG)
 @jsonify
 def set_se_config():
@@ -55,6 +64,8 @@ def set_se_config():
                     se_info = Se(storage=storage)
                 for key, value in se_info_new.items():
                     # value = validate_type(Se, key, value)
+                    if key == "tpc_support":
+                        _validate_tpc_support(key, value)
                     setattr(se_info, key, value)
 
                 audit_configuration(
