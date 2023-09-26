@@ -95,7 +95,7 @@ def set_link_config():
         Session.rollback()
         raise
 
-    return link_cfg
+    return Response(link_cfg, status=201)
 
 
 @authorize(CONFIG)
