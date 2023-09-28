@@ -252,33 +252,6 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             authorization.error = str(ex)
             return
 
-        # Try to obtain scopes via best-effort introspection
-        scope = self._scope_from_credential(credential)
-        if scope is None:
-            try:
-                log.debug(
-                    "Retrieving scopes via introspection: {}".format(credential["iss"])
-                )
-                response = oidc_manager.introspect(credential["iss"], access_token)
-                scope = self._scope_from_credential(response)
-            except Exception as ex:
-                log.info("Exception retrieving scopes via introspection: {}".format(ex))
-                pass
-
-        authorization.is_oauth = True
-        authorization.issuer = credential["iss"]
-        authorization.subject = credential["sub"]
-        authorization.client_id = credential.get("client_id")
-        authorization.expiry = credential["exp"]
-        authorization.scope = scope
-        authorization.groups = credential.get("wlcg.groups")
-        authorization.wlcg_profile = "wlcg.ver" in credential
-        authorization.token = access_token
-        authorization.expires_in = (
-            datetime.utcfromtimestamp(credential["exp"]) - datetime.utcnow()
-        )
-        authorization.is_valid = authorization.expires_in > timedelta(seconds=0)
-
     def _validate_token_offline(self, access_token):
         """
         Validate access token using cached information from the provider
