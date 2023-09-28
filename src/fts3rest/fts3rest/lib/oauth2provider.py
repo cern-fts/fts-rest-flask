@@ -125,7 +125,7 @@ class FTS3OAuth2AuthorizationProvider(AuthorizationProvider):
         self,
         client_id,
         scope,
-        access_token,
+        fts_access_token,
         token_type,
         expires_in,
         refresh_token,
@@ -140,7 +140,7 @@ class FTS3OAuth2AuthorizationProvider(AuthorizationProvider):
         token = OAuth2Token(
             client_id=client_id,
             scope=scope,
-            access_token=access_token,
+            fts_access_token=fts_access_token,
             token_type=token_type,
             expires=datetime.utcnow() + timedelta(seconds=expires_in),
             refresh_token=refresh_token,
@@ -194,7 +194,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         Obtain a refresh token from a filled-in token authorization object
 
         :param authorization: the token authorization object as filled-in
-                              by the validate_access_token() method
+                              by the validate_fts_token() method
         :return: an access/refresh token pair
         """
         if authorization.issuer is None or authorization.token is None:
@@ -205,15 +205,15 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         if authorization.wlcg_profile:
             audience = "https://wlcg.cern.ch/jwt/v1/any"
 
-        (access_token, refresh_token) = oidc_manager.generate_refresh_token(
+        (fts_access_token, refresh_token) = oidc_manager.generate_refresh_token(
             issuer=authorization.issuer,
             token=authorization.token,
             audience=audience,
             scope=authorization.scope,
         )
-        return access_token, refresh_token
+        return fts_access_token, refresh_token
 
-    def validate_access_token(self, access_token, authorization):
+    def validate_fts_token(self, fts_access_token, authorization):
         """
         Validate access token offline or online
 
@@ -223,14 +223,14 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             -- Offline validation must have valid "exp", "iat" and "nbf" claims
             -- Online validation must include "offline_access" scope
 
-        :param access_token:
+        :param fts_access_token:
         :param authorization: attribute to fill-in with token information
         """
         authorization.is_valid = False
         validation_method = "offline" if self._should_validate_offline() else "online"
 
         try:
-            if not oidc_manager.token_issuer_supported(access_token):
+            if not oidc_manager.token_issuer_supported(fts_access_token):
                 authorization.error = "TokenProvider not supported"
                 return
         except Exception as ex:
@@ -240,9 +240,9 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
         try:
             if validation_method == "offline":
-                valid, credential = self._validate_token_offline(access_token)
+                valid, credential = self._validate_token_offline(fts_access_token)
             else:
-                valid, credential = self._validate_token_online(access_token)
+                valid, credential = self._validate_token_online(fts_access_token)
             if not valid:
                 return
         except Exception as ex:
@@ -252,11 +252,11 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             authorization.error = str(ex)
             return
 
-    def _validate_token_offline(self, access_token):
+    def _validate_token_offline(self, fts_access_token):
         """
         Validate access token using cached information from the provider
 
-        :param access_token:
+        :param fts_access_token:
         :return: tuple(valid, credential) or tuple(False, None)
         :raise Exception: exception on invalid token
         """
@@ -271,7 +271,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                     audience = "https://wlcg.cern.ch/jwt/v1/any"
                     options["verify_aud"] = True
                 return jwt.decode(
-                    access_token,
+                    fts_access_token,
                     key.export_to_pem(),
                     algorithms=[algorithm],
                     audience=audience,
@@ -281,12 +281,12 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                 return None
 
         unverified_payload = jwt.decode(
-            access_token,
+            fts_access_token,
             options=jwt_options_unverified(
                 {"verify_exp": True, "verify_nbf": True, "verify_iat": True}
             ),
         )
-        unverified_header = jwt.get_unverified_header(access_token)
+        unverified_header = jwt.get_unverified_header(fts_access_token)
         issuer = unverified_payload["iss"]
         key_id = unverified_header.get("kid")
         algorithm = unverified_header.get("alg")
@@ -303,21 +303,23 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         log.warning("No key managed to decode the token")
         return False, None
 
-    def _validate_token_online(self, access_token):
+    def _validate_token_online(self, fts_access_token):
         """
         Validate access token using Introspection (RFC 7662).
         Furthermore, run some FTS specific validations, such as
         requiring the "offline_access" scope.
 
-        :param access_token:
+        :param fts_access_token:
         :return: tuple(valid, credential) or tuple(False, None)
         :raise Exception: exception during introspection
                or if missing "offline_access" scope
         """
-        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
+        unverified_payload = jwt.decode(
+            fts_access_token, options=jwt_options_unverified()
+        )
         issuer = unverified_payload["iss"]
         log.debug("issuer={}".format(issuer))
-        credential = oidc_manager.introspect(issuer, access_token)
+        credential = oidc_manager.introspect(issuer, fts_access_token)
         log.debug("online_response::: {}".format(credential))
         if not credential["active"]:
             return False, None
