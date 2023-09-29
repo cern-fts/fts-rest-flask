@@ -2,6 +2,7 @@
 
 curl -s -O https://gitlab.cern.ch/fts/fts3/-/raw/develop/src/db/schema/mysql/fts-schema-8.0.1.sql
 curl -s -O https://gitlab.cern.ch/fts/fts3/-/raw/develop/src/db/schema/mysql/fts-diff-8.1.0.sql
+curl -s -O https://gitlab.cern.ch/fts/fts3/-/raw/FTS-1829_scitags/src/db/schema/mysql/fts-diff-8.2.0.sql
 
 mysql --user=root --password=ftsflaskroot --host=mysqldb ftsflask < fts-schema-8.0.1.sql
 mysql --user=root --password=ftsflaskroot --host=mysqldb ftsflask < fts-diff-8.1.0.sql
