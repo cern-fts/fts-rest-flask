@@ -365,7 +365,7 @@ class JobSubmitter(Base):
         # Both the certificate and the fts token is present
         if self.options.ucert and any(
             [
-                self.options.fts_token,
+                self.options.fts_access_token,
                 self.options.src_access_token,
                 self.options.dst_access_token,
             ]
@@ -375,7 +375,7 @@ class JobSubmitter(Base):
             )
 
         # The fts token is present
-        if self.options.fts_token:
+        if self.options.fts_access_token:
             if self.options.src_access_token is None:
                 self.opt_parser.error(
                     "Source token doesn't exist. Please specify a source access token"
