@@ -138,13 +138,13 @@ class Base:
         self.opt_parser.add_option(
             "--access-token",
             dest="access_token",
-            help="deprecated: OAuth2 access token (supported for limited time)",
+            help="deprecated: Single OAuth2 access-token for FTS submission plus source and destination tokens.",
             default=None,
         )
         self.opt_parser.add_option(
             "--fts-access-token",
             dest="fts_access_token",
-            help="OAuth2 token that will be used to construct an identity for the connecting client",
+            help="OAuth2 access-token for FTS submission.  Source and destination tokens must be specified separately.",
             default=None,
         )
 
