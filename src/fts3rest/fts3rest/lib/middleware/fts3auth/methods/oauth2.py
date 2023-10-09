@@ -61,14 +61,6 @@ def do_authentication(credentials, env, config):
         credentials.user_dn, credentials.voms_cred
     )
 
-    # Handle the database part of token authentication
-    # Should be refactored and moved to the delegation process
-    try:
-        _handle_credential_storing(res_provider, credentials, authn)
-    except Exception as ex:
-        log.warning("Error obtaining refresh token: {}".format(ex))
-        raise InvalidCredentials("Error obtaining refresh tokens: {}".format(ex))
-
     # Extend UserCredentials object with OAuth2 specific fields
     setattr(credentials, "oauth2_scope", " ".join(authn.scope) if authn.scope else None)
     setattr(credentials, "wlcg_profile", authn.wlcg_profile)
