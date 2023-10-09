@@ -742,23 +742,27 @@ def submit():
     # First, the request has to be valid JSON
     submitted_dict = get_input_as_dict(request)
 
-    # The auto-generated delegation id must be valid
     user = request.environ["fts3.User.Credentials"]
-    credential = Session.query(Credential).get((user.delegation_id, user.user_dn))
-    if credential is None:
-        raise HTTPAuthenticationTimeout('No delegation found for "%s"' % user.user_dn)
-    if credential.expired():
-        remaining = credential.remaining()
-        seconds = abs(remaining.seconds + remaining.days * 24 * 3600)
-        raise HTTPAuthenticationTimeout(
-            "The delegated credentials expired %d seconds ago (%s)"
-            % (seconds, user.delegation_id)
-        )
-    if user.method != "oauth2" and credential.remaining() < timedelta(hours=1):
-        raise HTTPAuthenticationTimeout(
-            "The delegated credentials has less than one hour left (%s)"
-            % user.delegation_id
-        )
+
+    if user.method == "certificate":
+        # The auto-generated delegation id must be valid
+        credential = Session.query(Credential).get((user.delegation_id, user.user_dn))
+        if credential is None:
+            raise HTTPAuthenticationTimeout(
+                'No delegation found for "%s"' % user.user_dn
+            )
+        if credential.expired():
+            remaining = credential.remaining()
+            seconds = abs(remaining.seconds + remaining.days * 24 * 3600)
+            raise HTTPAuthenticationTimeout(
+                "The delegated credentials expired %d seconds ago (%s)"
+                % (seconds, user.delegation_id)
+            )
+        if credential.remaining() < timedelta(hours=1):
+            raise HTTPAuthenticationTimeout(
+                "The delegated credentials has less than one hour left (%s)"
+                % user.delegation_id
+            )
 
     # Populate the job and files
     populated = JobBuilder(user, **submitted_dict)
