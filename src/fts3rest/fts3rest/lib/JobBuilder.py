@@ -483,12 +483,14 @@ class JobBuilder:
         else:
             self.params["job_metadata"] = {"auth_method": self.user.method}
 
-    def __init__(self, user, **kwargs):
+    def __init__(self, request, **kwargs):
         """
         Constructor
         """
         try:
-            self.user = user
+            self.request = request
+            self.user = request.environ["fts3.User.Credentials"]
+
             # Get the job parameters
             self.params = self._get_params(kwargs.pop("params", dict()))
 

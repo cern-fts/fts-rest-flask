@@ -765,7 +765,7 @@ def submit():
             )
 
     # Populate the job and files
-    populated = JobBuilder(user, **submitted_dict)
+    populated = JobBuilder(request, **submitted_dict)
 
     log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
 
