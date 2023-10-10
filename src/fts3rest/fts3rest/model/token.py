@@ -12,16 +12,16 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from datetime import datetime
+from sqlalchemy import Column, DateTime, Text, String
+
 from .base import Base
-from .banned import *
-from .cloudStorage import *
-from .config import *
-from .credentials import *
-from .dm import *
-from .file import *
-from .job import *
-from .oauth2 import *
-from .optimizer import *
-from .server import *
-from .token import *
-from .version import *
+
+
+class Token(Base):
+    __tablename__ = "t_token"
+
+    token_id = Column(String(16), primary_key=True)
+    access_token = Column(Text)
+    refresh_token = Column(Text)
+    issuer = Column(Text)
