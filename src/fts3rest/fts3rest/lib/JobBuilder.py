@@ -324,6 +324,42 @@ class JobBuilder:
                 "Reuse jobs must only contain transfers for the same source ad destination storage"
             )
 
+    def _file_list_contains_a_token_list(self, files_list):
+        """
+        Returns true if the list of file contains at least one list of source or destination tokens
+        """
+
+        for file_dict in files_list:
+            if "source_tokens" in file_dict:
+                return True
+            if "destination_tokens" in file_dict:
+                return True
+        return False
+
+    def _add_missing_tokens_if_necessary(self, files_list):
+        """
+        Adds missing tokens if "single token" end user
+        """
+
+        # If "single token" end user
+        if self.user.method == "oauth" and not self._file_list_contains_a_token_list(
+            files_list
+        ):
+            # Get bearer token from HTTP headers
+            http_auth_header = self.request.environ["HTTP_AUTHORIZATION"].split()
+            bearer_token = http_auth_header[1]
+
+            # Add bearer token as missing source and destination tokens
+            for file_dict in files_list:
+
+                file_dict["source_tokens"] = []
+                for i in range(len(file_dict["sources"])):
+                    file_dict["source_tokens"].append(bearer_token)
+
+                file_dict["destination_tokens"] = []
+                for i in range(len(file_dict["destinations"])):
+                    file_dict["destination_tokens"].append(bearer_token)
+
     def _populate_transfers(self, files_list):
         """
         Initializes the list of transfers
@@ -498,6 +534,9 @@ class JobBuilder:
 
             files_list = kwargs.pop("files", None)
             datamg_list = kwargs.pop("delete", None)
+
+            # Be backwards compatible with single token clients
+            self._add_missing_tokens_if_necessary(files_list)
 
             if datamg_list is not None:
                 raise MethodNotAllowed(
