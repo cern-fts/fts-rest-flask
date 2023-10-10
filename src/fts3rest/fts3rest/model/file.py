@@ -84,6 +84,8 @@ class File(Base):
     log_debug = Column("log_file_debug", Integer)
     activity = Column(String(255), default="default")
     scitag = Column(Integer)
+    src_token_id = Column(String(16))
+    dst_token_id = Column(String(16))
 
     retries = relation(
         "FileRetryLog", uselist=True, lazy=True, backref=backref("file", lazy=False)
