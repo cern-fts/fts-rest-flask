@@ -46,6 +46,11 @@ class Submitter:
                     if "filesize" not in f:
                         f["filesize"] = job["params"]["filesize"]
                 del job["params"]["filesize"]
+            if "scitag" in job["params"]:
+                for f in job["files"]:
+                    if "scitag" not in f:
+                        f["scitag"] = job["params"]["scitag"]
+                del job["params"]["scitag"]
             if "file_metadata" in job["params"]:
                 for f in job["files"]:
                     if "metadata" not in f:

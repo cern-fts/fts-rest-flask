@@ -60,6 +60,7 @@ def new_transfer(
     destination,
     checksum="ADLER32",
     filesize=None,
+    scitag=None,
     metadata=None,
     staging_metadata=None,
     archive_metadata=None,
@@ -74,6 +75,7 @@ def new_transfer(
         destination:        Destination SURL
         checksum:           Checksum
         filesize:           File size
+        scitag:             SciTag flow label
         metadata:           Metadata to bind to the transfer
         staging_metadata:   Staging Metadata to bind to the bringonline operation
         archive_metadata:   Archive Metadata to bind to the archiving operation
@@ -90,6 +92,12 @@ def new_transfer(
         transfer["checksum"] = checksum
     if filesize:
         transfer["filesize"] = filesize
+    if scitag:
+        if not (65 <= scitag <= 65535):
+            raise ClientError(
+                "Invalid SciTag value: {} (not in [65, 65535] range)".format(scitag)
+            )
+        transfer["scitag"] = scitag
     if metadata:
         transfer["metadata"] = metadata
     if staging_metadata:

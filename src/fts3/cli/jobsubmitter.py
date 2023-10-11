@@ -52,6 +52,7 @@ DEFAULT_PARAMS = {
     "ipv6": False,
     "buffer_size": None,
     "strict_copy": False,
+    "scitag": None,
 }
 
 
@@ -320,6 +321,12 @@ class JobSubmitter(Base):
             action="store_true",
             help="disable all checks, just copy the file",
         )
+        self.opt_parser.add_option(
+            "--scitag",
+            dest="scitag",
+            type=int,
+            help="SciTag flow label (value must be in the [65, 65535] range)",
+        )
 
     def validate(self):
         self.checksum = None
@@ -350,6 +357,14 @@ class JobSubmitter(Base):
         ):
             self.opt_parser.error(
                 "Multiple overwrite flags can not be used at the same time"
+            )
+        if self.params.get("scitag") is not None and not (
+            65 <= self.params["scitag"] <= 65535
+        ):
+            self.opt_parser.error(
+                "Invalid SciTag value: {} (not in [65, 65535] range)".format(
+                    self.params["scitag"]
+                )
             )
 
     def _build_transfers(self):
@@ -432,6 +447,7 @@ class JobSubmitter(Base):
             target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
             strict_copy=self.options.strict_copy,
+            scitag=self.options.scitag,
         )
 
     def _do_submit(self, context):
