@@ -52,6 +52,7 @@ DEFAULT_PARAMS = {
     "ipv6": False,
     "buffer_size": None,
     "strict_copy": False,
+    "activity": None,
     "scitag": None,
 }
 
@@ -322,6 +323,12 @@ class JobSubmitter(Base):
             help="disable all checks, just copy the file",
         )
         self.opt_parser.add_option(
+            "--activity",
+            dest="activity",
+            type="string",
+            help="transfer activity label",
+        )
+        self.opt_parser.add_option(
             "--scitag",
             dest="scitag",
             type=int,
@@ -447,6 +454,7 @@ class JobSubmitter(Base):
             target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
             strict_copy=self.options.strict_copy,
+            activity=self.options.activity,
             scitag=self.options.scitag,
         )
 

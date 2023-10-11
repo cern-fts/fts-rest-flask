@@ -47,6 +47,7 @@ class Submitter:
             job["files"] = transfers
             _apply_job_param_to_files("checksum", job["params"], job["files"])
             _apply_job_param_to_files("filesize", job["params"], job["files"])
+            _apply_job_param_to_files("activity", job["params"], job["files"])
             _apply_job_param_to_files("scitag", job["params"], job["files"])
             _apply_job_param_to_files(
                 "file_metadata", job["params"], job["files"], "metadata"
