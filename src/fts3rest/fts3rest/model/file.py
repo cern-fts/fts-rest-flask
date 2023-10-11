@@ -83,6 +83,7 @@ class File(Base):
     log_file = Column(String(2048))
     log_debug = Column("log_file_debug", Integer)
     activity = Column(String(255), default="default")
+    scitag = Column(Integer)
 
     retries = relation(
         "FileRetryLog", uselist=True, lazy=True, backref=backref("file", lazy=False)
@@ -131,6 +132,7 @@ class ArchivedFile(Base):
     staging_finished = Column(DateTime)
     selection_strategy = Column(String(255))
     bringonline_token = Column(String(255))
+    scitag = Column(Integer)
 
     def __str__(self):
         return str(self.file_id)

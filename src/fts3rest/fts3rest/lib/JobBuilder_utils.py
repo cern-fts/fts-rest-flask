@@ -158,6 +158,26 @@ def safe_int(param, default=-1):
             return default
 
 
+def validate_scitag(scitag):
+    """
+    Ensure "scitag" is integer in the [65, 65535] range.
+    Throw an error if not integer or not in range
+    """
+    if scitag is None:
+        return scitag
+    if not isinstance(scitag, int):
+        raise ValueError(
+            "Invalid SciTag value: {}. "
+            "Must be an integer in the [65, 65535] range!".format(scitag)
+        )
+    else:
+        if not (65 <= scitag <= 65535):
+            raise ValueError(
+                "Invalid SciTag value: {} (not in [65, 65535] range)".format(scitag)
+            )
+    return scitag
+
+
 def generate_hashed_id():
     """
     Generates a uniformly distributed value between 0 and 2**16
