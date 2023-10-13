@@ -24,7 +24,7 @@ import logging
 import functools
 import time
 
-from fts3rest.model import Job, File, JobActiveStates, FileActiveStates
+from fts3rest.model import Job, File, JobActiveStates, FileActiveStates, Token
 from fts3rest.model import DataManagement, DataManagementActiveStates
 from fts3rest.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
@@ -771,6 +771,15 @@ def submit():
 
     # Insert the job
     try:
+        start_merge_tokens = time.perf_counter()
+        for token_dict in populated.tokens:
+            token = Token(**token_dict)
+            Session.merge(token)
+            Session.commit()
+        log.info(
+            f"Merged tokens into database: job_id={populated.job_id} db_secs={time.perf_counter() - start_merge_tokens} nb_tokens={len(populated.tokens)}"
+        )
+
         try:
             start_insert_job = time.perf_counter()
             Session.execute(Job.__table__.insert(), [populated.job])
