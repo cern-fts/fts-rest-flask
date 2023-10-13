@@ -192,7 +192,7 @@ class TestJobSubmission(TestController):
             status=200,
         ).json["job_id"]
 
-        # Make sure it was commited to the DB
+        # Make sure it was committed to the DB
         self.assertTrue(job_id)
 
         job = Session.query(Job).get(job_id)
@@ -228,7 +228,7 @@ class TestJobSubmission(TestController):
             status=200,
         ).json["job_id"]
 
-        # Make sure it was commited to the DB
+        # Make sure it was committed to the DB
         self.assertTrue(job_id)
 
         job = Session.query(Job).get(job_id)
@@ -641,7 +641,7 @@ class TestJobSubmission(TestController):
             status=200,
         ).json["job_id"]
 
-        # Make sure it was commited to the DB
+        # Make sure it was committed to the DB
         self.assertGreater(len(job_id), 0)
 
         self._validate_submitted(Session.query(Job).get(job_id), no_vo=True)
@@ -676,7 +676,7 @@ class TestJobSubmission(TestController):
             status=200,
         ).json["job_id"]
 
-        # Make sure it was commited to the DB
+        # Make sure it was committed to the DB
         self.assertGreater(len(job_id), 0)
 
         self._validate_submitted(
@@ -716,7 +716,7 @@ class TestJobSubmission(TestController):
             status=200,
         ).json["job_id"]
 
-        # Make sure it was commited to the DB
+        # Make sure it was committed to the DB
         self.assertGreater(len(job_id), 0)
 
         job = Session.query(Job).get(job_id)
@@ -726,7 +726,7 @@ class TestJobSubmission(TestController):
 
     def test_with_activity(self):
         """
-        Submit a job specifiying activities for the files
+        Submit a job specifying activities for the files
         """
         self.setup_gridsite_environment()
         self.push_delegation()
@@ -753,7 +753,7 @@ class TestJobSubmission(TestController):
             status=200,
         ).json["job_id"]
 
-        # Make sure it was commited to the DB
+        # Make sure it was committed to the DB
         self.assertGreater(len(job_id), 0)
 
         job = Session.query(Job).get(job_id)
@@ -787,7 +787,7 @@ class TestJobSubmission(TestController):
             params=json.dumps(job),
             status=200,
         ).json["job_id"]
-        # Make sure it was commited to the DB
+        # Make sure it was committed to the DB
         self.assertGreater(len(job_id), 0)
 
         job = Session.query(Job).get(job_id)
@@ -1120,3 +1120,145 @@ class TestJobSubmission(TestController):
         self.assertTrue(
             jobdb.internal_job_params is None or "ipv6" not in jobdb.internal_job_params
         )
+
+    def test_submit_scitag(self):
+        """
+        Submit a job with valid scitag value
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.es/file"],
+                    "destinations": ["https://dest.ch/file"],
+                    "scitag": 65,
+                },
+                {
+                    "sources": ["https://source.es/file2"],
+                    "destinations": ["https://dest.ch/file2"],
+                    "scitag": 65535,
+                },
+            ]
+        }
+
+        job_id = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        # Make sure it was committed to the DB
+        self.assertGreater(len(job_id), 0)
+
+        job = Session.query(Job).get(job_id)
+        self.assertEqual(job.files[0].scitag, 65)
+        self.assertEqual(job.files[1].scitag, 65535)
+
+    def test_submit_scitag_none(self):
+        """
+        Submit a job with scitag value "None"
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.es/file"],
+                    "destinations": ["https://dest.ch/file"],
+                    "scitag": None,
+                },
+            ]
+        }
+
+        job_id = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        # Make sure it was committed to the DB
+        self.assertGreater(len(job_id), 0)
+
+        job = Session.query(Job).get(job_id)
+        self.assertEqual(job.files[0].scitag, None)
+
+    def test_submit_scitag_invalid_range(self):
+        """
+        Submit jobs with invalid scitag numeric values
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.es/file"],
+                    "destinations": ["https://dest.ch/file"],
+                },
+            ]
+        }
+
+        # Scitag below min range value
+        job["files"][0]["scitag"] = 0
+        message = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        ).json["message"]
+        self.assertIn("Invalid SciTag", message)
+        self.assertIn("0", message)
+
+        # Scitag above max range value
+        job["files"][0]["scitag"] = 80000
+        message = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        ).json["message"]
+        self.assertIn("Invalid SciTag", message)
+        self.assertIn("80000", message)
+
+    def test_submit_scitag_invalid_type(self):
+        """
+        Submit jobs with invalid scitag type
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.es/file"],
+                    "destinations": ["https://dest.ch/file"],
+                },
+            ]
+        }
+
+        # Scitag orthodox string value
+        job["files"][0]["scitag"] = "mystring"
+        message = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        ).json["message"]
+        self.assertIn("Must be an integer", message)
+        self.assertIn("mystring", message)
+
+        # Scitag non-orthodox string value
+        job["files"][0]["scitag"] = "65"
+        message = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        ).json["message"]
+        self.assertIn("Must be an integer", message)
+        self.assertIn("65", message)

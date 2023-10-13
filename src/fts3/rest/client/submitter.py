@@ -24,6 +24,15 @@ class Submitter:
     def build_submission(
         transfers=None, delete=None, params=None, staging=None, **kwargs
     ):
+        def _apply_job_param_to_files(key, params, files, file_key=None):
+            if file_key is None:
+                file_key = key
+            if key in params:
+                for f in files:
+                    if key not in f:
+                        f[file_key] = params[key]
+                del params[key]
+
         job = dict()
         job["params"] = dict()
         if params:
@@ -36,31 +45,15 @@ class Submitter:
             job["staging"] = staging
         if transfers:
             job["files"] = transfers
-            if "checksum" in job["params"]:
-                for f in job["files"]:
-                    if "checksum" not in f:
-                        f["checksum"] = job["params"]["checksum"]
-                del job["params"]["checksum"]
-            if "filesize" in job["params"]:
-                for f in job["files"]:
-                    if "filesize" not in f:
-                        f["filesize"] = job["params"]["filesize"]
-                del job["params"]["filesize"]
-            if "file_metadata" in job["params"]:
-                for f in job["files"]:
-                    if "metadata" not in f:
-                        f["metadata"] = job["params"]["file_metadata"]
-                del job["params"]["file_metadata"]
-            if "staging_metadata" in job["params"]:
-                for f in job["files"]:
-                    if "staging_metadata" not in f:
-                        f["staging_metadata"] = job["params"]["staging_metadata"]
-                del job["params"]["staging_metadata"]
-            if "archive_metadata" in job["params"]:
-                for f in job["files"]:
-                    if "archive_metadata" not in f:
-                        f["archive_metadata"] = job["params"]["archive_metadata"]
-                del job["params"]["archive_metadata"]
+            _apply_job_param_to_files("checksum", job["params"], job["files"])
+            _apply_job_param_to_files("filesize", job["params"], job["files"])
+            _apply_job_param_to_files("activity", job["params"], job["files"])
+            _apply_job_param_to_files("scitag", job["params"], job["files"])
+            _apply_job_param_to_files(
+                "file_metadata", job["params"], job["files"], "metadata"
+            )
+            _apply_job_param_to_files("staging_metadata", job["params"], job["files"])
+            _apply_job_param_to_files("archive_metadata", job["params"], job["files"])
 
         return json.dumps(job, indent=2)
 
