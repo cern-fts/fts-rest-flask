@@ -12,6 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import base64
+import itertools
+import json
 import socket
 import time
 
@@ -19,6 +22,7 @@ from datetime import datetime
 from urllib.parse import urlparse, parse_qsl, ParseResult, urlencode
 from flask import current_app as app
 from .JobBuilder_utils import *
+from fts3rest.lib.middleware.fts3auth import credentials
 
 log = logging.getLogger(__name__)
 
@@ -115,15 +119,31 @@ class JobBuilder:
         """
         From the dictionary file_dict, generate a list of transfers for a job
         """
-        # Extract matching pairs
-        pairs = []
-        for source in file_dict["sources"]:
+        # Extract transfer tuples where each tuple has a source, destination
+        # source token and destionation token.  Source and destination
+        # tokens will be None if the client is using X509 proxy certificates
+        tuples = []
+        self.user.method == "oauth"
+
+        # Use a combination of empty lists and itertools.zip_longest() to handle
+        # the fact the JSON submit/job request will not contain source or
+        # destination tokens if the client is using X509 proxy certificates
+        src_tokens = file_dict.get("source_tokens", [])
+        dst_tokens = file_dict.get("destination_tokens", [])
+
+        for source, src_token in itertools.zip_longest(
+            file_dict["sources"], src_tokens
+        ):
             source_url = urlparse(source.strip())
             validate_url(source_url)
-            for destination in file_dict["destinations"]:
+            src_token_id = credentials.generate_token_id(src_token)
+            for destination, dst_token in itertools.zip_longest(
+                file_dict["destinations"], dst_tokens
+            ):
                 dest_url = urlparse(destination.strip())
                 validate_url(dest_url)
-                pairs.append((source_url, dest_url))
+                dst_token_id = credentials.generate_token_id(dst_token)
+                tuples.append((source_url, dest_url, src_token_id, dst_token_id))
 
         # Create one File entry per matching pair
         if self.is_bringonline:
@@ -146,7 +166,7 @@ class JobBuilder:
                 shared_hashed_id = generate_hashed_id()
         vo_name = self.user.vos[0]
 
-        for source, destination in pairs:
+        for source, destination, src_token_id, dst_token_id in tuples:
             if len(file_dict["sources"]) > 1 or not is_dest_surl_uuid_enabled(vo_name):
                 dest_uuid = None
             else:
@@ -181,6 +201,8 @@ class JobBuilder:
                 archive_metadata=file_dict.get("archive_metadata", None),
                 activity=file_dict.get("activity", "default"),
                 scitag=validate_scitag(file_dict.get("scitag", None)),
+                src_token_id=src_token_id,
+                dst_token_id=dst_token_id,
                 hashed_id=shared_hashed_id
                 if shared_hashed_id
                 else generate_hashed_id(),
@@ -360,6 +382,70 @@ class JobBuilder:
                 file_dict["destination_tokens"] = []
                 for i in range(len(file_dict["destinations"])):
                     file_dict["destination_tokens"].append(bearer_token)
+
+    def _add_tokens_to_dict(self, tokens_dict, token_list):
+        """
+        Adds the specified tokens to the specified dictionary
+        """
+
+        for token in token_list:
+            token_id = credentials.generate_token_id(token)
+            tokens_dict[token_id] = token
+
+    def _get_jwt_payload(self, token):
+        """
+        Extracts, decodes and parses the payload of the specified token
+        """
+
+        segments = token.split(".")
+        if len(segments) < 3:
+            raise Exception(f"Not enough token segments: min=3 actual={len(segments)}")
+        payload = segments[1]
+        len_payload_mod_4 = len(segments[1]) % 4
+        if len_payload_mod_4 > 0:
+            payload = payload + "=" * (4 - len_payload_mod_4)
+        decoded_payload = base64.urlsafe_b64decode(payload)
+        return json.loads(decoded_payload)
+
+    def _populate_tokens(self, files_list):
+        """
+        Generates the list of tokens ready for the database
+        """
+
+        # Create a self.tokens attrinbue no matter what
+        self.tokens = []
+
+        if not files_list:
+            return
+
+        tokens_dict = {}
+        for file_dict in files_list:
+            # Source and destination tokens will not be present when the client is
+            # using X509 proxy certificates
+            src_tokens = file_dict.get("source_tokens", [])
+            dst_tokens = file_dict.get("destination_tokens", [])
+
+            self._add_tokens_to_dict(tokens_dict, src_tokens)
+            self._add_tokens_to_dict(tokens_dict, dst_tokens)
+
+        for token_item in tokens_dict.items():
+            token_id = token_item[0]
+            token = token_item[1]
+
+            jwt_payload = None
+            try:
+                jwt_payload = self._get_jwt_payload(token)
+            except Exception as ex:
+                log.warn(f"Failed to parse JWT: token_id={token_id} error={ex}")
+
+            token_dict = {}
+            token_dict["token_id"] = token_id
+            token_dict["access_token"] = token
+            token_dict["issuer"] = "UNKNOWN"
+            if jwt_payload and "iss" in jwt_payload:
+                token_dict["issuer"] = jwt_payload["iss"]
+            token_dict["refresh_token"] = None
+            self.tokens.append(token_dict)
 
     def _populate_transfers(self, files_list):
         """
@@ -558,6 +644,8 @@ class JobBuilder:
             else:
                 self.job_id = str(uuid.uuid1())
             self.files = []
+
+            self._populate_tokens(files_list)
 
             if files_list is not None:
                 self._populate_transfers(files_list)
