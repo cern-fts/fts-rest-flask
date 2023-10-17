@@ -66,6 +66,18 @@ def generate_delegation_id(dn, fqans):
     return d.hexdigest()[:16]
 
 
+def generate_token_delegation_id(issuer, subject):
+    """
+    Generate a delegation ID from the specified token issuer and subject
+    """
+    d = hashlib.sha1()  # nosec
+    d.update(issuer.encode("utf-8"))
+    d.update(subject.encode("utf-8"))
+
+    # Original implementation only takes into account first 16 characters
+    return d.hexdigest()[:16]
+
+
 def generate_token_id(token):
     """
     Generates an id for the specified token
