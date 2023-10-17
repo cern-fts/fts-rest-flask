@@ -18,7 +18,7 @@ import logging
 from urllib.parse import urlparse
 from datetime import datetime
 from fts3rest.lib.middleware.fts3auth.credentials import (
-    generate_delegation_id,
+    generate_token_delegation_id,
     InvalidCredentials,
 )
 from fts3rest.model.meta import Session
@@ -44,6 +44,8 @@ def do_authentication(credentials, env, config):
     authn = res_provider.get_authorization()
     if authn is None:
         return False
+    if authn.issuer is None or authn.subject is None:
+        return False
     if not authn.is_valid:
         if authn.error is not None:
             log.info("Raising invalid OAuth2 credentials")
@@ -57,8 +59,8 @@ def do_authentication(credentials, env, config):
     credentials.user_dn = authn.subject
     credentials.dn.append(authn.subject)
     _build_vo_from_token_auth(credentials, authn)
-    credentials.delegation_id = generate_delegation_id(
-        credentials.user_dn, credentials.voms_cred
+    credentials.delegation_id = generate_token_delegation_id(
+        authn.issuer, authn.subject
     )
 
     # Extend UserCredentials object with OAuth2 specific fields
