@@ -13,18 +13,102 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import types
 import logging
+import json
+import jwt
+import types
+
 from urllib.parse import urlparse
 from datetime import datetime
 from fts3rest.lib.middleware.fts3auth.credentials import (
     generate_token_delegation_id,
     InvalidCredentials,
 )
+from fts3rest.lib.openidconnect import oidc_manager, jwt_options_unverified
 from fts3rest.model.meta import Session
 from fts3rest.model import Credential
+from jwcrypto.jwk import JWK
 
 log = logging.getLogger(__name__)
+
+
+def validate_token_offline(access_token):
+    """
+    Validate access token using cached information from the provider
+
+    :param access_token:
+    :return: tuple(valid, credential) or tuple(False, None)
+    :raise Exception: exception on invalid token
+    """
+
+    def _decode(key):
+        log.debug("Attempt decoding using key={}".format(key.export()))
+        try:
+            audience = None
+            options = {"verify_aud": False}
+            # Check audience only for WLCG tokens
+            if "wlcg" in issuer:
+                audience = "https://wlcg.cern.ch/jwt/v1/any"
+                options["verify_aud"] = True
+            return jwt.decode(
+                access_token,
+                key.export_to_pem(),
+                algorithms=[algorithm],
+                audience=audience,
+                options=options,
+            )
+        except Exception:
+            return None
+
+    unverified_payload = jwt.decode(
+        access_token,
+        options=jwt_options_unverified(
+            {"verify_exp": True, "verify_nbf": True, "verify_iat": True}
+        ),
+    )
+    unverified_header = jwt.get_unverified_header(access_token)
+    issuer = unverified_payload["iss"]
+    key_id = unverified_header.get("kid")
+    algorithm = unverified_header.get("alg")
+    log.debug("issuer={}, key_id={}, alg={}".format(issuer, key_id, algorithm))
+
+    # Find the first key which decodes the token
+    keys = oidc_manager.filter_provider_keys(issuer, key_id, algorithm)
+    jwkeys = [JWK.from_json(json.dumps(key.to_dict())) for key in keys]
+    for jwkey in jwkeys:
+        credential = _decode(jwkey)
+        if credential is not None:
+            log.debug("offline_response::: {}".format(credential))
+            return True, credential
+    log.warning("No key managed to decode the token")
+    return False, None
+
+
+def validate_token_online(access_token):
+    """
+    Validate access token using Introspection (RFC 7662).
+    Furthermore, run some FTS specific validations, such as
+    requiring the "offline_access" scope.
+
+    :param access_token:
+    :return: tuple(valid, credential) or tuple(False, None)
+    :raise Exception: exception during introspection
+           or if missing "offline_access" scope
+    """
+    unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
+    issuer = unverified_payload["iss"]
+    log.debug("issuer={}".format(issuer))
+    credential = oidc_manager.introspect(issuer, access_token)
+    log.debug("online_response::: {}".format(credential))
+    if not credential["active"]:
+        return False, None
+    # Perform FTS specific validations
+    scopes = credential.get("scope")
+    if scopes is None:
+        raise ValueError("Scope claim not found in online validation response")
+    if "offline_access" not in scopes:
+        raise ValueError("Scope claim dos not contain offline_access")
+    return True, credential
 
 
 def _oauth2_get_granted_level_for(self, operation):
