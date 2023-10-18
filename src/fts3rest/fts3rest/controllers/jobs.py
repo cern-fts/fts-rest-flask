@@ -47,6 +47,8 @@ from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.msgbus import submit_state_change
 from fts3rest.lib.JobBuilder import JobBuilder
 
+from fts3rest.lib.middleware.fts3auth.methods import oauth2
+
 log = logging.getLogger(__name__)
 
 """
@@ -725,6 +727,13 @@ def modify(job_id_list):
     return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
 
 
+def validate_tokens_offline(tokens):
+    for token in tokens:
+        valid, credential = oauth2.validate_token_offline(token["access_token"])
+        if not valid:
+            raise ValueError("Failed to validate access-token")
+
+
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -766,6 +775,8 @@ def submit():
 
     # Populate the job and files
     populated = JobBuilder(request, **submitted_dict)
+
+    validate_tokens_offline(populated.tokens)
 
     log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
 
