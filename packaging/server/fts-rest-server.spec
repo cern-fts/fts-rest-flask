@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.12.3
+Version:        3.12.4
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -124,6 +124,9 @@ fi
 %files selinux
 
 %changelog
+* Thu Oct 19 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4
+- Allow sending Scitag label for transfers
+
 * Tue Aug 08 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.3
 - Disable deletion submissions via the FTS-REST
 - Refuse FTS job submissions if archive/staging metadata exceeds configurable size
@@ -139,7 +142,7 @@ fi
 - Introduce new "/admin/force-start" endpoint
 - OAuth2 token-exchange workflow improvements
 
-* Thu Jul 14 2021 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.0-1
+* Wed Jul 14 2021 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.0-1
 - First production release of FTS-REST-FLASK (Python3)
 - Compatibility with MySQL8.0
 - Support for tape REST API
