@@ -46,7 +46,7 @@ def cancel_all(context, vo_name=None):
 
     Args:
         context: fts3.rest.client.context.Context instance
-        vo_name: The VO name, or None to cancell all jobs
+        vo_name: The VO name, or None to cancel all jobs
 
     Returns:
         None
@@ -60,10 +60,11 @@ def new_transfer(
     destination,
     checksum="ADLER32",
     filesize=None,
+    activity=None,
+    scitag=None,
     metadata=None,
     staging_metadata=None,
     archive_metadata=None,
-    activity=None,
     selection_strategy="auto",
 ):
     """
@@ -74,10 +75,12 @@ def new_transfer(
         destination:        Destination SURL
         checksum:           Checksum
         filesize:           File size
+        activity:           Transfer activity label
+        scitag:             SciTag flow label
         metadata:           Metadata to bind to the transfer
         staging_metadata:   Staging Metadata to bind to the bringonline operation
         archive_metadata:   Archive Metadata to bind to the archiving operation
-        selection_strategy: Selection Strategy to implement for multiple replica Jobs
+        selection_strategy: Selection strategy to implement for multiple replica Jobs
 
     Returns:
         An initialized transfer
@@ -90,14 +93,20 @@ def new_transfer(
         transfer["checksum"] = checksum
     if filesize:
         transfer["filesize"] = filesize
+    if activity:
+        transfer["activity"] = activity
+    if scitag:
+        if not (65 <= scitag <= 65535):
+            raise ClientError(
+                "Invalid SciTag value: {} (not in [65, 65535] range)".format(scitag)
+            )
+        transfer["scitag"] = scitag
     if metadata:
         transfer["metadata"] = metadata
     if staging_metadata:
         transfer["staging_metadata"] = staging_metadata
     if archive_metadata:
         transfer["archive_metadata"] = archive_metadata
-    if activity:
-        transfer["activity"] = activity
     if selection_strategy:
         transfer["selection_strategy"] = selection_strategy
 

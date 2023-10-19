@@ -180,6 +180,7 @@ class JobBuilder:
                 staging_metadata=file_dict.get("staging_metadata", None),
                 archive_metadata=file_dict.get("archive_metadata", None),
                 activity=file_dict.get("activity", "default"),
+                scitag=validate_scitag(file_dict.get("scitag", None)),
                 hashed_id=shared_hashed_id
                 if shared_hashed_id
                 else generate_hashed_id(),
