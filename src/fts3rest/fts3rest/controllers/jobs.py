@@ -729,9 +729,12 @@ def modify(job_id_list):
 
 def validate_tokens_offline(tokens):
     for token in tokens:
-        valid, credential = oauth2.validate_token_offline(token["access_token"])
+        try:
+            valid, credential = oauth2.validate_token_offline(token["access_token"])
+        except Exception:
+            raise BadRequest("Failed to validate access-token")
         if not valid:
-            raise ValueError("Failed to validate access-token")
+            raise BadRequest("Failed to validate access-token")
 
 
 @authorize(TRANSFER)
