@@ -737,6 +737,69 @@ def validate_tokens_offline(tokens):
             raise BadRequest("Failed to validate access-token")
 
 
+def has_a_refresh_token(token_id):
+    """
+    Returns true if then token with the specified ID has a refresh token within
+    the t_token table.
+    """
+    result = Session.execute(
+        "SELECT token_id FROM t_token WHERE token_id = :token_id AND refresh_token is not NULL",
+        params={"token_id": token_id},
+    )
+    for row in result:
+        return True
+    return False
+
+
+def get_token_ids_from_file_rows(file_rows):
+    """
+    Returns the set of token IDs present in the specified list of t_file table
+    rows.
+    """
+    token_ids = set()
+    for file_row in file_rows:
+        token_ids.add(file_row["src_token_id"])
+        token_ids.add(file_row["dst_token_id"])
+    return token_ids
+
+
+def get_refreshless_token_ids(token_ids):
+    """
+    From the specified set of token IDs this function returns the subset which
+    refers to tokens that have no refresh token within the t_token table.
+    """
+    refreshless_token_ids = set()
+    for token_id in token_ids:
+        if not has_a_refresh_token(token_id):
+            refreshless_token_ids.add(token_id)
+    return refreshless_token_ids
+
+
+def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
+    """
+    Sets the file_state column of the specified t_file table rows to TOKEN_PREP
+    if either the associated source or destination access token does not yet
+    have a refresh token.
+    """
+    token_ids = get_token_ids_from_file_rows(file_rows)
+    start_get_refreshless_token_ids = time.perf_counter()
+    refreshless_token_ids = get_refreshless_token_ids(token_ids)
+    log.info(
+        "Got tokens with no associated refresh tokens:"
+        f" job_id={job_id}"
+        f" db_secs={time.perf_counter() - start_get_refreshless_token_ids}"
+        f" nb_tokens_checked={len(token_ids)}"
+        f" nb_refreshless_tokens={len(refreshless_token_ids)}"
+    )
+
+    for file_row in file_rows:
+        if (
+            file_row["src_token_id"] in refreshless_token_ids
+            or file_row["dst_token_id"] in refreshless_token_ids
+        ):
+            file_row["file_state"] = "TOKEN_PREP"
+
+
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -793,6 +856,9 @@ def submit():
         log.info(
             f"Merged tokens into database: job_id={populated.job_id} db_secs={time.perf_counter() - start_merge_tokens} nb_tokens={len(populated.tokens)}"
         )
+
+        if user.method == "oauth2":
+            set_file_states_to_token_prep_as_necessary(populated.job_id, populated.files)
 
         try:
             start_insert_job = time.perf_counter()
