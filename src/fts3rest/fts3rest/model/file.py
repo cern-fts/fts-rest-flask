@@ -30,6 +30,7 @@ FileActiveStates = [
     "QOS_TRANSITION",
     "QOS_REQUEST_SUBMITTED",
     "FORCE_START",
+    "TOKEN_PREP",
 ]
 FileTerminalStates = ["FINISHED", "FAILED", "CANCELED"]
 # NOT_USED is not terminal, nor not-terminal
