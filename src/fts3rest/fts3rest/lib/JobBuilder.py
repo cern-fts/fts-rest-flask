@@ -413,7 +413,7 @@ class JobBuilder:
         # Create a self.tokens attrinbue no matter what
         self.tokens = []
 
-        if not files_list:
+        if self.user.method != "oauth2" or not files_list:
             return
 
         tokens_dict = {}
