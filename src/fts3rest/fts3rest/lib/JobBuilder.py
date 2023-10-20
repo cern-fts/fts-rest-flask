@@ -123,7 +123,6 @@ class JobBuilder:
         # source token and destionation token.  Source and destination
         # tokens will be None if the client is using X509 proxy certificates
         tuples = []
-        self.user.method == "oauth"
 
         # Use a combination of empty lists and itertools.zip_longest() to handle
         # the fact the JSON submit/job request will not contain source or
