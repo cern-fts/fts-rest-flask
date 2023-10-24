@@ -382,6 +382,29 @@ class JobBuilder:
                 for i in range(len(file_dict["destinations"])):
                     file_dict["destination_tokens"].append(bearer_token)
 
+    def _validate_new_source_destination_tokens(self, files_list):
+        for file_dict in files_list:
+            sources = file_dict.get("sources", [])
+            destinations = file_dict.get("destinations", [])
+            source_tokens = file_dict.get("source_tokens", [])
+            destination_tokens = file_dict.get("destination_tokens", [])
+
+            if source_tokens or destination_tokens:
+                if not (source_tokens and destination_tokens):
+                    raise BadRequest(
+                        "Both source_tokens and destination_tokens are required if one of them is present."
+                    )
+
+                if len(source_tokens) != len(sources):
+                    raise BadRequest(
+                        "Length of source_tokens should be equal to the length of sources."
+                    )
+
+                if len(destination_tokens) != len(destinations):
+                    raise BadRequest(
+                        "Length of destination_tokens should be equal to the length of destinations."
+                    )
+
     def _add_tokens_to_dict(self, tokens_dict, token_list):
         """
         Adds the specified tokens to the specified dictionary
