@@ -844,6 +844,16 @@ def submit():
 
     validate_tokens_offline(populated.tokens)
 
+    if user.method == "oauth2":
+        if submitted_dict["params"]["archive_timeout"] > 0:
+            raise BadRequest(
+                "Requests to archive to tape using token authentication are not supported"
+            )
+        if submitted_dict["params"]["bring_online"] > 0:
+            raise BadRequest(
+                "Requests to retrieve from tape using token authentication are not supported"
+            )
+
     log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
 
     # Insert the job
