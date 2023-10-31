@@ -431,7 +431,6 @@ class JobBuilder:
             token_id = token_item[0]
             token = token_item[1]
 
-            jwt_payload = None
             try:
                 jwt_payload = self._get_jwt_payload(token)
             except Exception as ex:
@@ -440,10 +439,19 @@ class JobBuilder:
             token_dict = {}
             token_dict["token_id"] = token_id
             token_dict["access_token"] = token
-            token_dict["issuer"] = "UNKNOWN"
-            if jwt_payload and "iss" in jwt_payload:
-                token_dict["issuer"] = jwt_payload["iss"]
             token_dict["refresh_token"] = None
+            if "iss" in jwt_payload:
+                token_dict["issuer"] = jwt_payload["iss"]
+            else:
+                raise BadRequest("Token does not contain an iss claim")
+            if "scope" in jwt_payload:
+                token_dict["scope"] = jwt_payload["scope"]
+            else:
+                raise BadRequest("Token does not contain a scope claim")
+            if "aud" in jwt_payload:
+                token_dict["audience"] = jwt_payload["aud"]
+            else:
+                raise BadRequest("Token does not contain an aud claim")
             self.tokens.append(token_dict)
 
     def _populate_transfers(self, files_list):
