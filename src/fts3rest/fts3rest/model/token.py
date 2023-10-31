@@ -25,3 +25,5 @@ class Token(Base):
     access_token = Column(Text)
     refresh_token = Column(Text)
     issuer = Column(Text)
+    scope = Column(Text)
+    audience = Column(Text)
