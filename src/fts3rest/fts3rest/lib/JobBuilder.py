@@ -381,28 +381,48 @@ class JobBuilder:
                 for i in range(len(file_dict["destinations"])):
                     file_dict["destination_tokens"].append(bearer_token)
 
-    def _validate_new_source_destination_tokens(self, files_list):
+    def _validate_transfer_tokens(self, files_list):
         for file_dict in files_list:
             sources = file_dict.get("sources", [])
             destinations = file_dict.get("destinations", [])
             source_tokens = file_dict.get("source_tokens", [])
             destination_tokens = file_dict.get("destination_tokens", [])
-
             if source_tokens or destination_tokens:
+                # Both source tokens and destination tokens should exist
                 if not (source_tokens and destination_tokens):
                     raise BadRequest(
                         "Both source_tokens and destination_tokens are required if one of them is present."
                     )
 
+                # Number of source tokens should match the number of sources
                 if len(source_tokens) != len(sources):
                     raise BadRequest(
                         "Length of source_tokens should be equal to the length of sources."
                     )
 
+                # Number of destination tokens should match the number of destinations
                 if len(destination_tokens) != len(destinations):
                     raise BadRequest(
                         "Length of destination_tokens should be equal to the length of destinations."
                     )
+
+                # Check if source and destination token lists are not empty
+                if not source_tokens or not destination_tokens:
+                    raise BadRequest(
+                        "Source tokens and destination tokens lists should not be empty."
+                    )
+
+                # Check if each source and destination has corresponding tokens
+                for source, source_token in zip(sources, source_tokens):
+                    if not source_token:
+                        raise BadRequest(f"Token for source '{source}' is missing.")
+                for destination, destination_token in zip(
+                    destinations, destination_tokens
+                ):
+                    if not destination_token:
+                        raise BadRequest(
+                            f"Token for destination '{destination}' is missing."
+                        )
 
     def _add_tokens_to_dict(self, tokens_dict, token_list):
         """
