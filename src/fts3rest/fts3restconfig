@@ -14,6 +14,9 @@ DbConnectString =
 # Leave * to authorize any VO
 AuthorizedVO = *
 
+#List of authorized audiences for JWT authorization (separated by ;)
+AuthorizedAudiences=https://wlcg.cern.ch/jwt/v1/any
+
 #For each metadata size limit, if size_limit = 0, no limit checks are performed upon job submission
 #Limit Job Metadata with specified Size Limit (default: 2048 bytes)
 JobMetadataSizeLimit = 2048
