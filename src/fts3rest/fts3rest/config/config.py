@@ -38,6 +38,14 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
     # AuthorizedVO is an array
     fts3cfg["fts3.AuthorizedVO"] = fts3cfg["fts3.AuthorizedVO"].split(";")
 
+    # Authorized JWT audiences
+    if fts3cfg.get("fts3.AuthorizedAudiences"):
+        fts3cfg["fts3.AuthorizedAudiences"] = fts3cfg["fts3.AuthorizedAudiences"].split(
+            ";"
+        )
+    else:
+        fts3cfg["fts3.AuthorizedAudiences"] = "https://wlcg.cern.ch/jwt/v1/any"
+
     # DbType always lowercase
     fts3cfg["fts3.DbType"] = fts3cfg["fts3.DbType"].lower()
 
