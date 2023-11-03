@@ -223,12 +223,14 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
           - Validate access token offline (using cached keys) or online (using introspection RFC 7662)
             -- Offline validation must have valid "exp", "iat" and "nbf" claims
             -- Online validation must include "offline_access" scope
+            -- Token audience must match one of the configured ones
 
         :param access_token:
         :param authorization: attribute to fill-in with token information
         """
         authorization.is_valid = False
         validation_method = "offline" if self._should_validate_offline() else "online"
+        audience = self.config["fts3.AuthorizedAudiences"]
 
         try:
             if not oidc_manager.token_issuer_supported(access_token):
@@ -241,9 +243,13 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
         try:
             if validation_method == "offline":
-                valid, credential = self._validate_token_offline(access_token)
+                valid, credential = self._validate_token_offline(
+                    access_token, audience=audience
+                )
             else:
-                valid, credential = self._validate_token_online(access_token)
+                valid, credential = self._validate_token_online(
+                    access_token, audience=audience
+                )
             if not valid:
                 return
         except Exception as ex:
@@ -280,11 +286,11 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         )
         authorization.is_valid = authorization.expires_in > timedelta(seconds=0)
 
-    def _validate_token_offline(self, access_token):
-        return oauth2.validate_token_offline(access_token)
+    def _validate_token_offline(self, access_token, audience=None):
+        return oauth2.validate_token_offline(access_token, audience)
 
-    def _validate_token_online(self, access_token):
-        return oauth2.validate_token_online(access_token)
+    def _validate_token_online(self, access_token, audience=None):
+        return oauth2.validate_token_online(access_token, audience)
 
     def _scope_from_credential(self, credential):
         scope = credential.get("scope")

@@ -32,11 +32,13 @@ from jwcrypto.jwk import JWK
 log = logging.getLogger(__name__)
 
 
-def validate_token_offline(access_token):
+def validate_token_offline(access_token, audience=None):
     """
     Validate access token using cached information from the provider
+    When enabled checks if access_token has the right audience
 
-    :param access_token:
+    :param access_token
+    :param audience
     :return: tuple(valid, credential) or tuple(False, None)
     :raise Exception: exception on invalid token
     """
@@ -44,27 +46,25 @@ def validate_token_offline(access_token):
     def _decode(key):
         log.debug("Attempt decoding using key={}".format(key.export()))
         try:
-            audience = None
-            options = {"verify_aud": False}
-            # Check audience only for WLCG tokens
-            if "wlcg" in issuer:
-                audience = "https://wlcg.cern.ch/jwt/v1/any"
-                options["verify_aud"] = True
             return jwt.decode(
                 access_token,
                 key.export_to_pem(),
                 algorithms=[algorithm],
-                audience=audience,
-                options=options,
+                options={"verify_aud": False},
             )
         except Exception:
             return None
 
+    # Check the token has valid "exp", "iat" and "nbf" claims
+    options = {"verify_exp": True, "verify_nbf": True, "verify_iat": True}
+    if audience:
+        # Verify that audience matches the expected
+        options["verify_aud"] = True
+
     unverified_payload = jwt.decode(
         access_token,
-        options=jwt_options_unverified(
-            {"verify_exp": True, "verify_nbf": True, "verify_iat": True}
-        ),
+        options=jwt_options_unverified(options),
+        audience=audience,
     )
     unverified_header = jwt.get_unverified_header(access_token)
     issuer = unverified_payload["iss"]
@@ -84,18 +84,25 @@ def validate_token_offline(access_token):
     return False, None
 
 
-def validate_token_online(access_token):
+def validate_token_online(access_token, audience=None):
     """
     Validate access token using Introspection (RFC 7662).
     Furthermore, run some FTS specific validations, such as
-    requiring the "offline_access" scope.
+    requiring the "offline_access" scope and requiring the right audience
 
     :param access_token:
+    :param audience:
     :return: tuple(valid, credential) or tuple(False, None)
     :raise Exception: exception during introspection
            or if missing "offline_access" scope
     """
-    unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
+    options = {}
+    if audience:
+        options["verify_aud"] = True
+
+    unverified_payload = jwt.decode(
+        access_token, options=jwt_options_unverified(options), audience=audience
+    )
     issuer = unverified_payload["iss"]
     log.debug("issuer={}".format(issuer))
     credential = oidc_manager.introspect(issuer, access_token)
