@@ -20,6 +20,8 @@ from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import noload
 
+import base64
+import json
 import logging
 import functools
 import time
@@ -800,6 +802,39 @@ def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
             file_row["file_state"] = "TOKEN_PREP"
 
 
+def get_issuer_from_bearer_token(token):
+    """
+    Returns the issuer of the issuer specified token.
+    """
+    segments = token.split(".")
+    if len(segments) < 3:
+        raise BadRequest(f"Not enough token segments: min=3 actual={len(segments)}")
+    payload = segments[1]
+    len_payload_mod_4 = len(segments[1]) % 4
+    if len_payload_mod_4 > 0:
+        payload = payload + "=" * (4 - len_payload_mod_4)
+    decoded_payload = base64.urlsafe_b64decode(payload)
+    jwt_payload = json.loads(decoded_payload)
+    if "iss" in jwt_payload:
+        return jwt_payload["iss"]
+    else:
+        raise BadRequest("Token does not contain an iss claim")
+
+
+def issuer_is_known(issuer):
+    """
+    Returns true if the specified token issuer is in the t_token_provider
+    table.
+    """
+    result = Session.execute(
+        "SELECT issuer FROM t_token_provider WHERE issuer = :issuer",
+        params={"issuer": issuer},
+    )
+    for row in result:
+        return True
+    return False
+
+
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -842,9 +877,11 @@ def submit():
     # Populate the job and files
     populated = JobBuilder(request, **submitted_dict)
 
-    validate_tokens_offline(populated.tokens)
-
+    # If token authentication
     if user.method == "oauth2":
+        validate_tokens_offline(populated.tokens)
+
+        # Block archive and retrieve requests
         if submitted_dict["params"]["archive_timeout"] > 0:
             raise BadRequest(
                 "Requests to archive to tape using token authentication are not supported"
@@ -853,6 +890,19 @@ def submit():
             raise BadRequest(
                 "Requests to retrieve from tape using token authentication are not supported"
             )
+
+        # Block unknown issuer
+        fts_submit_token = request.environ["HTTP_AUTHORIZATION"].split()[1]
+        fts_submit_token_issuer = get_issuer_from_bearer_token(fts_submit_token)
+        if not issuer_is_known(fts_submit_token_issuer):
+            raise BadRequest(
+                f"FTS access-token has unknown issuer: issuer={fts_submit_token_issuer}"
+            )
+        for transfer_token_row in populated.tokens:
+            if not issuer_is_known(transfer_token_row["issuer"]):
+                raise BadRequest(
+                    f"Transfer access-token has unknown issuer: issuer={transfer_token_row['issuer']}"
+                )
 
     log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
 
