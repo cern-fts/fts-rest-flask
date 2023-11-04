@@ -12,17 +12,15 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+from sqlalchemy import Column, String
+
 from .base import Base
-from .banned import *
-from .cloudStorage import *
-from .config import *
-from .credentials import *
-from .dm import *
-from .file import *
-from .job import *
-from .oauth2 import *
-from .optimizer import *
-from .server import *
-from .token import *
-from .token_provider import *
-from .version import *
+
+
+class Token_provider(Base):
+    __tablename__ = "t_token_provider"
+
+    name = Column(String(255))
+    issuer = Column(String(1024), primary_key=True)
+    client_id = Column(String(255))
+    client_secret = Column(String(255))
