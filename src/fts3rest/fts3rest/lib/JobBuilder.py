@@ -695,6 +695,8 @@ class JobBuilder:
                 self.job_id = str(uuid.uuid1())
             self.files = []
 
+            self._validate_transfer_tokens(files_list)
+
             self._populate_tokens(files_list)
 
             if files_list is not None:
