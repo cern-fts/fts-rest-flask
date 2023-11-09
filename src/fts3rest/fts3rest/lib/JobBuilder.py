@@ -449,6 +449,20 @@ class JobBuilder:
         decoded_payload = base64.urlsafe_b64decode(payload)
         return json.loads(decoded_payload)
 
+    def _to_space_separated_str(self, values):
+        """
+        Returns the specified list as a single space separated list of values.
+        """
+        result = ""
+        first = True
+        for value in values:
+            if first:
+                result = value
+                first = False
+            else:
+                result = result + " " + value
+        return result
+
     def _populate_tokens(self, files_list):
         """
         Generates the list of tokens ready for the database
@@ -492,7 +506,18 @@ class JobBuilder:
             else:
                 raise BadRequest("Token does not contain a scope claim")
             if "aud" in jwt_payload:
-                token_dict["audience"] = jwt_payload["aud"]
+                if jwt_payload["aud"] is None:
+                    token_dict["audience"] = None
+                elif isinstance(jwt_payload["aud"], str):
+                    token_dict["audience"] = jwt_payload["aud"]
+                elif isinstance(jwt_payload["aud"], list):
+                    token_dict["audience"] = self._to_space_separated_str(
+                        jwt_payload["aud"]
+                    )
+                else:
+                    raise BadRequest(
+                        f"Token audience must be a null, string or list of strings: actual_type={type(jwt_payload['aud'])}"
+                    )
             else:
                 raise BadRequest("Token does not contain an aud claim")
             self.tokens.append(token_dict)
