@@ -364,7 +364,7 @@ class JobBuilder:
         """
 
         # If "single token" end user
-        if self.user.method == "oauth" and not self._file_list_contains_a_token_list(
+        if self.user.method == "oauth2" and not self._file_list_contains_a_token_list(
             files_list
         ):
             # Get bearer token from HTTP headers
