@@ -835,6 +835,25 @@ def issuer_is_known(issuer):
     return False
 
 
+def get_tape_timeout(submit_params, timeout_name):
+    """
+    Returns the tape transfer timeout with the specified name if it exists in
+    the specified dictionary of submit parameters.  0 is returned otherwise.
+    """
+    if timeout_name not in submit_params:
+        return 0
+
+    timeout_value = submit_params[timeout_name]
+
+    if timeout_value is None:
+        return 0
+
+    if not isinstance(timeout_value, int):
+        return 0
+
+    return int(timeout_value)
+
+
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -882,11 +901,11 @@ def submit():
         validate_tokens_offline(populated.tokens)
 
         # Block archive and retrieve requests
-        if submitted_dict["params"].get("archive_timeout", 0) > 0:
+        if get_tape_timeout(submitted_dict["params"], "archive_timeout") > 0:
             raise BadRequest(
                 "Requests to archive to tape using token authentication are not supported"
             )
-        if submitted_dict["params"].get("bring_online", 0) > 0:
+        if get_tape_timeout(submitted_dict["params"], "bring_online") > 0:
             raise BadRequest(
                 "Requests to retrieve from tape using token authentication are not supported"
             )
