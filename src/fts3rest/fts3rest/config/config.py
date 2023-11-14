@@ -147,11 +147,19 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
                 fts3cfg["fts3.Providers"][provider_url]["client_id"] = client_id
                 client_secret = parser.get("providers", option + "_ClientSecret")
                 fts3cfg["fts3.Providers"][provider_url]["client_secret"] = client_secret
+                oauth_scope_fts = parser.get(
+                    "providers", option + "_OauthScopeFts", fallback=None
+                )
+                fts3cfg["fts3.Providers"][provider_url][
+                    "oauth_scope_fts"
+                ] = oauth_scope_fts
 
                 # Add custom configuration items for this provider
                 fts3cfg["fts3.Providers"][provider_url]["custom"] = {}
                 custom_options_filter = filter(
-                    lambda op: provider_name + "_" in op and "_Client" not in op,
+                    lambda op: provider_name + "_" in op
+                    and "_Client" not in op
+                    and provider_name + "_OauthScopeFts" != op,
                     parser.options("providers"),
                 )
                 for item in list(custom_options_filter):
