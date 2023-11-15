@@ -286,6 +286,43 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         )
         authorization.is_valid = authorization.expires_in > timedelta(seconds=0)
 
+        # Invalidate token if it does not have the required FTS scope
+        providers_config = self.config.get("fts3.Providers")
+        if not providers_config:
+            log.info("Invalid token: No token providers have been configured")
+            authorization.is_valid = False
+        else:
+            # Ensure token issuer ends with a '/'
+            if authorization.issuer and authorization.issuer[-1] != "/":
+                token_issuer = authorization.issuer + "/"
+            elif authorization.issuer:
+                token_issuer = authorization.issuer
+            else:
+                token_issuer = ""  # nosec
+
+            providers_config_keys = providers_config.keys()
+            if authorization.issuer not in providers_config_keys:
+                log.info(
+                    f"Invalid token: Issuer not found in configured providers: issuer={token_issuer}"
+                )
+                authorization.is_valid = False
+            else:
+                submit_token_provider_config = providers_config[token_issuer]
+                expected_fts_scope = submit_token_provider_config.get(
+                    "oauth_scope_fts", None
+                )
+                if expected_fts_scope:
+                    if not authorization.scope:
+                        log.info(
+                            f"Invalid token: Invalid scope: expected={expected_fts_scope} actual=None"
+                        )
+                        authorization.is_valid = False
+                    elif expected_fts_scope not in authorization.scope:
+                        log.info(
+                            f"Invalid token: Invalid scope: expected={expected_fts_scope} actual={authorization.scope}"
+                        )
+                        authorization.is_valid = False
+
     def _validate_token_offline(self, access_token, audience=None):
         return oauth2.validate_token_offline(access_token, audience)
 
