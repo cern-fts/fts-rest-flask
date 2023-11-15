@@ -32,13 +32,26 @@ from jwcrypto.jwk import JWK
 log = logging.getLogger(__name__)
 
 
-def validate_token_offline(access_token, audience=None):
+def _verify_scope_is_present(scope, jwt_payload):
+    """
+    Raises an Exception if the specified OAuth2 scope is not None and is not
+    contained within the specified jwt_payload.
+    """
+    if scope:
+        if "scope" not in jwt_payload:
+            raise Exception("Access-token does not contain a scope claim")
+        if scope not in jwt_payload["scope"].split():
+            raise Exception(f"Access-token scope does contain {scope}")
+
+
+def validate_token_offline(access_token, audience=None, scope=None):
     """
     Validate access token using cached information from the provider
     When enabled checks if access_token has the right audience
 
     :param access_token
     :param audience
+    :param scope
     :return: tuple(valid, credential) or tuple(False, None)
     :raise Exception: exception on invalid token
     """
@@ -66,6 +79,7 @@ def validate_token_offline(access_token, audience=None):
         options=jwt_options_unverified(options),
         audience=audience,
     )
+    _verify_scope_is_present(scope, unverified_payload)
     unverified_header = jwt.get_unverified_header(access_token)
     issuer = unverified_payload["iss"]
     key_id = unverified_header.get("kid")
@@ -84,7 +98,7 @@ def validate_token_offline(access_token, audience=None):
     return False, None
 
 
-def validate_token_online(access_token, audience=None):
+def validate_token_online(access_token, audience=None, scope=None):
     """
     Validate access token using Introspection (RFC 7662).
     Furthermore, run some FTS specific validations, such as
@@ -92,6 +106,7 @@ def validate_token_online(access_token, audience=None):
 
     :param access_token:
     :param audience:
+    :param scope:
     :return: tuple(valid, credential) or tuple(False, None)
     :raise Exception: exception during introspection
            or if missing "offline_access" scope
@@ -103,6 +118,7 @@ def validate_token_online(access_token, audience=None):
     unverified_payload = jwt.decode(
         access_token, options=jwt_options_unverified(options), audience=audience
     )
+    _verify_scope_is_present(scope, unverified_payload)
     issuer = unverified_payload["iss"]
     log.debug("issuer={}".format(issuer))
     credential = oidc_manager.introspect(issuer, access_token)
