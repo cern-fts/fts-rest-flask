@@ -189,7 +189,7 @@ docker_tag:
     - if: $CI_COMMIT_TAG != null
 
 #--------------------------
-# Testing jobs
+# Testing templates
 #--------------------------
 
 .functional_tests_template: &functional_tests_definition
@@ -215,6 +215,27 @@ docker_tag:
     PYTHONPATH: ./src:./src/fts3rest
     FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig
 
+.rpm_tests_template: &rpm_tests_definition
+  stage: tests
+  services:
+    - name: mysql:latest
+      alias: mysqldb
+      command: ["--default-authentication-plugin=mysql_native_password"]
+  script:
+    - sleep 20 # give some time for the mysql service to start
+    - yum install -y mariadb python3-pytest epel-release
+    - yum install -y epel-rpm-macros
+    - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=${FTS3REPO}\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
+    - PLATFORM=${CI_JOB_NAME%-*}
+    - yum localinstall --nogpgcheck -y ${PLATFORM}/RPMS/*/*.rpm
+    - ./.gitlab-ci/setup-db.sh
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
+    - pytest-3 -x $FTS3TESTPATH
+
+#--------------------------
+# Testing jobs
+#--------------------------
+
 functional_tests36:
   <<: *functional_tests_definition
 
@@ -224,47 +245,31 @@ functional_tests37:
 functional_tests38:
   <<: *functional_tests_definition
 
-rpm_tests:
-  stage: tests
+server_rpm_cc7-test:
+  <<: *rpm_tests_definition
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  services:
-    - name: mysql:latest
-      alias: mysqldb
-      command: ["--default-authentication-plugin=mysql_native_password"]
-  script:
-    - sleep 20 # give some time for the mysql service to start
-    - yum install -y yum-plugin-priorities mariadb python36-pytest
-    - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
-    - yum localinstall --nogpgcheck -y artifacts/RPMS/*/*.rpm
-    - ./.gitlab-ci/setup-db.sh
-    - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
-    - pytest-3 -x /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
   dependencies:
     - server_rpm_cc7
   needs:
     - server_rpm_cc7
   variables:
+    RHEL_VERSION: el7
     FTS3TESTCONFIG: /usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig
+    FTS3TESTPATH: /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
+    FTS3REPO: https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/
 
-rpm_tests_alma9:
-  stage: tests
+server_rpm_alma9-test:
+  <<: *rpm_tests_definition
   image: gitlab-registry.cern.ch/linuxsupport/alma9-base
-  services:
-    - name: mysql:latest
-      alias: mysqldb
-  script:
-    - dnf install -y mariadb python3-pytest epel-release
-    - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/testing/fts-depend/el9/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
-    - dnf localinstall --nogpgcheck -y alma9/RPMS/*/*.rpm
-    - ./.gitlab-ci/setup-db.sh
-    - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
-    - pytest-3 -x /usr/lib/python3.9/site-packages/fts3rest/tests/functional/
   dependencies:
     - server_rpm_alma9
   needs:
     - server_rpm_alma9
   variables:
+    RHEL_VERSION: el9
     FTS3TESTCONFIG: /usr/lib/python3.9/site-packages/fts3rest/tests/fts3testconfig
+    FTS3TESTPATH: /usr/lib/python3.9/site-packages/fts3rest/tests/functional/
+    FTS3REPO: https://fts-repo.web.cern.ch/fts-repo/testing/fts-depend/el9/x86_64/
 
 #--------------------------
 # Publish templates
