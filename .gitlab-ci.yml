@@ -281,10 +281,15 @@ server_rpm_alma9-test:
   dependencies:
     - client_rpm_cc7
     - server_rpm_cc7
+    - client_rpm_alma9
+    - server_rpm_alma9
   script:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
-    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/RPMS/*/*.rpm artifacts/SRPMS/*
+    - |
+      for package in server_rpm_cc7 client_rpm_cc7 server_rpm_alma9 client_rpm_alma9; do
+        packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages ${package}/RPMS/*/*.rpm ${package}/SRPMS/*
+      done
   tags:
     - docker-privileged-xl
   retry: 2
