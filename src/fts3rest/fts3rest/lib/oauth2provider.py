@@ -301,7 +301,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                 token_issuer = ""  # nosec
 
             providers_config_keys = providers_config.keys()
-            if authorization.issuer not in providers_config_keys:
+            if token_issuer not in providers_config_keys:
                 log.info(
                     f"Invalid token: Issuer not found in configured providers: issuer={token_issuer}"
                 )
