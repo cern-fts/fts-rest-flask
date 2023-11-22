@@ -353,7 +353,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         if scopes is None:
             raise ValueError("Scope claim not found in online validation response")
         if "offline_access" not in scopes:
-            raise ValueError("Scope claim dos not contain offline_access")
+            raise ValueError("Scope claim does not contain offline_access")
         return True, credential
 
     def _scope_from_credential(self, credential):

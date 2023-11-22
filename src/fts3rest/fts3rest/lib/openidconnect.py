@@ -54,16 +54,22 @@ class OIDCmanager:
                 log.warning(ex)
 
     def _retrieve_clients_keys(self):
-        for provider in self.clients:
-            client = self.clients[provider]
-            client.keyjar.get_issuer_keys(provider)
+        for issuer, client in self.clients.items():
+            client.keyjar.get_issuer_keys(issuer)
 
     def _set_keys_cache_time(self, cache_time):
-        for provider in self.clients:
-            client = self.clients[provider]
-            keybundles = client.keyjar.issuer_keys[provider]
+        for issuer, client in self.clients.items():
+            keybundles = client.keyjar.issuer_keys[issuer]
             for keybundle in keybundles:
                 keybundle.cache_time = cache_time
+
+    def retrieve_client(self, issuer):
+        if issuer in self.clients:
+            return self.clients.get(issuer), issuer
+        elif issuer + "/" in self.clients:
+            return self.clients.get(issuer + "/"), issuer + "/"
+        else:
+            raise ValueError("Could not retrieve client for issuer={}".format(issuer))
 
     def token_issuer_supported(self, access_token):
         """
@@ -76,7 +82,13 @@ class OIDCmanager:
         unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         issuer = unverified_payload["iss"]
         log.debug("Checking client registration for issuer={}".format(issuer))
-        return issuer in self.clients
+        try:
+            return self.retrieve_client(issuer) is not None
+        except ValueError:
+            log.warning(
+                "Could not find client registration for issuer={}".format(issuer)
+            )
+            return False
 
     def filter_provider_keys(self, issuer, kid=None, alg=None):
         """
@@ -88,9 +100,7 @@ class OIDCmanager:
         :return: keys
         :raise ValueError: client could not be retrieved
         """
-        client = self.clients.get(issuer)
-        if client is None:
-            raise ValueError("Could not retrieve client for issuer={}".format(issuer))
+        client, issuer = self.retrieve_client(issuer)
         # List of Keys (from pyjwkest)
         keys = client.keyjar.get_issuer_keys(issuer)
         filtered_keys = [key for key in keys if key.kid == kid or key.alg == alg]
@@ -105,9 +115,7 @@ class OIDCmanager:
         :param access_token: token to introspect
         :return: JSON response
         """
-        client = self.clients.get(issuer)
-        if client is None:
-            raise ValueError("Could not retrieve client for issuer={}".format(issuer))
+        client, _ = self.retrieve_client(issuer)
         if "introspection_endpoint" not in client.provider_info:
             raise Exception("Issuer does not support introspection")
         response = client.do_any(
@@ -132,7 +140,7 @@ class OIDCmanager:
         :return: refresh token
         :raise Exception: If refresh token cannot be obtained
         """
-        client = self.clients[issuer]
+        client, issuer = self.retrieve_client(issuer)
         body = {
             "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
             "requested_token_type": "urn:ietf:params:oauth:token-type:refresh_token",
@@ -208,10 +216,10 @@ class OIDCmanager:
         access_token, refresh_token = credential.proxy.split(":")
         unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
         issuer = unverified_payload["iss"]
-        client = self.clients[issuer]
         log.debug(
             "refresh_access_token::: issuer={} subject={}".format(issuer, credential.dn)
         )
+        client, _ = self.retrieve_client(issuer)
 
         # Prepare and make request
         refresh_session_state = rndstr(50)
