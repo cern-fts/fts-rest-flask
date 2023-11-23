@@ -178,6 +178,15 @@ def validate_scitag(scitag):
     return scitag
 
 
+def safe_issuer(issuer):
+    """
+    Return the "issuer" string with a trailing slash.
+    """
+    if issuer[-1] != "/":
+        issuer += "/"
+    return issuer
+
+
 def generate_hashed_id():
     """
     Generates a uniformly distributed value between 0 and 2**16

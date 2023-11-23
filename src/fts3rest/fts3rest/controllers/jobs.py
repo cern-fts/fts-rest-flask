@@ -48,6 +48,7 @@ from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.msgbus import submit_state_change
 from fts3rest.lib.JobBuilder import JobBuilder
+from fts3rest.lib.JobBuilder_utils import safe_issuer
 
 from fts3rest.lib.middleware.fts3auth.methods import oauth2
 
@@ -816,7 +817,7 @@ def get_issuer_from_bearer_token(token):
     decoded_payload = base64.urlsafe_b64decode(payload)
     jwt_payload = json.loads(decoded_payload)
     if "iss" in jwt_payload:
-        return jwt_payload["iss"]
+        return safe_issuer(jwt_payload["iss"])
     else:
         raise BadRequest("Token does not contain an iss claim")
 
@@ -898,6 +899,7 @@ def submit():
 
     # If token authentication
     if user.method == "oauth2":
+        log.debug("Token transfer submission: validating preconditions")
         validate_tokens_offline(populated.tokens)
 
         # Block archive and retrieve requests
