@@ -831,7 +831,7 @@ def issuer_is_known(issuer):
         "SELECT issuer FROM t_token_provider WHERE issuer = :issuer",
         params={"issuer": issuer},
     )
-    for row in result:
+    for _ in result:
         return True
     return False
 
