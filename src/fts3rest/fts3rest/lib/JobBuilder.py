@@ -484,7 +484,7 @@ class JobBuilder:
             token_dict["access_token"] = token
             token_dict["refresh_token"] = None
             if "iss" in jwt_payload:
-                token_dict["issuer"] = jwt_payload["iss"]
+                token_dict["issuer"] = safe_issuer(jwt_payload["iss"])
             else:
                 raise BadRequest("Token does not contain an iss claim")
             if "scope" in jwt_payload:
