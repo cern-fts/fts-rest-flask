@@ -454,7 +454,7 @@ class JobBuilder:
         Generates the list of tokens ready for the database
         """
 
-        # Create a self.tokens attrinbue no matter what
+        # Create a self.tokens attribute no matter what
         self.tokens = []
 
         if self.user.method != "oauth2" or not files_list:
@@ -477,12 +477,15 @@ class JobBuilder:
             try:
                 jwt_payload = self._get_jwt_payload(token)
             except Exception as ex:
-                log.warn(f"Failed to parse JWT: token_id={token_id} error={ex}")
+                log.warning(f"Failed to parse JWT: token_id={token_id} error={ex}")
+                jwt_payload = {}
 
-            token_dict = {}
-            token_dict["token_id"] = token_id
-            token_dict["access_token"] = token
-            token_dict["refresh_token"] = None
+            token_dict = {
+                "token_id": token_id,
+                "access_token": token,
+                "refresh_token": None,
+            }
+
             if "iss" in jwt_payload:
                 token_dict["issuer"] = safe_issuer(jwt_payload["iss"])
             else:
