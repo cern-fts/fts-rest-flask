@@ -22,6 +22,7 @@ from urllib.parse import urlparse
 from datetime import datetime
 from fts3rest.lib.middleware.fts3auth.credentials import (
     generate_token_delegation_id,
+    gridmap_vo,
     InvalidCredentials,
 )
 from fts3rest.lib.openidconnect import oidc_manager, jwt_options_unverified
@@ -149,7 +150,11 @@ def do_authentication(credentials, env, config):
     credentials.method = "oauth2"
     credentials.user_dn = authn.subject
     credentials.dn.append(authn.subject)
-    _build_vo_from_token_auth(credentials, authn)
+    vo = gridmap_vo(credentials.user_dn)
+    if vo:
+        credentials.vos.append(vo)
+    else:
+        _build_vo_from_token_auth(credentials, authn)
     credentials.delegation_id = generate_token_delegation_id(
         authn.issuer, authn.subject
     )
