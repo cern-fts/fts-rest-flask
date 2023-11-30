@@ -41,9 +41,10 @@ Public = vo:transfer;all:datamanagement
 lcgadmin = all:config
 
 [providers]
-xdc=https://iam.extreme-datacloud.eu
-xdc_ClientId=
-xdc_ClientSecret=
+# The xdc provider information is automatically filled out when testing
+#xdc=https://iam.extreme-datacloud.eu
+#xdc_ClientId=
+#xdc_ClientSecret=
 
 # Logging configuration
 [loggers]
