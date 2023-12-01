@@ -32,6 +32,7 @@ def _parse_provider(parser, provider_name):
     client_id_option_name = provider_name + "_ClientId"
     client_secret_option_name = provider_name + "_ClientSecret"
     oauth_scope_fts_option_name = provider_name + "_OauthScopeFts"
+    vo_option_name = provider_name + "_VO"
 
     mandatory_option_names = [
         provider_url_option_name,
@@ -49,6 +50,7 @@ def _parse_provider(parser, provider_name):
     oauth_scope_fts = parser.get(
         "providers", oauth_scope_fts_option_name, fallback=None
     )
+    vo = parser.get("providers", vo_option_name, fallback=None)
 
     # Sanitize provider URL
     if not provider_url.endswith("/"):
@@ -72,6 +74,7 @@ def _parse_provider(parser, provider_name):
     parsed_provider["client_id"] = client_id
     parsed_provider["client_secret"] = client_secret
     parsed_provider["oauth_scope_fts"] = oauth_scope_fts
+    parsed_provider["vo"] = vo
 
     # Add custom configuration items for this provider
     parsed_provider["custom"] = {}
