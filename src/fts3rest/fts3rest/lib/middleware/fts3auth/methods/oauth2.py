@@ -124,6 +124,28 @@ def _oauth2_get_granted_level_for(self, operation):
     return "all"
 
 
+def _get_vo_from_config(config, issuer):
+    """
+    Searches the specified FTS configuration for the VO for the specified
+    issuer.
+
+    :returns the VO or None if one not found
+    """
+    providers = config.get("fts3.Providers", None)
+    if not providers:
+        return None
+
+    provider = config["fts3.Providers"].get(issuer, None)
+    if not provider:
+        return None
+
+    vo = provider.get("vo", None)
+    if not vo:
+        return None
+
+    return vo
+
+
 def do_authentication(credentials, env, config):
     """
     The user will be the one who gave the bearer token
@@ -150,11 +172,17 @@ def do_authentication(credentials, env, config):
     credentials.method = "oauth2"
     credentials.user_dn = authn.subject
     credentials.dn.append(authn.subject)
+
     vo = gridmap_vo(credentials.user_dn)
     if vo:
         credentials.vos.append(vo)
     else:
-        _build_vo_from_token_auth(credentials, authn)
+        vo = _get_vo_from_config(config, authn.issuer)
+        if vo:
+            credentials.vos.append(vo)
+        else:
+            _build_vo_from_token_auth(credentials, authn)
+
     credentials.delegation_id = generate_token_delegation_id(
         authn.issuer, authn.subject
     )
