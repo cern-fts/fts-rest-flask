@@ -31,6 +31,7 @@ def _parse_provider(parser, provider_name):
     provider_url_option_name = provider_name
     client_id_option_name = provider_name + "_ClientId"
     client_secret_option_name = provider_name + "_ClientSecret"
+    oauth_aud_option_name = provider_name + "_OauthAud"
     oauth_scope_fts_option_name = provider_name + "_OauthScopeFts"
     vo_option_name = provider_name + "_VO"
 
@@ -47,6 +48,8 @@ def _parse_provider(parser, provider_name):
     provider_url = parser.get("providers", provider_url_option_name, fallback=None)
     client_id = parser.get("providers", client_id_option_name, fallback=None)
     client_secret = parser.get("providers", client_secret_option_name, fallback=None)
+    oauth_aud = parser.get("providers", oauth_aud_option_name, fallback=None)
+    oauth_aud_list = oauth_aud.split() if oauth_aud else []
     oauth_scope_fts = parser.get(
         "providers", oauth_scope_fts_option_name, fallback=None
     )
@@ -70,10 +73,12 @@ def _parse_provider(parser, provider_name):
                 f"{oauth_scope_fts_option_name} can only contain a single scope: nb_scopes_found={nb_oauth_scopes_fts}"
             )
 
+    # Construct parsed provider dictionary
     parsed_provider = {}
     parsed_provider["client_id"] = client_id
     parsed_provider["client_secret"] = client_secret
     parsed_provider["oauth_scope_fts"] = oauth_scope_fts
+    parsed_provider["oauth_aud"] = oauth_aud_list
     parsed_provider["vo"] = vo
 
     # Add custom configuration items for this provider
