@@ -16,7 +16,7 @@ RUN dnf install -y createrepo
 RUN echo -e "[fts-depend]\nname=FTS3 Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/testing/fts-depend/el9/x86_64/\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts-depend.repo
 
 # Add FTS repo from build artifacts stored in the alma9 directory
-ADD alma9 /repo/fts
+ADD server_rpm_alma9 /repo/fts
 RUN createrepo /repo/fts
 RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
 
