@@ -177,7 +177,7 @@ docker_build_alma9:
   needs:
     - job: server_rpm_alma9
   rules:
-    - if: $CI_COMMIT_REF_NAME == "alma9_playground"
+    - if: $CI_COMMIT_REF_NAME == "develop"
 
 docker_tag:
   <<: *kaniko_build-template
