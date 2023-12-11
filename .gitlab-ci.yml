@@ -62,6 +62,40 @@ bandit:
     - bandit --ini .gitlab-ci/bandit.ini
 
 #--------------------------
+# Build templates
+#--------------------------
+
+.server-build-template: &server-build-template_definition
+  stage: build
+  script:
+    - ./packaging/fedora-packages.sh
+    - ./packaging/server/fts-rest-server.sh
+    - mkdir ${CI_JOB_NAME}
+    - cp -rv build/server/RPMS build/server/SRPMS ${CI_JOB_NAME}
+    - tree ${CI_JOB_NAME}
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
+  artifacts:
+    when: on_success
+    paths:
+      - "$CI_JOB_NAME"
+
+.client-build-template: &client-build-template_definition
+  stage: build
+  script:
+    - ./packaging/fedora-packages.sh
+    - ./packaging/client/fts-rest-client.sh
+    - mkdir ${CI_JOB_NAME}
+    - cp -r build/client/RPMS build/client/SRPMS ${CI_JOB_NAME}
+    - tree ${CI_JOB_NAME}
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
+  artifacts:
+    when: on_success
+    paths:
+      - "$CI_JOB_NAME"
+
+#--------------------------
 # Build jobs
 #--------------------------
 
@@ -77,37 +111,21 @@ client_wheel_sdist:
     paths:
       - dist/
 
-client_rpm:
+client_rpm_cc7:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  stage: build
-  script:
-    - yum install -y git rpm-build tree
-    - ./packaging/client/fts-rest-client.sh
-    - mkdir artifacts/
-    - cp -r build/client/RPMS build/client/SRPMS artifacts/
-    - tree artifacts/
-  variables:
-    BRANCH: ${CI_COMMIT_REF_NAME}
-  artifacts:
-    when: on_success
-    paths:
-      - artifacts/
+  <<: *client-build-template_definition
 
-server_rpm:
+client_rpm_alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  <<: *client-build-template_definition
+
+server_rpm_cc7:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  stage: build
-  script:
-    - yum install -y git rpm-build tree
-    - ./packaging/server/fts-rest-server.sh
-    - mkdir artifacts/
-    - cp -r build/server/RPMS build/server/SRPMS artifacts/
-    - tree artifacts/
-  variables:
-    BRANCH: ${CI_COMMIT_REF_NAME}
-  artifacts:
-    when: on_success
-    paths:
-      - artifacts/
+  <<: *server-build-template_definition
+
+server_rpm_alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  <<: *server-build-template_definition
 
 #--------------------------
 # Docker build templates
@@ -139,21 +157,39 @@ server_rpm:
 docker_build:
   <<: *kaniko_build-template
   needs:
-    - job: server_rpm
+    - job: server_rpm_cc7
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
+
+docker_build_alma9:
+  stage: docker
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - CACHE="false";
+    - DMC_REPO="https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo";
+    - DESTINATION="gitlab-registry.cern.ch/fts/fts-rest-flask:alma9-ci"
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --dockerfile .gitlab-ci/docker/Dockerfile-ci-alma9 --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
+  retry: 1
+  needs:
+    - job: server_rpm_alma9
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "alma9_playground"
 
 docker_tag:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
   needs:
-    - job: server_rpm
+    - job: server_rpm_cc7
   rules:
     - if: $CI_COMMIT_TAG != null
 
 #--------------------------
-# Testing jobs
+# Testing templates
 #--------------------------
 
 .functional_tests_template: &functional_tests_definition
@@ -179,6 +215,27 @@ docker_tag:
     PYTHONPATH: ./src:./src/fts3rest
     FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig
 
+.rpm_tests_template: &rpm_tests_definition
+  stage: tests
+  services:
+    - name: mysql:latest
+      alias: mysqldb
+      command: ["--default-authentication-plugin=mysql_native_password"]
+  script:
+    - sleep 20 # give some time for the mysql service to start
+    - yum install -y mariadb python3-pytest epel-release
+    - yum install -y epel-rpm-macros
+    - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=${FTS3REPO}\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
+    - PLATFORM=${CI_JOB_NAME%-*}
+    - yum localinstall --nogpgcheck -y ${PLATFORM}/RPMS/*/*.rpm
+    - ./.gitlab-ci/setup-db.sh
+    - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
+    - pytest-3 -x $FTS3TESTPATH
+
+#--------------------------
+# Testing jobs
+#--------------------------
+
 functional_tests36:
   <<: *functional_tests_definition
 
@@ -188,27 +245,31 @@ functional_tests37:
 functional_tests38:
   <<: *functional_tests_definition
 
-rpm_tests:
-  stage: tests
+server_rpm_cc7-test:
+  <<: *rpm_tests_definition
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  services:
-    - name: mysql:latest
-      alias: mysqldb
-      command: ["--default-authentication-plugin=mysql_native_password"]
-  script:
-    - sleep 20 # give some time for the mysql service to start
-    - yum install -y yum-plugin-priorities mariadb python36-pytest
-    - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
-    - yum localinstall --nogpgcheck -y artifacts/RPMS/*/*.rpm
-    - ./.gitlab-ci/setup-db.sh
-    - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
-    - pytest-3 -x /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
   dependencies:
-    - server_rpm
+    - server_rpm_cc7
   needs:
-    - server_rpm
+    - server_rpm_cc7
   variables:
+    RHEL_VERSION: el7
     FTS3TESTCONFIG: /usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig
+    FTS3TESTPATH: /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
+    FTS3REPO: https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/
+
+server_rpm_alma9-test:
+  <<: *rpm_tests_definition
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  dependencies:
+    - server_rpm_alma9
+  needs:
+    - server_rpm_alma9
+  variables:
+    RHEL_VERSION: el9
+    FTS3TESTCONFIG: /usr/lib/python3.9/site-packages/fts3rest/tests/fts3testconfig
+    FTS3TESTPATH: /usr/lib/python3.9/site-packages/fts3rest/tests/functional/
+    FTS3REPO: https://fts-repo.web.cern.ch/fts-repo/testing/fts-depend/el9/x86_64/
 
 #--------------------------
 # Publish templates
@@ -218,12 +279,17 @@ rpm_tests:
   stage: publish
   image: gitlab-registry.cern.ch/eos/gitlab-eos/alma9:latest
   dependencies:
-    - client_rpm
-    - server_rpm
+    - client_rpm_cc7
+    - server_rpm_cc7
+    - client_rpm_alma9
+    - server_rpm_alma9
   script:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
-    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/RPMS/*/*.rpm artifacts/SRPMS/*
+    - |
+      for package in server_rpm_cc7 client_rpm_cc7 server_rpm_alma9 client_rpm_alma9; do
+        packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages ${package}/RPMS/*/*.rpm ${package}/SRPMS/*
+      done
   tags:
     - docker-privileged-xl
   retry: 2
