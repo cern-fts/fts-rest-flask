@@ -960,7 +960,8 @@ def submit():
 
     log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
 
-    insert_tokens(populated.job_id, populated.tokens)
+    if populated.tokens:
+        insert_tokens(populated.job_id, populated.tokens)
 
     # Insert the job
     try:
