@@ -855,6 +855,39 @@ def get_tape_timeout(submit_params, timeout_name):
     return int(timeout_value)
 
 
+def insert_tokens(job_id, tokens):
+    """
+    Inserts the specified list of tokens into the database
+    """
+
+    nb_inserted = 0
+    nb_duplicate = 0
+    started = time.perf_counter()
+    for token_dict in tokens:
+        try:
+            Session.execute(
+                "INSERT INTO t_token(token_id, access_token, issuer, scope, audience) "
+                "VALUES (:token_id, :access_token, :issuer, :scope, :audience)",
+                params={
+                    "token_id": token_dict["token_id"],
+                    "access_token": token_dict["access_token"],
+                    "issuer": token_dict["issuer"],
+                    "scope": token_dict["scope"],
+                    "audience": token_dict["audience"],
+                },
+            )
+            Session.commit()
+            nb_inserted = nb_inserted + 1
+        except IntegrityError:
+            Session.rollback()
+            nb_duplicate = nb_duplicate + 1
+
+    db_secs = time.perf_counter() - started
+    log.info(
+        f"Inserted tokens into database: job_id={job_id} db_secs={db_secs} nb_inserted={nb_inserted} nb_duplicate={nb_duplicate}"
+    )
+
+
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -927,17 +960,10 @@ def submit():
 
     log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
 
+    insert_tokens(populated.job_id, populated.tokens)
+
     # Insert the job
     try:
-        start_merge_tokens = time.perf_counter()
-        for token_dict in populated.tokens:
-            token = Token(**token_dict)
-            Session.merge(token)
-            Session.commit()
-        log.info(
-            f"Merged tokens into database: job_id={populated.job_id} db_secs={time.perf_counter() - start_merge_tokens} nb_tokens={len(populated.tokens)}"
-        )
-
         if user.method == "oauth2":
             set_file_states_to_token_prep_as_necessary(
                 populated.job_id, populated.files
