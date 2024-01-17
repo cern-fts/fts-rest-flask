@@ -866,11 +866,25 @@ def insert_tokens(job_id, tokens):
     for token_dict in tokens:
         try:
             Session.execute(
-                "INSERT INTO t_token(token_id, access_token, issuer, scope, audience) "
-                "VALUES (:token_id, :access_token, :issuer, :scope, :audience)",
+                "INSERT INTO t_token("
+                "  token_id,"
+                "  access_token,"
+                "  access_token_expiry,"
+                "  issuer,"
+                "  scope,"
+                "  audience"
+                ") VALUES ("
+                "  :token_id,"
+                "  :access_token,"
+                "  from_unixtime(:access_token_expiry),"
+                "  :issuer,"
+                "  :scope,"
+                "  :audience"
+                ")",
                 params={
                     "token_id": token_dict["token_id"],
                     "access_token": token_dict["access_token"],
+                    "access_token_expiry": token_dict["exp"],
                     "issuer": token_dict["issuer"],
                     "scope": token_dict["scope"],
                     "audience": token_dict["audience"],
