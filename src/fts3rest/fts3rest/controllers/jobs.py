@@ -892,9 +892,12 @@ def insert_tokens(job_id, tokens):
             )
             Session.commit()
             nb_inserted = nb_inserted + 1
-        except IntegrityError:
+        except IntegrityError as e:
             Session.rollback()
-            nb_duplicate = nb_duplicate + 1
+            if '"Duplicate entry ' in str(e):
+                nb_duplicate = nb_duplicate + 1
+            else:
+                raise
 
     db_secs = time.perf_counter() - started
     log.info(
