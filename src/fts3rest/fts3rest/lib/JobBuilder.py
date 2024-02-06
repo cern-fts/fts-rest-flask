@@ -135,12 +135,20 @@ class JobBuilder:
         ):
             source_url = urlparse(source.strip())
             validate_url(source_url)
+            if src_token is not None and not isinstance(src_token, str):
+                raise BadRequest(
+                    f"Source token is not a string: type(src_token)={type(src_token)}"
+                )
             src_token_id = credentials.generate_token_id(src_token)
             for destination, dst_token in itertools.zip_longest(
                 file_dict["destinations"], dst_tokens
             ):
                 dest_url = urlparse(destination.strip())
                 validate_url(dest_url)
+                if dst_token is not None and not isinstance(dst_token, str):
+                    raise BadRequest(
+                        f"Destination token is not a string: type(dst_token)={type(dst_token)}"
+                    )
                 dst_token_id = credentials.generate_token_id(dst_token)
                 tuples.append((source_url, dest_url, src_token_id, dst_token_id))
 
