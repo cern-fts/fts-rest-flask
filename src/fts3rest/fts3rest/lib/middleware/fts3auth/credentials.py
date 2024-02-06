@@ -84,10 +84,15 @@ def generate_token_id(token):
     """
     if token is None:
         return None
-    else:
-        d = hashlib.sha1()  # nosec
-        d.update(token.encode("utf-8"))
-        return d.hexdigest()[:16]
+
+    if not hasattr(token, "encode"):
+        raise Exception(
+            f"token does not have the encode() method: type(token) = {type(token)}"
+        )
+
+    d = hashlib.sha1()  # nosec
+    d.update(token.encode("utf-8"))
+    return d.hexdigest()[:16]
 
 
 def gridmap_vo(user_dn):
