@@ -498,6 +498,10 @@ class JobBuilder:
                 token_dict["issuer"] = safe_issuer(jwt_payload["iss"])
             else:
                 raise BadRequest("Token does not contain an iss claim")
+            if "nbf" in jwt_payload:
+                token_dict["nbf"] = jwt_payload["nbf"]
+            else:
+                raise BadRequest("Token does not contain a nbf claim")
             if "exp" in jwt_payload:
                 token_dict["exp"] = jwt_payload["exp"]
             else:

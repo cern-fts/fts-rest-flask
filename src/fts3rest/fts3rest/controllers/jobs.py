@@ -869,6 +869,7 @@ def insert_tokens(job_id, tokens):
                 "INSERT INTO t_token("
                 "  token_id,"
                 "  access_token,"
+                "  access_token_not_before,"
                 "  access_token_expiry,"
                 "  issuer,"
                 "  scope,"
@@ -876,6 +877,7 @@ def insert_tokens(job_id, tokens):
                 ") VALUES ("
                 "  :token_id,"
                 "  :access_token,"
+                "  from_unixtime(:access_token_not_before),"
                 "  from_unixtime(:access_token_expiry),"
                 "  :issuer,"
                 "  :scope,"
@@ -884,6 +886,7 @@ def insert_tokens(job_id, tokens):
                 params={
                     "token_id": token_dict["token_id"],
                     "access_token": token_dict["access_token"],
+                    "access_token_not_before": token_dict["nbf"],
                     "access_token_expiry": token_dict["exp"],
                     "issuer": token_dict["issuer"],
                     "scope": token_dict["scope"],
