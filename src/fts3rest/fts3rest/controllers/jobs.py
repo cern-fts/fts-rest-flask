@@ -985,10 +985,17 @@ def submit():
 
     # Insert the job
     try:
-        if user.method == "oauth2":
-            set_file_states_to_token_prep_as_necessary(
-                populated.job_id, populated.files
-            )
+        # Note: Move away from the "TOKEN_PREP" mechanism to manage token lifecycle
+        # Refresh tokens must be obtained for ALL access tokens that don't have one.
+        # The transfer file state is no longer involved in token lifecycle management.
+        # The token-exchange will have no more impact on transfers:
+        #   - no additional wait time, as transfers will start already in their initial state (instead of "TOKEN_PREP")
+        #   - no additional chance to fail in the token-exchange step
+
+        # if user.method == "oauth2":
+        #     set_file_states_to_token_prep_as_necessary(
+        #         populated.job_id, populated.files
+        #     )
 
         try:
             start_insert_job = time.perf_counter()
