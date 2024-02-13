@@ -96,6 +96,7 @@ class File(Base):
     scitag = Column(Integer)
     src_token_id = Column(String(16))
     dst_token_id = Column(String(16))
+    file_state_initial = Column(String(32))
 
     retries = relation(
         "FileRetryLog", uselist=True, lazy=True, backref=backref("file", lazy=False)

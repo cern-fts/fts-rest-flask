@@ -194,6 +194,7 @@ class JobBuilder:
                 file_index=f_index,
                 dest_surl_uuid=dest_uuid,
                 file_state=initial_file_state,
+                file_state_initial="",
                 source_surl=source.geturl(),
                 dest_surl=destination.geturl(),
                 source_se=get_storage_element(source),

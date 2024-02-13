@@ -783,6 +783,8 @@ def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
     Sets the file_state column of the specified t_file table rows to TOKEN_PREP
     if either the associated source or destination access token does not yet
     have a refresh token.
+
+    The initial file state is stored under t_file.file_state_initial
     """
     token_ids = get_token_ids_from_file_rows(file_rows)
     start_get_refreshless_token_ids = time.perf_counter()
@@ -800,6 +802,7 @@ def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
             file_row["src_token_id"] in refreshless_token_ids
             or file_row["dst_token_id"] in refreshless_token_ids
         ):
+            file_row["file_state_initial"] = file_row["file_state"]
             file_row["file_state"] = "TOKEN_PREP"
 
 
@@ -985,17 +988,14 @@ def submit():
 
     # Insert the job
     try:
-        # Note: Move away from the "TOKEN_PREP" mechanism to manage token lifecycle
-        # Refresh tokens must be obtained for ALL access tokens that don't have one.
-        # The transfer file state is no longer involved in token lifecycle management.
-        # The token-exchange will have no more impact on transfers:
-        #   - no additional wait time, as transfers will start already in their initial state (instead of "TOKEN_PREP")
-        #   - no additional chance to fail in the token-exchange step
+        # Token transfers which require a refresh token will be placed in "TOKEN_PREP" file state.
+        # What was supposed to be the initial file state is stored in "t_file.file_state_initial".
+        # The FTS server will reset the file state to its initial value after obtaining the refresh token
 
-        # if user.method == "oauth2":
-        #     set_file_states_to_token_prep_as_necessary(
-        #         populated.job_id, populated.files
-        #     )
+        if user.method == "oauth2":
+            set_file_states_to_token_prep_as_necessary(
+                populated.job_id, populated.files
+            )
 
         try:
             start_insert_job = time.perf_counter()
