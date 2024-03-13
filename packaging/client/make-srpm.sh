@@ -16,7 +16,7 @@ function print_info {
 
 VERSION=$(grep -m1 packaging/client/fts-rest-client.spec -e "^Version:" | awk {'print $2'})
 TIMESTAMP=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%y%m%d%H%M)
-GITREF=`git rev-parse --short HEAD`
+GITREF=`git rev-parse --short=7 HEAD`
 RELEASE=r${TIMESTAMP}git${GITREF}
 
 if [[ -z ${BRANCH} ]]; then
