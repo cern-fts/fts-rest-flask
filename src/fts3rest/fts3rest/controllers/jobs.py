@@ -867,6 +867,14 @@ def insert_tokens(job_id, tokens):
     nb_duplicate = 0
     started = time.perf_counter()
     for token_dict in tokens:
+        # Refresh a token half way through its lifetime
+        lifetime_sec = (
+            token_dict["exp"] - token_dict["nbf"]
+            if token_dict["exp"] > token_dict["nbf"]
+            else 0
+        )
+        access_token_refresh_timestamp = token_dict["nbf"] + lifetime_sec * 0.5
+
         try:
             Session.execute(
                 "INSERT INTO t_token("
@@ -874,6 +882,7 @@ def insert_tokens(job_id, tokens):
                 "  access_token,"
                 "  access_token_not_before,"
                 "  access_token_expiry,"
+                "  access_token_refresh_timestamp,"
                 "  issuer,"
                 "  scope,"
                 "  audience"
@@ -882,6 +891,7 @@ def insert_tokens(job_id, tokens):
                 "  :access_token,"
                 "  from_unixtime(:access_token_not_before),"
                 "  from_unixtime(:access_token_expiry),"
+                "  from_unixtime(:access_token_refresh_timestamp),"
                 "  :issuer,"
                 "  :scope,"
                 "  :audience"
@@ -891,6 +901,7 @@ def insert_tokens(job_id, tokens):
                     "access_token": token_dict["access_token"],
                     "access_token_not_before": token_dict["nbf"],
                     "access_token_expiry": token_dict["exp"],
+                    "access_token_refresh_timestamp": access_token_refresh_timestamp,
                     "issuer": token_dict["issuer"],
                     "scope": token_dict["scope"],
                     "audience": token_dict["audience"],
