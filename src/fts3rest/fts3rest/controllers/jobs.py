@@ -873,7 +873,7 @@ def insert_tokens(job_id, tokens):
             if token_dict["exp"] > token_dict["nbf"]
             else 0
         )
-        access_token_refresh_timestamp = token_dict["nbf"] + lifetime_sec * 0.5
+        access_token_refresh_after = token_dict["nbf"] + lifetime_sec * 0.5
 
         try:
             Session.execute(
@@ -882,7 +882,7 @@ def insert_tokens(job_id, tokens):
                 "  access_token,"
                 "  access_token_not_before,"
                 "  access_token_expiry,"
-                "  access_token_refresh_timestamp,"
+                "  access_token_refresh_after,"
                 "  issuer,"
                 "  scope,"
                 "  audience"
@@ -891,7 +891,7 @@ def insert_tokens(job_id, tokens):
                 "  :access_token,"
                 "  from_unixtime(:access_token_not_before),"
                 "  from_unixtime(:access_token_expiry),"
-                "  from_unixtime(:access_token_refresh_timestamp),"
+                "  from_unixtime(:access_token_refresh_after),"
                 "  :issuer,"
                 "  :scope,"
                 "  :audience"
@@ -901,7 +901,7 @@ def insert_tokens(job_id, tokens):
                     "access_token": token_dict["access_token"],
                     "access_token_not_before": token_dict["nbf"],
                     "access_token_expiry": token_dict["exp"],
-                    "access_token_refresh_timestamp": access_token_refresh_timestamp,
+                    "access_token_refresh_after": access_token_refresh_after,
                     "issuer": token_dict["issuer"],
                     "scope": token_dict["scope"],
                     "audience": token_dict["audience"],
