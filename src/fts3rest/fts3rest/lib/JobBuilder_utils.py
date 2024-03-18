@@ -187,41 +187,14 @@ def safe_issuer(issuer):
     return issuer
 
 
-def get_nb_servers():
-    """
-    Returns the number of fts_servers in the t_hosts table
-    """
-    result = Session.execute(
-        "SELECT COUNT(*) FROM t_hosts WHERE service_name = 'fts_server'"
-    ).scalar()
-
-    return result
-
-
 def generate_hashed_id():
     """
     Generates a uniformly distributed value between 0 and 2**16
     This is intended to split evenly the load across node
     The name is an unfortunately legacy from when this used to
     be based on a hash on the job
-    If the leading node is not running the scheduler do not
-    assign work to it
     """
-    exclude_leading_node = app.config.get("fts3.StopSchedulerOnLeadNode", False)
-    lower_limit = 0
-
-    if exclude_leading_node:
-        log.debug("Excluding the leading node form pool of schedulers")
-        # Calculate the hashed id lower limit so that the leading node is excluded
-        nb_servers = get_nb_servers()
-
-        if (
-            nb_servers > 1
-        ):  # Only exclude leading node if there are more than one node running the fts_server service
-            lower_limit = ((2**16) - 1) // nb_servers + 1
-            log.debug("Hashed id lower limit is set %s" % lower_limit)
-
-    return random.randint(lower_limit, (2**16) - 1)  # nosec
+    return random.randint(0, (2**16) - 1)  # nosec
 
 
 def has_multiple_options(files):

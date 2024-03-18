@@ -37,10 +37,6 @@ Alias =
 # Inform the REST component whether the Optimizer service is running
 #Optimizer = True
 
-# Inform the REST component that the leading node is not running the fts_server daemon
-# to not assign transfers to it
-#StopSchedulerOnLeadNode = False
-
 # Enable or disable monitoring messages (see fts-msg-monitoring.conf) (default false)
 #MonitoringMessaging = False
 # Enable or disable publishing of user DNs (recommended false)
