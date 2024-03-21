@@ -806,25 +806,6 @@ def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
             file_row["file_state"] = "TOKEN_PREP"
 
 
-def get_issuer_from_bearer_token(token):
-    """
-    Returns the issuer of the issuer specified token.
-    """
-    segments = token.split(".")
-    if len(segments) < 3:
-        raise BadRequest(f"Not enough token segments: min=3 actual={len(segments)}")
-    payload = segments[1]
-    len_payload_mod_4 = len(segments[1]) % 4
-    if len_payload_mod_4 > 0:
-        payload = payload + "=" * (4 - len_payload_mod_4)
-    decoded_payload = base64.urlsafe_b64decode(payload)
-    jwt_payload = json.loads(decoded_payload)
-    if "iss" in jwt_payload:
-        return safe_issuer(jwt_payload["iss"])
-    else:
-        raise BadRequest("Token does not contain an iss claim")
-
-
 def issuer_is_known(issuer):
     """
     Returns true if the specified token issuer is in the t_token_provider
@@ -922,6 +903,31 @@ def insert_tokens(job_id, tokens):
     )
 
 
+def decode_token(raw):
+    split_raw = raw.split(".")
+
+    if len(split_raw) != 3:
+        raise Exception(
+            "Could not split token into three parts using '.' as the delimiter"
+        )
+
+    encoded_header = split_raw[0]
+    encoded_payload = split_raw[1]
+
+    for i in range(0, len(encoded_header) % 4):
+        encoded_header += "="
+    for i in range(0, len(encoded_payload) % 4):
+        encoded_payload += "="
+
+    token = {}
+    token["raw"] = raw
+    token["header"] = json.loads(base64.urlsafe_b64decode(encoded_header))
+    token["payload"] = json.loads(base64.urlsafe_b64decode(encoded_payload))
+    token["signature"] = split_raw[2]
+
+    return token
+
+
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -964,6 +970,9 @@ def submit():
     # Populate the job and files
     populated = JobBuilder(request, **submitted_dict)
 
+    fts_submit_token_issuer = "NA"  # nosec
+    fts_submit_token_aud = "NA"  # nosec
+
     # If token authentication
     if user.method == "oauth2":
         log.debug("Token transfer submission: validating preconditions")
@@ -980,8 +989,17 @@ def submit():
             )
 
         # Block unknown issuer
-        fts_submit_token = request.environ["HTTP_AUTHORIZATION"].split()[1]
-        fts_submit_token_issuer = get_issuer_from_bearer_token(fts_submit_token)
+        raw_fts_submit_token = request.environ["HTTP_AUTHORIZATION"].split()[1]
+        fts_submit_token = decode_token(raw_fts_submit_token)
+
+        if "iss" not in fts_submit_token["payload"]:
+            raise BadRequest("Token does not contain an iss claim")
+        fts_submit_token_issuer = safe_issuer(fts_submit_token["payload"]["iss"])
+
+        if "aud" not in fts_submit_token["payload"]:
+            raise BadRequest("Token does not contain an aud claim")
+        fts_submit_token_aud = fts_submit_token["payload"]["aud"]
+
         if not issuer_is_known(fts_submit_token_issuer):
             raise BadRequest(
                 f"FTS access-token has unknown issuer: issuer={fts_submit_token_issuer}"
@@ -1045,8 +1063,15 @@ def submit():
             log.warning("Failed to write state message to disk: %s" % str(ex))
 
     log.info(
-        "Job %s submitted: transfers=%d vo=%s"
-        % (populated.job_id, len(populated.files), user.vos[0])
+        "Job %s submitted: transfers=%d vo=%s method=%s fts_submit_token_issuer=%s fts_submit_token_aud=%s"
+        % (
+            populated.job_id,
+            len(populated.files),
+            user.vos[0],
+            user.method,
+            fts_submit_token_issuer,
+            fts_submit_token_aud,
+        )
     )
 
     return {"job_id": populated.job_id}
