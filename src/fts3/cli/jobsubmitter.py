@@ -367,7 +367,7 @@ class JobSubmitter(Base):
             ]
         ):
             self.opt_parser.error(
-                "Cannot use both '--access-token' and '--src/dst-access-token' simultaneously. (prefer new token handles i.e. with --fts-token)"
+                "Cannot use both '--access-token' and '--src/dst-access-token' simultaneously. (prefer new token handles i.e. with --fts-access-token)"
             )
 
         # Compatibility for access token
@@ -376,7 +376,7 @@ class JobSubmitter(Base):
                 self.options.dst_access_token
             ) = self.options.access_token
 
-        # Both the certificate and the fts token is present
+        # Both the certificate and the FTS access token is present
         if self.options.ucert and any(
             [
                 self.options.fts_access_token,
@@ -388,33 +388,44 @@ class JobSubmitter(Base):
                 "Cannot use both certificate and tokens simultaneously"
             )
 
-        # The fts token is present
-        if self.options.fts_access_token:
-            if self.options.src_access_token is None:
-                self.opt_parser.error(
-                    "Source token doesn't exist. Please specify a source access token"
-                )
-            if self.options.dst_access_token is None:
-                self.opt_parser.error(
-                    "Destination token doesn't exist. Please specify a destination access token"
-                )
+        if self.options.fts_access_token is None and any(
+            [
+                self.options.src_access_token,
+                self.options.dst_access_token,
+            ]
+        ):
+            self.opt_parser.error(
+                "Source or destination token set, but FTS access token is missing. Please set FTS access token!"
+            )
 
         self._prepare_options()
 
-        # For the case if submission is made through bulk file
-        if self.options.bulk_file:
-            for transfer in self.transfers:
-                sources = transfer.get("sources", [])
-                destinations = transfer.get("destinations", [])
-                source_tokens = transfer.get("source_tokens", [])
-                destination_tokens = transfer.get("destination_tokens", [])
-                if len(sources) != len(source_tokens):
+        # Validation for token submission
+        if self.options.fts_access_token:
+            # Bulk submission
+            if self.options.bulk_file:
+                for transfer in self.transfers:
+                    sources = transfer.get("sources", [])
+                    destinations = transfer.get("destinations", [])
+                    source_tokens = transfer.get("source_tokens", [])
+                    destination_tokens = transfer.get("destination_tokens", [])
+                    if len(sources) != len(source_tokens):
+                        self.opt_parser.error(
+                            "Please specify access token for each source in file submission"
+                        )
+                    if len(destinations) != len(destination_tokens):
+                        self.opt_parser.error(
+                            "Please specify access token for each destination in file submission"
+                        )
+            # Non-bulk submission
+            else:
+                if self.options.src_access_token is None:
                     self.opt_parser.error(
-                        "Please specify source access token for each source"
+                        "Source token doesn't exist. Please specify a source access token"
                     )
-                if len(destinations) != len(destination_tokens):
+                if self.options.dst_access_token is None:
                     self.opt_parser.error(
-                        "Please specify destination access token for each destination"
+                        "Destination token doesn't exist. Please specify a destination access token"
                     )
 
         if self.params["ipv4"] and self.params["ipv6"]:
