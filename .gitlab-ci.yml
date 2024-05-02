@@ -195,7 +195,7 @@ docker_tag:
 .functional_tests_template: &functional_tests_definition
   stage: tests
   services:
-    - name: mysql:latest
+    - name: mysql:8.0.32
       alias: mysqldb
       command: ["--default-authentication-plugin=mysql_native_password"]
   script:
@@ -218,7 +218,7 @@ docker_tag:
 .rpm_tests_template: &rpm_tests_definition
   stage: tests
   services:
-    - name: mysql:latest
+    - name: mysql:8.0.32
       alias: mysqldb
       command: ["--default-authentication-plugin=mysql_native_password"]
   script:
