@@ -355,6 +355,49 @@ class JobBuilder:
                 "Reuse jobs must only contain transfers for the same source ad destination storage"
             )
 
+    def _validate_overwrite_flag(self):
+        """
+        Validates and returns the correct overwrite flag
+        If an invalid combination is detected, a user error is raised.
+
+        Y -- overwrite enabled
+        R -- overwrite enabled only on FTS retries
+        M -- overwrite enabled only for intermediary hops
+        D -- overwrite-when-only-on-disk feature enabled (overwrite if destination file has only disk locality)
+        Q -- overwrite-hop + overwrite-when-only-on-disk behavior
+        """
+
+        overwrite_flags_count = sum(
+            [
+                self.params["overwrite"],
+                self.params["overwrite_on_retry"],
+                self.params["overwrite_when_only_on_disk"],
+                self.params["overwrite_hop"],
+            ]
+        )
+        # "overwrite_hop" and "overwrite_when_only_on_disk" allowed to work together
+        if overwrite_flags_count > 1 and not (
+            overwrite_flags_count == 2
+            and self.params["overwrite_hop"]
+            and self.params["overwrite_when_only_on_disk"]
+        ):
+            raise BadRequest("Incompatible overwrite flags used at the same time")
+        if self.params["overwrite"]:
+            return "Y"
+        if self.params["overwrite_on_retry"]:
+            return "R"
+        if self.params["overwrite_hop"] and self.params["overwrite_when_only_on_disk"]:
+            return "Q"  # Multihop + overwrite disk
+        if self.params["overwrite_hop"]:
+            return "M"
+        if self.params["overwrite_when_only_on_disk"]:
+            if safe_int(self.params["archive_timeout"]) <= 0:
+                raise BadRequest(
+                    "'overwrite-when-only-on-disk' requires 'archive-timeout' to be set"
+                )
+            return "D"
+        return None
+
     def _file_list_contains_a_token_list(self, files_list):
         """
         Returns true if the list of file contains at least one list of source or destination tokens
@@ -581,14 +624,7 @@ class JobBuilder:
                         + " seconds apart"
                     )
 
-        if self.params["overwrite"]:
-            overwrite_flag = "Y"
-        elif self.params["overwrite_on_retry"]:
-            overwrite_flag = "R"
-        elif self.params["overwrite_hop"]:
-            overwrite_flag = "M"
-        else:
-            overwrite_flag = None
+        overwrite_flag = self._validate_overwrite_flag()
 
         self.job = dict(
             job_id=self.job_id,
