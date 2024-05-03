@@ -36,6 +36,7 @@ DEFAULT_PARAMS = {
     "job_metadata": None,
     "overwrite": False,
     "overwrite_on_retry": False,
+    "overwrite_when_only_on_disk": False,
     "overwrite_hop": False,
     "dst_file_report": False,
     "reuse": None,
