@@ -369,10 +369,10 @@ class JobBuilder:
 
         overwrite_flags_count = sum(
             [
-                self.params["overwrite"],
-                self.params["overwrite_on_retry"],
-                self.params["overwrite_when_only_on_disk"],
-                self.params["overwrite_hop"],
+                safe_flag(self.params["overwrite"]),
+                safe_flag(self.params["overwrite_on_retry"]),
+                safe_flag(self.params["overwrite_when_only_on_disk"]),
+                safe_flag(self.params["overwrite_hop"]),
             ]
         )
         # "overwrite_hop" and "overwrite_when_only_on_disk" allowed to work together
