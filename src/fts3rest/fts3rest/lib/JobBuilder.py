@@ -382,6 +382,13 @@ class JobBuilder:
             and self.params["overwrite_when_only_on_disk"]
         ):
             raise BadRequest("Incompatible overwrite flags used at the same time")
+        if (
+            self.params["overwrite_when_only_on_disk"]
+            and safe_int(self.params["archive_timeout"]) <= 0
+        ):
+            raise BadRequest(
+                "'overwrite-when-only-on-disk' requires 'archive-timeout' to be set"
+            )
         if self.params["overwrite"]:
             return "Y"
         if self.params["overwrite_on_retry"]:
@@ -391,10 +398,6 @@ class JobBuilder:
         if self.params["overwrite_hop"]:
             return "M"
         if self.params["overwrite_when_only_on_disk"]:
-            if safe_int(self.params["archive_timeout"]) <= 0:
-                raise BadRequest(
-                    "'overwrite-when-only-on-disk' requires 'archive-timeout' to be set"
-                )
             return "D"
         return None
 
