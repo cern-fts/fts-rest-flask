@@ -165,7 +165,7 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
     )
 
     # Convert options to boolean
-    options = {"Optimizer": True, "AutoSessionReuse": False}
+    options = {"Optimizer": True, "AutoSessionReuse": False, "OAuth2": False}
 
     for key in options:
         try:
