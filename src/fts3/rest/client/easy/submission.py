@@ -227,6 +227,12 @@ def new_job(
         raise ClientError(
             "Bad request: Incompatible overwrite flags used at the same time"
         )
+    if overwrite_when_only_on_disk and (
+        archive_timeout is None or archive_timeout <= 0
+    ):
+        raise ClientError(
+            "Bad request: 'overwrite_when_only_on_disk' requires 'archive_timeout' to be set"
+        )
 
     # Deprecate the "spacetoken" field (will be removed in FTS v3.14)
     if "spacetoken" in kwargs:
