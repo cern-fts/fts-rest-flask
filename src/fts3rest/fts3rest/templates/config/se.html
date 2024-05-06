@@ -58,9 +58,12 @@
 									<label>Skip Eviction</label>
 									<input id="skip_eviction_hidden" class="form-control" type="number" name="skip_eviction" value="{{se_info.skip_eviction}}" min="0" max="1"/>
 								</div>
+								<div class="form-group">
+									<label>Tape Endpoint</label>
+									<input id="tape_endpoint_hidden" class="form-control" type="number" name="tape_endpoint" value="{{se_info.tape_endpoint}}" min="0" max="1"/>
+								</div>
 								<div class="from-group">
 									<label>TCP Support</label>
-
 									<select id="tpc_support_hidden" name="tpc_support" class="form-control">
 										<option value="test" hidden selected>{{se_info.tpc_support}}</option>
 										<option value="FULL">Full support</option>
@@ -191,7 +194,7 @@
 									<input class="form-control" name="ipv6" id="ipv6" type="number" min="0" max="1"/> 
 							</div>
 							<div class="form-group">
-								<label for="udt"> UDT <i
+								<label for="udt">UDT<i
 									class="glyphicon glyphicon-question-sign"
 									title="If set, FTS3 will enable UDT for this endpoint, but will fallback to non-UDT on error"></i>
 								</label> 
@@ -203,11 +206,18 @@
 								type="number" min="0" max="3"/>
 							</div>
 							<div class="form-group">
-								<label for="skip_eviction"> Eviction <i
+								<label for="skip_eviction">Eviction <i
 									class="glyphicon glyphicon-question-sign"
 									title="If set, after a successful transfer, FTS3 will not evict the source file from the endpoint."></i>
 								</label> 
 								<input class="form-control" name="skip_eviction" id="skip_eviction" type="number" min="0" max="1"/>
+							</div>
+							<div class="form-group">
+								<label for="tape_endpoint">Tape Endpoint <i
+										class="glyphicon glyphicon-question-sign"
+										title="Configure end-point as Tape. This allows FTS to use the 'overwrite-when-only-on-disk' feature"></i>
+								</label>
+								<input class="form-control" name="tape_endpoint" id="tape_endpoint" type="number" min="0" max="1"/>
 							</div>
 							<div class="form-group">
 								<label for="tpc_support">TPC support <i
