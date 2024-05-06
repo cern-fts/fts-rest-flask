@@ -139,6 +139,7 @@ def get_se_config():
             "debug_level",
             "skip_eviction",
             "tpc_support",
+            "tape_endpoint",
         ]:
             if attr == "tpc_support":
                 se_info[attr] = _translate_tcp_mode(getattr(opt, attr))
