@@ -31,6 +31,8 @@ from flask import request
 from fts3rest.model import CredentialCache
 from fts3rest.model.oauth2 import OAuth2Application, OAuth2Code, OAuth2Token
 
+from werkzeug.exceptions import BadRequest
+
 log = logging.getLogger(__name__)
 
 
@@ -228,6 +230,9 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         :param access_token:
         :param authorization: attribute to fill-in with token information
         """
+        if "fts3.OAuth2" not in self.config or not self.config.get("fts3.OAuth2"):
+            raise BadRequest("Unsupported authentication method: method=OAuth2")
+
         authorization.is_valid = False
         validation_method = "offline" if self._should_validate_offline() else "online"
         audience = self.config["fts3.AuthorizedAudiences"]

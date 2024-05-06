@@ -17,6 +17,7 @@ class TestFTS3OAuth2ResourceProvider(TestController):
         config = self.flask_app.config
         if not config["fts3.Providers"]:
             raise unittest.SkipTest("Missing OIDC client configuration data")
+        config["fts3.OAuth2"] = True
         self.oidc_manager = OIDCmanager()
         self.issuer = "https://iam.extreme-datacloud.eu/"
         self.oidc_manager.setup(config)
