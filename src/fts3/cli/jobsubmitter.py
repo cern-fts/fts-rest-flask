@@ -457,6 +457,14 @@ class JobSubmitter(Base):
         ):
             self.opt_parser.error("Incompatible overwrite flags used at the same time!")
 
+        if (
+            self.params["overwrite_when_only_on_disk"]
+            and self.params["archive_timeout"] <= 0
+        ):
+            self.opt_parser.error(
+                "Using 'overwrite-when-only-on-disk' requires 'archive-timeout' to be set"
+            )
+
         if self.params.get("scitag") is not None and not (
             65 <= self.params["scitag"] <= 65535
         ):
