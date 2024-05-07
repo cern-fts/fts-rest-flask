@@ -37,7 +37,7 @@ class JobDeletionSubmitter(Base):
             This command can be used to submit a deletion job to FTS3. It supports simple and bulk submissions.
             """,
             example="""
-            $ %(prog)s -s https://fts3-devel.cern.ch:8446 gsiftp://source.host/file1 gsiftp://source.host/file2
+            $ %(prog)s -s https://fts3-devel.cern.ch:8446 https://source.host/file1 https://source.host/file2
             Job successfully submitted.
             Job id: 9fee8c1e-c46d-11e3-8299-02163e00a17a
 

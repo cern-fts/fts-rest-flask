@@ -82,10 +82,10 @@ class JobSubmitter(Base):
               "files": [
                 {
                   "sources": [
-                    "gsiftp://source.host/file"
+                    "https://source.host/file"
                   ],
                   "destinations": [
-                    "gsiftp://destination.host/file"
+                    "https://destination.host/file"
                   ],
                   "metadata": "file-metadata",
                   "checksum": "ADLER32:1234",
@@ -93,10 +93,10 @@ class JobSubmitter(Base):
                 },
                 {
                   "sources": [
-                    "gsiftp://source.host/file2"
+                    "https://source.host/file2"
                   ],
                   "destinations": [
-                    "gsiftp://destination.host/file2"
+                    "https://destination.host/file2"
                   ],
                   "metadata": "file2-metadata",
                   "checksum": "ADLER32:4321",
@@ -108,7 +108,7 @@ class JobSubmitter(Base):
             ```
             """,
             example="""
-            $ %(prog)s -s https://fts3-devel.cern.ch:8446 gsiftp://source.host/file gsiftp://destination.host/file
+            $ %(prog)s -s https://fts3-devel.cern.ch:8446 https://source.host/file https://destination.host/file
             Job successfully submitted.
             Job id: 9fee8c1e-c46d-11e3-8299-02163e00a17a
 
