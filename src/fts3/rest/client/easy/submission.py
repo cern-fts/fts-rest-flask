@@ -66,6 +66,8 @@ def new_transfer(
     staging_metadata=None,
     archive_metadata=None,
     selection_strategy="auto",
+    source_token=None,
+    destination_token=None,
 ):
     """
     Creates a new transfer pair
@@ -81,6 +83,8 @@ def new_transfer(
         staging_metadata:   Staging Metadata to bind to the bringonline operation
         archive_metadata:   Archive Metadata to bind to the archiving operation
         selection_strategy: Selection strategy to implement for multiple replica Jobs
+        source_token:       The source access token in token-based transfers
+        destination_token:  The destination access token in token-based transfers
 
     Returns:
         An initialized transfer
@@ -109,6 +113,11 @@ def new_transfer(
         transfer["archive_metadata"] = archive_metadata
     if selection_strategy:
         transfer["selection_strategy"] = selection_strategy
+    if source_token or destination_token:
+        if not (source_token and destination_token):
+            raise ClientError("Both source and destination tokens should be given")
+        transfer["source_tokens"] = [source_token]
+        transfer["destination_tokens"] = [destination_token]
 
     return transfer
 
