@@ -33,7 +33,7 @@ class TestJobSubmission(TestController):
 
         self.assertEqual(job.source_se, "root://source.es")
         self.assertEqual(job.dest_se, "root://dest.ch")
-        self.assertEqual(job.overwrite_flag, True)
+        self.assertEqual(job.overwrite_flag, "Y")
         self.assertEqual(job.verify_checksum, "b")
         self.assertEqual(job.job_type, "N")
         self.assertEqual(job.priority, 3)
@@ -1263,6 +1263,53 @@ class TestJobSubmission(TestController):
         self.assertIn("Must be an integer", message)
         self.assertIn("65", message)
 
+    def test_submit_overwrite_all(self):
+        """
+        Submit jobs with all "overwrite" values
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                }
+            ]
+        }
+
+        overwrite_submissions = [
+            ({"overwrite": True}, "Y"),
+            ({"overwrite_on_retry": True}, "R"),
+            ({"overwrite_hop": True}, "M"),
+            ({"overwrite_when_only_on_disk": True, "archive_timeout": 86400}, "D"),
+            (
+                {
+                    "overwrite_when_only_on_disk": True,
+                    "overwrite_hop": True,
+                    "archive_timeout": 86400,
+                },
+                "Q",
+            ),
+        ]
+
+        for submission in overwrite_submissions:
+            job["params"] = submission[0]
+
+            job_id = self.app.put(
+                url="/jobs",
+                content_type="application/json",
+                params=json.dumps(job),
+                status=200,
+            ).json["job_id"]
+
+            # Make sure it was committed to the DB
+            self.assertGreater(len(job_id), 0)
+
+            _job = Session.query(Job).get(job_id)
+            self.assertEqual(_job.overwrite_flag, submission[1])
+
     def test_submit_overwrite_multiple_flags_invalid(self):
         """
         Submit jobs with incompatible overwrite flags
@@ -1351,67 +1398,3 @@ class TestJobSubmission(TestController):
             status=400,
         ).json["message"]
         self.assertIn("archive-timeout", message)
-
-    def test_submit_overwrite_disk(self):
-        """
-        Submit job with "overwrite-when-only-on-disk"
-        """
-        self.setup_gridsite_environment()
-        self.push_delegation()
-
-        job = {
-            "files": [
-                {
-                    "sources": ["https://source.ch/file"],
-                    "destinations": ["https://dest.ch/file"],
-                }
-            ],
-            "params": {"overwrite_when_only_on_disk": True, "archive_timeout": 86400},
-        }
-
-        job_id = self.app.put(
-            url="/jobs",
-            content_type="application/json",
-            params=json.dumps(job),
-            status=200,
-        ).json["job_id"]
-
-        # Make sure it was committed to the DB
-        self.assertGreater(len(job_id), 0)
-
-        job = Session.query(Job).get(job_id)
-        self.assertTrue(job.overwrite_flag)
-
-    def test_submit_overwrite_disk_overwrite_hop(self):
-        """
-        Submit job with "overwrite-when-only-on-disk" + "overwrite_hop"
-        """
-        self.setup_gridsite_environment()
-        self.push_delegation()
-
-        job = {
-            "files": [
-                {
-                    "sources": ["https://source.ch/file"],
-                    "destinations": ["https://dest.ch/file"],
-                }
-            ],
-            "params": {
-                "overwrite_when_only_on_disk": True,
-                "overwrite_hope": True,
-                "archive_timeout": 86400,
-            },
-        }
-
-        job_id = self.app.put(
-            url="/jobs",
-            content_type="application/json",
-            params=json.dumps(job),
-            status=200,
-        ).json["job_id"]
-
-        # Make sure it was committed to the DB
-        self.assertGreater(len(job_id), 0)
-
-        job = Session.query(Job).get(job_id)
-        self.assertTrue(job.overwrite_flag)
