@@ -14,6 +14,7 @@
 #   limitations under the License.
 
 from datetime import timedelta
+from optparse import SUPPRESS_HELP
 import json
 import sys
 import time
@@ -337,12 +338,14 @@ class JobSubmitter(Base):
         self.opt_parser.add_option(
             "--src-access-token",
             dest="src_access_token",
-            help="The source access token in token-based transfers",
+            help=SUPPRESS_HELP,
+            # help="The source access token in token-based transfers",
         )
         self.opt_parser.add_option(
             "--dst-access-token",
             dest="dst_access_token",
-            help="The destination access token in token-based transfers",
+            help=SUPPRESS_HELP,
+            # help="The destination access token in token-based transfers",
         )
 
     def validate(self):
@@ -359,7 +362,7 @@ class JobSubmitter(Base):
                 self.logger.critical("Too many parameters")
                 sys.exit(1)
 
-        # Both the access and the fts token is present
+        # Both the access and the FTS token is present
         if self.options.access_token and any(
             [
                 self.options.src_access_token,
@@ -367,7 +370,7 @@ class JobSubmitter(Base):
             ]
         ):
             self.opt_parser.error(
-                "Cannot use both '--access-token' and '--src/dst-access-token' simultaneously. (prefer new token handles i.e. with --fts-access-token)"
+                "Cannot use both '--access-token' and '--src/dst-access-token' simultaneously (prefer new token handles: i.e. '--fts-access-token')"
             )
 
         # Compatibility for access token
@@ -465,14 +468,15 @@ class JobSubmitter(Base):
                 self.logger.critical("Could not find any transfers")
                 sys.exit(1)
         else:
-            return [
-                {
-                    "sources": [self.source],
-                    "destinations": [self.destination],
-                    "source_tokens": [self.options.src_access_token],
-                    "destination_tokens": [self.options.dst_access_token],
-                }
-            ]
+            transfer = {
+                "sources": [self.source],
+                "destinations": [self.destination],
+            }
+            if self.options.src_access_token:
+                transfer["source_tokens"] = [self.options.src_access_token]
+            if self.options.dst_access_token:
+                transfer["destination_tokens"] = [self.options.dst_access_token]
+            return [transfer]
 
     def _build_params(self, **kwargs):
         params = dict()

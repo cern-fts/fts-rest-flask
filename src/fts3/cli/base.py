@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from configparser import ConfigParser
-from optparse import OptionParser, IndentedHelpFormatter
+from optparse import OptionParser, IndentedHelpFormatter, SUPPRESS_HELP
 import logging
 import os
 import socket
@@ -138,13 +138,15 @@ class Base:
         self.opt_parser.add_option(
             "--access-token",
             dest="access_token",
-            help="deprecated: Single OAuth2 access-token for FTS submission plus source and destination tokens.",
+            help="Single OAuth2 access-token for FTS submission plus source and destination tokens.",
+            # help="deprecated: Single OAuth2 access-token for FTS submission plus source and destination tokens.",
             default=None,
         )
         self.opt_parser.add_option(
             "--fts-access-token",
             dest="fts_access_token",
-            help="OAuth2 access-token for FTS submission.  Source and destination tokens must be specified separately.",
+            help=SUPPRESS_HELP,
+            # help="OAuth2 access-token for FTS submission.  Source and destination tokens must be specified separately.",
             default=None,
         )
 
@@ -188,7 +190,7 @@ class Base:
     def _access_token_compatibility(self):
         if self.options.access_token and self.options.fts_access_token:
             self.opt_parser.error(
-                "Cannot use both '--access-token' and '--fts-token' simultaneously. (prefer new token handles)"
+                "Cannot use both '--access-token' and '--fts-access-token' simultaneously. (prefer new '--fts-access-token' handle)"
             )
         if self.options.access_token:
             self.options.fts_access_token = self.options.access_token
