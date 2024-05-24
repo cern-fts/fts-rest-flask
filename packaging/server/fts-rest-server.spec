@@ -63,9 +63,9 @@ Requires:       python%{python3_pkgversion}-mako
 
 ### The following three packages are still not found in community repositories on RHEL9 and were build by us
 ### They follow the naming convention for python packages on RHEL9
-Requires:       python%{python3_pkgversion}-pyjwkest
-Requires:       python%{python3_pkgversion}-beaker
-Requires:       python%{python3_pkgversion}-oic
+Requires:       python%{python3_pkgversion}-pyjwkest = 1.4.2-1.el9.cern
+Requires:       python%{python3_pkgversion}-beaker = 1.11.0-1.el9.cern
+Requires:       python%{python3_pkgversion}-oic = 1.4.0-1.git64c5e3b.el9.cern
 %endif
 
 BuildArch:      noarch
