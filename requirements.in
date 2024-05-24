@@ -1,5 +1,6 @@
-Flask
-SQLAlchemy
+Flask==2.0.3
+Werkzeug==2.0.3
+SQLAlchemy==1.4.45
 M2Crypto
 requests
 mysqlclient  # requires python3-devel mysql-devel
