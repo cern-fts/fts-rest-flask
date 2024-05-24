@@ -286,7 +286,7 @@ def new_staging_job(
             staging_meta = trans["staging_metadata"]
         elif isinstance(trans, str):
             surl = trans
-            meta = None
+            meta = staging_meta = None
         else:
             raise AttributeError("Unexpected input type %s" % type(files))
 
@@ -328,6 +328,7 @@ def new_delete_job(
         files:        Array of surls to delete. Each item can be either a string or a dictionary with keys surl and metadata
         spacetoken:   Deletion spacetoken
         metadata:     Metadata to bind to the job
+        priority:     Job priority
         id_generator: Job id generator algorithm
         sid:          Specific id given by the client
 
