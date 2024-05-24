@@ -137,54 +137,57 @@ server_rpm_alma9:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - if [[ -z "$CI_COMMIT_TAG" ]];
-      then CACHE="true"; REGISTRY="latest";
-      else CACHE="false"; REGISTRY="${CI_COMMIT_TAG}";
-      fi
-    - if [[ -z "$DMC_REPO" ]];
-      then DMC_REPO="https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo";
-      fi
-    - DESTINATION="gitlab-registry.cern.ch/fts/fts-rest-flask:${REGISTRY}"
+    - if [[ -z "$CI_COMMIT_TAG" ]]; then CACHE="true"; else CACHE="false"; fi
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --dockerfile .gitlab-ci/docker/Dockerfile-ci --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
+    - /kaniko/executor --dockerfile .gitlab-ci/docker/${IMAGE} --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
   retry: 1
 
 #--------------------------
 # Docker build jobs
 #--------------------------
 
-docker_build:
+docker_build_cc7:
   <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7
+    IMAGE: Dockerfile-ci-cc7
   needs:
     - job: server_rpm_cc7
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
 
 docker_build_alma9:
-  stage: docker
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
-  script:
-    - CACHE="false";
-    - DMC_REPO="https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo";
-    - DESTINATION="gitlab-registry.cern.ch/fts/fts-rest-flask:alma9-ci"
-    - mkdir -p /kaniko/.docker
-    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --dockerfile .gitlab-ci/docker/Dockerfile-ci-alma9 --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
-  retry: 1
+  <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-alma9
+    IMAGE: Dockerfile-ci-alma9
   needs:
     - job: server_rpm_alma9
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
 
-docker_tag:
+docker_tag_cc7:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}-cc7
+    IMAGE: Dockerfile-ci-cc7
   needs:
     - job: server_rpm_cc7
+  rules:
+    - if: $CI_COMMIT_TAG != null
+
+docker_tag_alma9:
+  <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el9.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}-alma9
+    IMAGE: Dockerfile-ci-alma9
+  needs:
+    - job: server_rpm_alma9
   rules:
     - if: $CI_COMMIT_TAG != null
 
@@ -253,7 +256,6 @@ server_rpm_cc7-test:
   needs:
     - server_rpm_cc7
   variables:
-    RHEL_VERSION: el7
     FTS3TESTCONFIG: /usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig
     FTS3TESTPATH: /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
     FTS3REPO: https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/
@@ -266,7 +268,6 @@ server_rpm_alma9-test:
   needs:
     - server_rpm_alma9
   variables:
-    RHEL_VERSION: el9
     FTS3TESTCONFIG: /usr/lib/python3.9/site-packages/fts3rest/tests/fts3testconfig
     FTS3TESTPATH: /usr/lib/python3.9/site-packages/fts3rest/tests/functional/
     FTS3REPO: https://fts-repo.web.cern.ch/fts-repo/fts-depend/el9/x86_64/

@@ -3,7 +3,7 @@
 #
 
 FROM centos:7
-LABEL maintainer="FTS Team, fts-support@cern.ch, CERN 2022"
+LABEL maintainer="FTS Team, fts-support@cern.ch, CERN 2024"
 
 # Add EPEL repos
 ADD https://linuxsoft.cern.ch/epel/epel-release-latest-7.noarch.rpm /tmp/epel-release-7.noarch.rpm
@@ -16,16 +16,16 @@ RUN yum localinstall /tmp/epel-release-7.noarch.rpm -y \
 RUN yum install -y createrepo
 
 # Add FTS Dependencies repo (needed for Python3 packages)
-RUN echo -e "[fts-depend]\nname=FTS3 Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts-depend.repo
+ADD "https://fts-repo.web.cern.ch/fts-repo/fts3-depend.repo" /etc/yum.repos.d/fts3-depend.repo
+
+# Add DMC repo
+ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
+ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 
 # Add FTS repo from build artifacts
 ADD server_rpm_cc7  /repo/fts
 RUN createrepo /repo/fts
 RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
-
-# Add DMC repo
-ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
-ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 RUN yum clean metadata
 
 # Enable Centos Software Collections repository
@@ -37,7 +37,6 @@ RUN yum install -y fts-rest-server fts-rest-server-selinux
 
 # Install VOMS packages
 RUN yum install -y voms-config-wlcg voms-config-vo-dteam
-
 
 # Expose ports
 EXPOSE 8446
