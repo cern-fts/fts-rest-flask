@@ -269,7 +269,7 @@ server_rpm_alma9-test:
     RHEL_VERSION: el9
     FTS3TESTCONFIG: /usr/lib/python3.9/site-packages/fts3rest/tests/fts3testconfig
     FTS3TESTPATH: /usr/lib/python3.9/site-packages/fts3rest/tests/functional/
-    FTS3REPO: https://fts-repo.web.cern.ch/fts-repo/testing/fts-depend/el9/x86_64/
+    FTS3REPO: https://fts-repo.web.cern.ch/fts-repo/fts-depend/el9/x86_64/
 
 #--------------------------
 # Publish templates
