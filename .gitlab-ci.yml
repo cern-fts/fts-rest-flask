@@ -34,15 +34,23 @@ black:
   stage: static_code_analysis
   script:
     - black --version
-    - black --check --fast --diff --target-version py36 src/
+    - black --check --fast --diff --target-version py39 src/
 
+# Use the "fts/fts-rest-flask:ci-cc7-old" image, which is built on CC7 + Python3.6
+# The latest "fts/fts-rest-flask:ci" image is based on Alma9 + Python3.9
 pylint36:
   <<: *pylint_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
 
 pylint37:
   <<: *pylint_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
 
 pylint38:
+  <<: *pylint_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
+
+pylint39:
   <<: *pylint_definition
 
 radon:
@@ -241,11 +249,17 @@ docker_tag_alma9:
 
 functional_tests36:
   <<: *functional_tests_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
 
 functional_tests37:
   <<: *functional_tests_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
 
 functional_tests38:
+  <<: *functional_tests_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
+
+functional_tests39:
   <<: *functional_tests_definition
 
 server_rpm_cc7-test:
