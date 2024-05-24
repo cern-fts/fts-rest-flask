@@ -151,7 +151,7 @@ docker_build_cc7:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:cc7-ci
     IMAGE: Dockerfile-ci-cc7
   needs:
     - job: server_rpm_cc7
@@ -162,7 +162,7 @@ docker_build_alma9:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-alma9
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:alma9-ci
     IMAGE: Dockerfile-ci-alma9
   needs:
     - job: server_rpm_alma9
@@ -173,7 +173,7 @@ docker_tag_cc7:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}-cc7
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:cc7-${CI_COMMIT_TAG}
     IMAGE: Dockerfile-ci-cc7
   needs:
     - job: server_rpm_cc7
@@ -184,7 +184,7 @@ docker_tag_alma9:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el9.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}-alma9
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:alma9-${CI_COMMIT_TAG}
     IMAGE: Dockerfile-ci-alma9
   needs:
     - job: server_rpm_alma9
