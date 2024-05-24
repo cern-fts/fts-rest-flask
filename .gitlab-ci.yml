@@ -108,7 +108,7 @@ bandit:
 #--------------------------
 
 client_wheel_sdist:
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
   stage: build
   script:
     - yum install -y python3 python3-wheel
