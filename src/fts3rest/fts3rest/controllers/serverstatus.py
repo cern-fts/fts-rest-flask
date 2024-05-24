@@ -39,7 +39,7 @@ def hosts_activity():
     )
     response = dict()
 
-    for (count, host) in staging:
+    for count, host in staging:
         response[host] = dict(staging=count)
 
     active = Session.execute(
@@ -48,7 +48,7 @@ def hosts_activity():
         " WHERE file_state = 'ACTIVE' "
         " GROUP BY transfer_host"
     )
-    for (count, host) in active:
+    for count, host in active:
         if host not in response:
             response[host] = dict()
         response[host]["active"] = count

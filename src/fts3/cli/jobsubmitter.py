@@ -375,9 +375,9 @@ class JobSubmitter(Base):
 
         # Compatibility for access token
         if self.options.access_token:
-            self.options.src_access_token = (
-                self.options.dst_access_token
-            ) = self.options.access_token
+            self.options.src_access_token = self.options.dst_access_token = (
+                self.options.access_token
+            )
 
         # Both the certificate and the FTS access token is present
         if self.options.ucert and any(

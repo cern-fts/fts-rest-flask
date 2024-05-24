@@ -90,7 +90,7 @@ class Context(object):
             log.debug("User certificate: %s" % ucert)
             log.debug("User private key: %s" % ukey)
 
-            for (cert, name) in [(ucert, "Certificate"), (ukey, "Private key")]:
+            for cert, name in [(ucert, "Certificate"), (ukey, "Private key")]:
                 if not os.path.exists(cert):
                     raise FileNotFoundError(name + " not found!")
 

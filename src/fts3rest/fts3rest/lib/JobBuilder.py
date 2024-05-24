@@ -211,9 +211,9 @@ class JobBuilder:
                 scitag=validate_scitag(file_dict.get("scitag", None)),
                 src_token_id=src_token_id,
                 dst_token_id=dst_token_id,
-                hashed_id=shared_hashed_id
-                if shared_hashed_id
-                else generate_hashed_id(),
+                hashed_id=(
+                    shared_hashed_id if shared_hashed_id else generate_hashed_id()
+                ),
             )
             if f["file_metadata"] is not None:
                 f["file_metadata"] = metadata(
@@ -615,9 +615,11 @@ class JobBuilder:
             job_metadata=self.params["job_metadata"],
             internal_job_params=self._build_internal_job_params(),
             max_time_in_queue=expiration_time,
-            target_qos=self.params["target_qos"]
-            if "target_qos" in self.params.keys()
-            else None,
+            target_qos=(
+                self.params["target_qos"]
+                if "target_qos" in self.params.keys()
+                else None
+            ),
         )
 
         if "credential" in self.params:
