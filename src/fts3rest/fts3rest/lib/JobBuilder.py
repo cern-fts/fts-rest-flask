@@ -523,7 +523,7 @@ class JobBuilder:
                         f"Token audience must be a null, string or list of strings: actual_type={type(jwt_payload['aud'])}"
                     )
             else:
-                raise BadRequest("Token does not contain an aud claim")
+                token_dict["audience"] = None
             self.tokens.append(token_dict)
 
     def _populate_transfers(self, files_list):
