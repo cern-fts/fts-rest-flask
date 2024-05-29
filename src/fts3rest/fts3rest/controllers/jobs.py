@@ -857,50 +857,32 @@ def insert_tokens(job_id, tokens):
         access_token_refresh_after = token_dict["nbf"] + lifetime_sec * 0.5
 
         try:
-            if current_app.config["fts3.DbType"] == "postgresql":
-                sql = """
-                INSERT INTO t_token(
-                  token_id,
-                  access_token,
-                  access_token_not_before,
-                  access_token_expiry,
-                  access_token_refresh_after,
-                  issuer,
-                  scope,
-                  audience
-                ) VALUES (
-                  :token_id,
-                  :access_token,
-                  to_timestamp(:access_token_not_before),
-                  to_timestamp(:access_token_expiry),
-                  to_timestamp(:access_token_refresh_after),
-                  :issuer,
-                  :scope,
-                  :audience
-                )
-                """
-            else:
-                sql = """
-                INSERT INTO t_token(
-                  token_id,
-                  access_token,
-                  access_token_not_before,
-                  access_token_expiry,
-                  access_token_refresh_after,
-                  issuer,
-                  scope,
-                  audience
-                ) VALUES (
-                  :token_id,
-                  :access_token,
-                  from_unixtime(:access_token_not_before),
-                  from_unixtime(:access_token_expiry),
-                  from_unixtime(:access_token_refresh_after),
-                  :issuer,
-                  :scope,
-                  :audience
-                )
-                """
+            timestamp_func = (
+                "to_timestamp"
+                if current_app.config["fts3.DbType"] == "postgresql"
+                else "from_unixtime"
+            )
+            sql = f"""
+            INSERT INTO t_token(
+              token_id,
+              access_token,
+              access_token_not_before,
+              access_token_expiry,
+              access_token_refresh_after,
+              issuer,
+              scope,
+              audience
+            ) VALUES (
+              :token_id,
+              :access_token,
+              {timestamp_func}(:access_token_not_before),
+              {timestamp_func}(:access_token_expiry),
+              {timestamp_func}(:access_token_refresh_after),
+              :issuer,
+              :scope,
+              :audience
+            )
+            """  # nosec
             Session.execute(
                 sql,
                 params={
@@ -952,6 +934,38 @@ def decode_token(raw):
     token["signature"] = split_raw[2]
 
     return token
+
+
+def _get_link_counts(files):
+    result = {}
+    for file in files:
+        link = (file["source_se"], file["dest_se"])
+        result[link] = 0 if link not in result else result[link] + 1
+    return result
+
+
+def _update_t_link_stats_row(dbconn, source_se, dest_se, nb_submitted):
+    sql = """
+        INSERT INTO t_link_stats (
+            source_se,
+            dest_se,
+            nb_submitted
+        ) VALUES (
+            %(source_se)s,
+            %(dest_se)s,
+            %(nb_submitted)s
+        )
+        ON CONFLICT (source_se, dest_se) DO
+            UPDATE SET nb_submitted =
+                t_link_stats.nb_submitted + EXCLUDED.nb_submitted
+    """
+    params = {"source_se": source_se, "dest_se": dest_se, "nb_submitted": nb_submitted}
+    dbconn.execute(sql, params)
+
+
+def _update_link_stats(dbconn, linkcounts):
+    for (source_se, dest_se), count in linkcounts.items():
+        _update_t_link_stats_row(dbconn, source_se, dest_se, count)
 
 
 @authorize(TRANSFER)
@@ -1065,6 +1079,9 @@ def submit():
 
         start_insert_files = time.perf_counter()
         Session.execute(File.__table__.insert(), populated.files)
+        if current_app.config["fts3.DbType"] == "postgresql":
+            linkcounts = _get_link_counts(populated.files)
+            _update_link_stats(Session.connection(), linkcounts)
         log.info(
             "Inserted files into database: job_id={} db_secs={}".format(
                 populated.job_id, str(time.perf_counter() - start_insert_files)
