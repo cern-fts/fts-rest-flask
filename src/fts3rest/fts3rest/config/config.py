@@ -142,7 +142,7 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
             ";"
         )
     else:
-        fts3cfg["fts3.AuthorizedAudiences"] = "https://wlcg.cern.ch/jwt/v1/any"
+        fts3cfg["fts3.AuthorizedAudiences"] = None
 
     # DbType always lowercase
     fts3cfg["fts3.DbType"] = fts3cfg["fts3.DbType"].lower()
