@@ -502,7 +502,7 @@ class JobBuilder:
             if "nbf" in jwt_payload:
                 token_dict["nbf"] = jwt_payload["nbf"]
             else:
-                raise BadRequest("Token does not contain a nbf claim")
+                token_dict["nbf"] = time.time()
             if "exp" in jwt_payload:
                 token_dict["exp"] = jwt_payload["exp"]
             else:
