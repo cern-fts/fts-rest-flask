@@ -996,10 +996,6 @@ def submit():
             raise BadRequest("Token does not contain an iss claim")
         fts_submit_token_issuer = safe_issuer(fts_submit_token["payload"]["iss"])
 
-        if "aud" not in fts_submit_token["payload"]:
-            raise BadRequest("Token does not contain an aud claim")
-        fts_submit_token_aud = fts_submit_token["payload"]["aud"]
-
         if not issuer_is_known(fts_submit_token_issuer):
             raise BadRequest(
                 f"FTS access-token has unknown issuer: issuer={fts_submit_token_issuer}"
