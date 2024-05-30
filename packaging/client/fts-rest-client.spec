@@ -5,8 +5,8 @@ Summary:        File Transfer Service (FTS) -- Python3 Client and CLI
 
 License:        ASL 2.0
 URL:            https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.12.4 https://gitlab.cern.ch/fts/fts-rest-flask.git fts-rest-client-3.12.4
-# tar -C fts-rest-client-3.12.4/ -czf fts-rest-client-3.12.4.tar.gz src/cli src/fts3 LICENSE setup.py setup.cfg --transform "s|^|fts-rest-client-3.12.4/|" --show-transformed-names
+# git clone --depth=1 --branch v3.13.0 https://gitlab.cern.ch/fts/fts-rest-flask.git fts-rest-client-3.13.0
+# tar -C fts-rest-client-3.13.0/ -czf fts-rest-client-3.13.0.tar.gz src/cli src/fts3 LICENSE setup.py setup.cfg --transform "s|^|fts-rest-client-3.13.0/|" --show-transformed-names
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3-devel
@@ -42,6 +42,9 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 %{_bindir}/fts-rest-*
 
 %changelog
+* Thu May 30 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.0
+- Alma9 release
+
 * Thu Oct 19 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4
 - Allow sending Scitag label for transfers
 

@@ -151,6 +151,9 @@ fi
 %files selinux
 
 %changelog
+* Thu May 30 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.0
+- Alma9 release
+
 * Thu Oct 19 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4
 - Allow sending Scitag label for transfers
 
