@@ -3,6 +3,7 @@ This module contains methods for JobBuilder.
 Originally these methods were in the JobBuilder module, but they were separated to
 reduce the complexity of the module.
 """
+
 import logging
 import random
 import uuid
@@ -40,7 +41,7 @@ DEFAULT_PARAMS = {
     "reuse": None,
     "multihop": False,
     "source_spacetoken": "",
-    "spacetoken": "",
+    "destination_spacetoken": "",
     "retry": 0,
     "retry_delay": 0,
     "priority": 3,
@@ -176,6 +177,15 @@ def validate_scitag(scitag):
                 "Invalid SciTag value: {} (not in [65, 65535] range)".format(scitag)
             )
     return scitag
+
+
+def safe_issuer(issuer):
+    """
+    Return the "issuer" string with a trailing slash.
+    """
+    if issuer[-1] != "/":
+        issuer += "/"
+    return issuer
 
 
 def generate_hashed_id():

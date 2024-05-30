@@ -44,7 +44,7 @@ class Client(object):
         """
         if not url.startswith("https://"):
             raise ValueError("Protocol must be HTTPS, invalid URL: %s" % url)
-        return requests.post(url, data, verify=True)
+        return requests.post(url, data, timeout=30, verify=True)
 
     def get_authorization_code_uri(self, **params):
         """Construct a full URL that can be used to obtain an authorization

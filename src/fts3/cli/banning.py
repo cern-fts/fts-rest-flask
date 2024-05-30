@@ -23,9 +23,9 @@ class Banning(Base):
         super(Banning, self).__init__(
             description="Ban and unban storage elements and users",
             example="""
-                $ %(prog)s -s https://fts3-devel.cern.ch:8446 --storage gsiftp://sample
+                $ %(prog)s -s https://fts3-devel.cern.ch:8446 --storage https://sample
                 No jobs affected
-                $ %(prog)s -s https://fts3-devel.cern.ch:8446 --storage gsiftp://sample --unban
+                $ %(prog)s -s https://fts3-devel.cern.ch:8446 --storage https://sample --unban
                 $
             """,
         )

@@ -15,6 +15,7 @@ from sqlalchemy import Column, String, DateTime, ForeignKey
 
 from .base import Base, Set
 
+
 # TODO Are these models needed anymore?
 class OAuth2Application(Base):
     __tablename__ = "t_oauth2_apps"

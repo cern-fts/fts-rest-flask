@@ -34,15 +34,23 @@ black:
   stage: static_code_analysis
   script:
     - black --version
-    - black --check --fast --diff --target-version py36 src/
+    - black --check --fast --diff --target-version py39 src/
 
+# Use the "fts/fts-rest-flask:ci-cc7-old" image, which is built on CC7 + Python3.6
+# The latest "fts/fts-rest-flask:ci" image is based on Alma9 + Python3.9
 pylint36:
   <<: *pylint_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
 
 pylint37:
   <<: *pylint_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
 
 pylint38:
+  <<: *pylint_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
+
+pylint39:
   <<: *pylint_definition
 
 radon:
@@ -62,14 +70,48 @@ bandit:
     - bandit --ini .gitlab-ci/bandit.ini
 
 #--------------------------
+# Build templates
+#--------------------------
+
+.server-build-template: &server-build-template_definition
+  stage: build
+  script:
+    - ./packaging/fedora-packages.sh
+    - ./packaging/server/fts-rest-server.sh
+    - mkdir ${CI_JOB_NAME}
+    - cp -rv build/server/RPMS build/server/SRPMS ${CI_JOB_NAME}
+    - tree ${CI_JOB_NAME}
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
+  artifacts:
+    when: on_success
+    paths:
+      - "$CI_JOB_NAME"
+
+.client-build-template: &client-build-template_definition
+  stage: build
+  script:
+    - ./packaging/fedora-packages.sh
+    - ./packaging/client/fts-rest-client.sh
+    - mkdir ${CI_JOB_NAME}
+    - cp -r build/client/RPMS build/client/SRPMS ${CI_JOB_NAME}
+    - tree ${CI_JOB_NAME}
+  variables:
+    BRANCH: ${CI_COMMIT_REF_NAME}
+  artifacts:
+    when: on_success
+    paths:
+      - "$CI_JOB_NAME"
+
+#--------------------------
 # Build jobs
 #--------------------------
 
 client_wheel_sdist:
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
   stage: build
   script:
-    - yum install -y python3 python3-wheel
+    - dnf install -y python3 python3-wheel
     - python3 setup.py bdist_wheel
     - python3 setup.py sdist
   artifacts:
@@ -77,37 +119,21 @@ client_wheel_sdist:
     paths:
       - dist/
 
-client_rpm:
+client_rpm_cc7:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  stage: build
-  script:
-    - yum install -y git rpm-build tree
-    - ./packaging/client/fts-rest-client.sh
-    - mkdir artifacts/
-    - cp -r build/client/RPMS build/client/SRPMS artifacts/
-    - tree artifacts/
-  variables:
-    BRANCH: ${CI_COMMIT_REF_NAME}
-  artifacts:
-    when: on_success
-    paths:
-      - artifacts/
+  <<: *client-build-template_definition
 
-server_rpm:
+client_rpm_alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  <<: *client-build-template_definition
+
+server_rpm_cc7:
   image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  stage: build
-  script:
-    - yum install -y git rpm-build tree
-    - ./packaging/server/fts-rest-server.sh
-    - mkdir artifacts/
-    - cp -r build/server/RPMS build/server/SRPMS artifacts/
-    - tree artifacts/
-  variables:
-    BRANCH: ${CI_COMMIT_REF_NAME}
-  artifacts:
-    when: on_success
-    paths:
-      - artifacts/
+  <<: *server-build-template_definition
+
+server_rpm_alma9:
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  <<: *server-build-template_definition
 
 #--------------------------
 # Docker build templates
@@ -119,47 +145,68 @@ server_rpm:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - if [[ -z "$CI_COMMIT_TAG" ]];
-      then CACHE="true"; REGISTRY="latest";
-      else CACHE="false"; REGISTRY="${CI_COMMIT_TAG}";
-      fi
-    - if [[ -z "$DMC_REPO" ]];
-      then DMC_REPO="https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo";
-      fi
-    - DESTINATION="gitlab-registry.cern.ch/fts/fts-rest-flask:${REGISTRY}"
+    - if [[ -z "$CI_COMMIT_TAG" ]]; then CACHE="true"; else CACHE="false"; fi
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --dockerfile .gitlab-ci/docker/Dockerfile-ci --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
+    - /kaniko/executor --dockerfile .gitlab-ci/docker/${IMAGE} --context "${CI_PROJECT_DIR}" --cache=${CACHE} --destination ${DESTINATION} --build-arg dmcrepo=${DMC_REPO}
   retry: 1
 
 #--------------------------
 # Docker build jobs
 #--------------------------
 
-docker_build:
+docker_build_cc7:
   <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:latest-cc7
+    IMAGE: Dockerfile-ci-cc7
   needs:
-    - job: server_rpm
+    - job: server_rpm_cc7
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
 
-docker_tag:
+docker_build_alma9:
+  <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:latest-alma9
+    IMAGE: Dockerfile-ci-alma9
+  needs:
+    - job: server_rpm_alma9
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "develop"
+
+docker_tag_cc7:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}-cc7
+    IMAGE: Dockerfile-ci-cc7
   needs:
-    - job: server_rpm
+    - job: server_rpm_cc7
+  rules:
+    - if: $CI_COMMIT_TAG != null
+
+docker_tag_alma9:
+  <<: *kaniko_build-template
+  variables:
+    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el9.repo
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}-alma9
+    IMAGE: Dockerfile-ci-alma9
+  needs:
+    - job: server_rpm_alma9
   rules:
     - if: $CI_COMMIT_TAG != null
 
 #--------------------------
-# Testing jobs
+# Testing templates
 #--------------------------
 
 .functional_tests_template: &functional_tests_definition
   stage: tests
   services:
-    - name: mysql:latest
+    - name: mysql:8.0.32
       alias: mysqldb
       command: ["--default-authentication-plugin=mysql_native_password"]
   script:
@@ -179,36 +226,65 @@ docker_tag:
     PYTHONPATH: ./src:./src/fts3rest
     FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig
 
-functional_tests36:
-  <<: *functional_tests_definition
-
-functional_tests37:
-  <<: *functional_tests_definition
-
-functional_tests38:
-  <<: *functional_tests_definition
-
-rpm_tests:
+.rpm_tests_template: &rpm_tests_definition
   stage: tests
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   services:
-    - name: mysql:latest
+    - name: mysql:8.0.32
       alias: mysqldb
       command: ["--default-authentication-plugin=mysql_native_password"]
   script:
     - sleep 20 # give some time for the mysql service to start
-    - yum install -y yum-plugin-priorities mariadb python36-pytest
-    - echo -e "[fts-depend]\nname=FTS Dependencies\nbaseurl=https://fts-repo.web.cern.ch/fts-repo/fts-depend/el7/x86_64/\nenabled=1\ngpgcheck=0\npriority=3\n" > /etc/yum.repos.d/fts-depend.repo
-    - yum localinstall --nogpgcheck -y artifacts/RPMS/*/*.rpm
+    - dnf install -y mariadb python3-pytest epel-release
+    - dnf install -y epel-rpm-macros
+    - curl -s https://fts-repo.web.cern.ch/fts-repo/fts3-depend.repo -o /etc/yum.repos.d/fts3-depend.repo
+    - PLATFORM=${CI_JOB_NAME%-*}
+    - dnf localinstall --nogpgcheck -y ${PLATFORM}/RPMS/*/*.rpm
     - ./.gitlab-ci/setup-db.sh
     - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
-    - pytest-3 -x /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
+    - pytest-3 -x $FTS3TESTPATH
+
+#--------------------------
+# Testing jobs
+#--------------------------
+
+functional_tests36:
+  <<: *functional_tests_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
+
+functional_tests37:
+  <<: *functional_tests_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
+
+functional_tests38:
+  <<: *functional_tests_definition
+  image: gitlab-registry.cern.ch/fts/fts-rest-flask:ci-cc7-old
+
+functional_tests39:
+  <<: *functional_tests_definition
+
+server_rpm_cc7-test:
+  before_script:
+    - yum install -y dnf
+  <<: *rpm_tests_definition
+  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
   dependencies:
-    - server_rpm
+    - server_rpm_cc7
   needs:
-    - server_rpm
+    - server_rpm_cc7
   variables:
     FTS3TESTCONFIG: /usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig
+    FTS3TESTPATH: /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
+
+server_rpm_alma9-test:
+  <<: *rpm_tests_definition
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
+  dependencies:
+    - server_rpm_alma9
+  needs:
+    - server_rpm_alma9
+  variables:
+    FTS3TESTCONFIG: /usr/lib/python3.9/site-packages/fts3rest/tests/fts3testconfig
+    FTS3TESTPATH: /usr/lib/python3.9/site-packages/fts3rest/tests/functional/
 
 #--------------------------
 # Publish templates
@@ -218,12 +294,17 @@ rpm_tests:
   stage: publish
   image: gitlab-registry.cern.ch/eos/gitlab-eos/alma9:latest
   dependencies:
-    - client_rpm
-    - server_rpm
+    - client_rpm_cc7
+    - server_rpm_cc7
+    - client_rpm_alma9
+    - server_rpm_alma9
   script:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
-    - packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages artifacts/RPMS/*/*.rpm artifacts/SRPMS/*
+    - |
+      for package in server_rpm_cc7 client_rpm_cc7 server_rpm_alma9 client_rpm_alma9; do
+        packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages ${package}/RPMS/*/*.rpm ${package}/SRPMS/*
+      done
   tags:
     - docker-privileged-xl
   retry: 2
@@ -240,6 +321,7 @@ rpms:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
     - if: '$CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_TAG != null'
+    - if: '$CI_COMMIT_REF_NAME == "FTS-1925_token_project" || $CI_COMMIT_TAG != null'
     - if: '$CI_COMMIT_REF_NAME != "develop" && $CI_COMMIT_TAG == null'
       when: manual
 
@@ -247,9 +329,9 @@ pypi-publish:
   needs:
     - job: client_wheel_sdist
   stage: publish
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
+  image: gitlab-registry.cern.ch/linuxsupport/alma9-base
   script:
-    - yum install -y git python3-pip
+    - dnf install -y git python3 python3-pip
     - python3 -m pip install --upgrade pip
     - python3 -m pip install setuptools twine
     - twine check dist/*

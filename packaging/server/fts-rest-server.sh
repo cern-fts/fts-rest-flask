@@ -12,6 +12,11 @@ rm -rf build/server/
 
 # Install build dependencies
 cd build/server/
-yum-builddep -y SRPMS/*
+
+if [[ -f /usr/bin/dnf ]]; then
+  dnf builddep -y SRPMS/*
+else
+  yum-builddep -y SRPMS/*
+fi
 
 rpmbuild --rebuild SRPMS/* --define "_topdir ${PWD}"

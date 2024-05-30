@@ -14,6 +14,9 @@ DbConnectString =
 # Leave * to authorize any VO
 AuthorizedVO = *
 
+#List of authorized audiences for JWT authorization (separated by ;)
+AuthorizedAudiences=https://wlcg.cern.ch/jwt/v1/any
+
 #For each metadata size limit, if size_limit = 0, no limit checks are performed upon job submission
 #Limit Job Metadata with specified Size Limit (default: 2048 bytes)
 JobMetadataSizeLimit = 2048
@@ -68,6 +71,11 @@ Alias =
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
 TokenRefreshDaemonIntervalInSeconds=600
+
+# List of authorized audiences (semicolon separated values)
+# If not set, implicit "https://wlcg.cern.ch/jwt/v1/any" authorized audience is used
+# If the token has an "aud" field, it must contain at least one of the configured values
+#AuthorizedAudiences=https://wlcg.cern.ch/jwt/v1/any;https://fts3-devel.cern.ch:8446
 
 #[providers]
 #provider1 = https://wlcg.cloud.cnaf.infn.it

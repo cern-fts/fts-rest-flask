@@ -2,7 +2,7 @@
 pip-tools
 black
 pylint
-bandit==1.7.1; python_version <= '3.6'
+bandit
 radon
 pytest
 coverage

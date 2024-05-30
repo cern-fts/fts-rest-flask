@@ -36,5 +36,7 @@ def delegate(
     Returns:
         The delegation ID
     """
+    if context.access_method != "X509":
+        return ""
     delegator = Delegator(context)
     return delegator.delegate(lifetime, force, delegate_when_lifetime_lt)

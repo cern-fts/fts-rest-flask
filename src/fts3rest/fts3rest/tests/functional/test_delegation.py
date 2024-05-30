@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from M2Crypto import EVP
+from M2Crypto import EVP, RSA
 import time
 
 from fts3rest.controllers.delegation import _generate_proxy_request
@@ -135,8 +135,13 @@ class TestDelegation(TestController):
             url="/delegation/%s/request" % creds.delegation_id, status=200
         )
 
+        # Generate different private key
+        different_rsa_key = RSA.gen_key(512, 65537)
+        different_pkey = EVP.PKey()
+        different_pkey.assign_rsa(different_rsa_key)
+
         proxy = self.get_x509_proxy(
-            request.get_data(as_text=True), private_key=EVP.PKey()
+            request.get_data(as_text=True), private_key=different_pkey
         )
 
         self.app.put(
@@ -155,7 +160,15 @@ class TestDelegation(TestController):
         self.app.get(url="/delegation/%s/request" % creds.delegation_id, status=200)
 
         (different_request, _) = _generate_proxy_request()
-        proxy = self.get_x509_proxy(different_request.as_pem(), private_key=EVP.PKey())
+
+        # Generate different private key
+        different_rsa_key = RSA.gen_key(512, 65537)
+        different_pkey = EVP.PKey()
+        different_pkey.assign_rsa(different_rsa_key)
+
+        proxy = self.get_x509_proxy(
+            different_request.as_pem(), private_key=different_pkey
+        )
 
         self.app.put(
             url="/delegation/%s/credential" % creds.delegation_id,

@@ -20,11 +20,13 @@ from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import noload
 
+import base64
+import json
 import logging
 import functools
 import time
 
-from fts3rest.model import Job, File, JobActiveStates, FileActiveStates
+from fts3rest.model import Job, File, JobActiveStates, FileActiveStates, Token
 from fts3rest.model import DataManagement, DataManagementActiveStates
 from fts3rest.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
@@ -46,6 +48,9 @@ from fts3rest.lib.helpers.misc import get_input_as_dict
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.msgbus import submit_state_change
 from fts3rest.lib.JobBuilder import JobBuilder
+from fts3rest.lib.JobBuilder_utils import safe_issuer
+
+from fts3rest.lib.middleware.fts3auth.methods import oauth2
 
 log = logging.getLogger(__name__)
 
@@ -725,6 +730,204 @@ def modify(job_id_list):
     return _multistatus(responses, expecting_multistatus=len(requested_job_ids) > 1)
 
 
+def validate_tokens_offline(tokens):
+    for token in tokens:
+        try:
+            valid, credential = oauth2.validate_token_offline(token["access_token"])
+        except Exception:
+            raise BadRequest("Failed to validate access-token")
+        if not valid:
+            raise BadRequest("Failed to validate access-token")
+
+
+def has_a_refresh_token(token_id):
+    """
+    Returns true if then token with the specified ID has a refresh token within
+    the t_token table.
+    """
+    result = Session.execute(
+        "SELECT token_id FROM t_token WHERE token_id = :token_id AND refresh_token is not NULL",
+        params={"token_id": token_id},
+    )
+    for row in result:
+        return True
+    return False
+
+
+def get_token_ids_from_file_rows(file_rows):
+    """
+    Returns the set of token IDs present in the specified list of t_file table
+    rows.
+    """
+    token_ids = set()
+    for file_row in file_rows:
+        token_ids.add(file_row["src_token_id"])
+        token_ids.add(file_row["dst_token_id"])
+    return token_ids
+
+
+def get_refreshless_token_ids(token_ids):
+    """
+    From the specified set of token IDs this function returns the subset which
+    refers to tokens that have no refresh token within the t_token table.
+    """
+    refreshless_token_ids = set()
+    for token_id in token_ids:
+        if not has_a_refresh_token(token_id):
+            refreshless_token_ids.add(token_id)
+    return refreshless_token_ids
+
+
+def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
+    """
+    Sets the file_state column of the specified t_file table rows to TOKEN_PREP
+    if either the associated source or destination access token does not yet
+    have a refresh token.
+
+    The initial file state is stored under t_file.file_state_initial
+    """
+    token_ids = get_token_ids_from_file_rows(file_rows)
+    start_get_refreshless_token_ids = time.perf_counter()
+    refreshless_token_ids = get_refreshless_token_ids(token_ids)
+    log.info(
+        "Got tokens with no associated refresh tokens:"
+        f" job_id={job_id}"
+        f" db_secs={time.perf_counter() - start_get_refreshless_token_ids}"
+        f" nb_tokens_checked={len(token_ids)}"
+        f" nb_refreshless_tokens={len(refreshless_token_ids)}"
+    )
+
+    for file_row in file_rows:
+        if (
+            file_row["src_token_id"] in refreshless_token_ids
+            or file_row["dst_token_id"] in refreshless_token_ids
+        ):
+            file_row["file_state_initial"] = file_row["file_state"]
+            file_row["file_state"] = "TOKEN_PREP"
+
+
+def issuer_is_known(issuer):
+    """
+    Returns true if the specified token issuer is in the t_token_provider
+    table.
+    """
+    result = Session.execute(
+        "SELECT issuer FROM t_token_provider WHERE issuer = :issuer",
+        params={"issuer": issuer},
+    )
+    for _ in result:
+        return True
+    return False
+
+
+def get_tape_timeout(submit_params, timeout_name):
+    """
+    Returns the tape transfer timeout with the specified name if it exists in
+    the specified dictionary of submit parameters.  0 is returned otherwise.
+    """
+    if timeout_name not in submit_params:
+        return 0
+
+    timeout_value = submit_params[timeout_name]
+
+    if timeout_value is None:
+        return 0
+
+    if not isinstance(timeout_value, int):
+        return 0
+
+    return int(timeout_value)
+
+
+def insert_tokens(job_id, tokens):
+    """
+    Inserts the specified list of tokens into the database
+    """
+
+    nb_inserted = 0
+    nb_duplicate = 0
+    started = time.perf_counter()
+    for token_dict in tokens:
+        # Refresh a token half way through its lifetime
+        lifetime_sec = (
+            token_dict["exp"] - token_dict["nbf"]
+            if token_dict["exp"] > token_dict["nbf"]
+            else 0
+        )
+        access_token_refresh_after = token_dict["nbf"] + lifetime_sec * 0.5
+
+        try:
+            Session.execute(
+                "INSERT INTO t_token("
+                "  token_id,"
+                "  access_token,"
+                "  access_token_not_before,"
+                "  access_token_expiry,"
+                "  access_token_refresh_after,"
+                "  issuer,"
+                "  scope,"
+                "  audience"
+                ") VALUES ("
+                "  :token_id,"
+                "  :access_token,"
+                "  from_unixtime(:access_token_not_before),"
+                "  from_unixtime(:access_token_expiry),"
+                "  from_unixtime(:access_token_refresh_after),"
+                "  :issuer,"
+                "  :scope,"
+                "  :audience"
+                ")",
+                params={
+                    "token_id": token_dict["token_id"],
+                    "access_token": token_dict["access_token"],
+                    "access_token_not_before": token_dict["nbf"],
+                    "access_token_expiry": token_dict["exp"],
+                    "access_token_refresh_after": access_token_refresh_after,
+                    "issuer": token_dict["issuer"],
+                    "scope": token_dict["scope"],
+                    "audience": token_dict["audience"],
+                },
+            )
+            Session.commit()
+            nb_inserted = nb_inserted + 1
+        except IntegrityError as e:
+            Session.rollback()
+            if '"Duplicate entry ' in str(e):
+                nb_duplicate = nb_duplicate + 1
+            else:
+                raise
+
+    db_secs = time.perf_counter() - started
+    log.info(
+        f"Inserted tokens into database: job_id={job_id} db_secs={db_secs} nb_inserted={nb_inserted} nb_duplicate={nb_duplicate}"
+    )
+
+
+def decode_token(raw):
+    split_raw = raw.split(".")
+
+    if len(split_raw) != 3:
+        raise Exception(
+            "Could not split token into three parts using '.' as the delimiter"
+        )
+
+    encoded_header = split_raw[0]
+    encoded_payload = split_raw[1]
+
+    for i in range(0, len(encoded_header) % 4):
+        encoded_header += "="
+    for i in range(0, len(encoded_payload) % 4):
+        encoded_payload += "="
+
+    token = {}
+    token["raw"] = raw
+    token["header"] = json.loads(base64.urlsafe_b64decode(encoded_header))
+    token["payload"] = json.loads(base64.urlsafe_b64decode(encoded_payload))
+    token["signature"] = split_raw[2]
+
+    return token
+
+
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -742,31 +945,87 @@ def submit():
     # First, the request has to be valid JSON
     submitted_dict = get_input_as_dict(request)
 
-    # The auto-generated delegation id must be valid
     user = request.environ["fts3.User.Credentials"]
-    credential = Session.query(Credential).get((user.delegation_id, user.user_dn))
-    if credential is None:
-        raise HTTPAuthenticationTimeout('No delegation found for "%s"' % user.user_dn)
-    if credential.expired():
-        remaining = credential.remaining()
-        seconds = abs(remaining.seconds + remaining.days * 24 * 3600)
-        raise HTTPAuthenticationTimeout(
-            "The delegated credentials expired %d seconds ago (%s)"
-            % (seconds, user.delegation_id)
-        )
-    if user.method != "oauth2" and credential.remaining() < timedelta(hours=1):
-        raise HTTPAuthenticationTimeout(
-            "The delegated credentials has less than one hour left (%s)"
-            % user.delegation_id
-        )
+
+    if user.method == "certificate":
+        # The auto-generated delegation id must be valid
+        credential = Session.query(Credential).get((user.delegation_id, user.user_dn))
+        if credential is None:
+            raise HTTPAuthenticationTimeout(
+                'No delegation found for "%s"' % user.user_dn
+            )
+        if credential.expired():
+            remaining = credential.remaining()
+            seconds = abs(remaining.seconds + remaining.days * 24 * 3600)
+            raise HTTPAuthenticationTimeout(
+                "The delegated credentials expired %d seconds ago (%s)"
+                % (seconds, user.delegation_id)
+            )
+        if credential.remaining() < timedelta(hours=1):
+            raise HTTPAuthenticationTimeout(
+                "The delegated credentials has less than one hour left (%s)"
+                % user.delegation_id
+            )
 
     # Populate the job and files
-    populated = JobBuilder(user, **submitted_dict)
+    populated = JobBuilder(request, **submitted_dict)
+
+    fts_submit_token_issuer = "NA"  # nosec
+    fts_submit_token_aud = "NA"  # nosec
+
+    # If token authentication
+    if user.method == "oauth2":
+        log.debug("Token transfer submission: validating preconditions")
+        validate_tokens_offline(populated.tokens)
+
+        # Block archive and retrieve requests
+        if get_tape_timeout(submitted_dict["params"], "archive_timeout") > 0:
+            raise BadRequest(
+                "Requests to archive to tape using token authentication are not supported"
+            )
+        if get_tape_timeout(submitted_dict["params"], "bring_online") > 0:
+            raise BadRequest(
+                "Requests to retrieve from tape using token authentication are not supported"
+            )
+
+        # Block unknown issuer
+        raw_fts_submit_token = request.environ["HTTP_AUTHORIZATION"].split()[1]
+        fts_submit_token = decode_token(raw_fts_submit_token)
+
+        if "iss" not in fts_submit_token["payload"]:
+            raise BadRequest("Token does not contain an iss claim")
+        fts_submit_token_issuer = safe_issuer(fts_submit_token["payload"]["iss"])
+
+        if "aud" not in fts_submit_token["payload"]:
+            raise BadRequest("Token does not contain an aud claim")
+        fts_submit_token_aud = fts_submit_token["payload"]["aud"]
+
+        if not issuer_is_known(fts_submit_token_issuer):
+            raise BadRequest(
+                f"FTS access-token has unknown issuer: issuer={fts_submit_token_issuer}"
+            )
+        for transfer_token_row in populated.tokens:
+            if not issuer_is_known(transfer_token_row["issuer"]):
+                raise BadRequest(
+                    f"Transfer access-token has unknown issuer: issuer={transfer_token_row['issuer']}"
+                )
 
     log.info("%s (%s) is submitting a transfer job" % (user.user_dn, user.vos[0]))
 
+    if populated.tokens:
+        insert_tokens(populated.job_id, populated.tokens)
+
     # Insert the job
     try:
+        # Token transfers which require a refresh token will be placed in "TOKEN_PREP" file state.
+        # What was supposed to be the initial file state is stored in "t_file.file_state_initial".
+        # The FTS server will reset the file state to its initial value after obtaining the refresh token
+
+        if user.method == "oauth2":
+            set_file_states_to_token_prep_as_necessary(
+                populated.job_id, populated.files
+            )
+
         try:
             start_insert_job = time.perf_counter()
             Session.execute(Job.__table__.insert(), [populated.job])
@@ -804,8 +1063,15 @@ def submit():
             log.warning("Failed to write state message to disk: %s" % str(ex))
 
     log.info(
-        "Job %s submitted: transfers=%d vo=%s"
-        % (populated.job_id, len(populated.files), user.vos[0])
+        "Job %s submitted: transfers=%d vo=%s method=%s fts_submit_token_issuer=%s fts_submit_token_aud=%s"
+        % (
+            populated.job_id,
+            len(populated.files),
+            user.vos[0],
+            user.method,
+            fts_submit_token_issuer,
+            fts_submit_token_aud,
+        )
     )
 
     return {"job_id": populated.job_id}

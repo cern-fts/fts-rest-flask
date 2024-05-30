@@ -31,6 +31,9 @@ FileActiveStates = [
     "QOS_REQUEST_SUBMITTED",
     "FORCE_START",
 ]
+FileTokenStates = [
+    "TOKEN_PREP",
+]
 FileTerminalStates = ["FINISHED", "FAILED", "CANCELED"]
 # NOT_USED is not terminal, nor not-terminal
 FileOnHoldStates = ["NOT_USED", "ON_HOLD", "ON_HOLD_STAGING"]
@@ -53,7 +56,14 @@ class File(Base):
     dest_se = Column(String(255))
     priority = Column(Integer)
     file_state = Column(
-        Enum(*(FileActiveStates + FileTerminalStates + FileOnHoldStates))
+        Enum(
+            *(
+                FileActiveStates
+                + FileTerminalStates
+                + FileOnHoldStates
+                + FileTokenStates
+            )
+        )
     )
     transfer_host = Column(String(255))
     source_surl = Column(String(1100))
@@ -84,6 +94,9 @@ class File(Base):
     log_debug = Column("log_file_debug", Integer)
     activity = Column(String(255), default="default")
     scitag = Column(Integer)
+    src_token_id = Column(String(16))
+    dst_token_id = Column(String(16))
+    file_state_initial = Column(String(32))
 
     retries = relation(
         "FileRetryLog", uselist=True, lazy=True, backref=backref("file", lazy=False)

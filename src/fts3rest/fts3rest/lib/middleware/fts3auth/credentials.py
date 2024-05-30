@@ -66,6 +66,35 @@ def generate_delegation_id(dn, fqans):
     return d.hexdigest()[:16]
 
 
+def generate_token_delegation_id(issuer, subject):
+    """
+    Generate a delegation ID from the specified token issuer and subject
+    """
+    d = hashlib.sha1()  # nosec
+    d.update(issuer.encode("utf-8"))
+    d.update(subject.encode("utf-8"))
+
+    # Original implementation only takes into account first 16 characters
+    return d.hexdigest()[:16]
+
+
+def generate_token_id(token):
+    """
+    Generates an id for the specified token
+    """
+    if token is None:
+        return None
+
+    if not hasattr(token, "encode"):
+        raise Exception(
+            f"token does not have the encode() method: type(token) = {type(token)}"
+        )
+
+    d = hashlib.sha1()  # nosec
+    d.update(token.encode("utf-8"))
+    return d.hexdigest()[:16]
+
+
 def gridmap_vo(user_dn):
     """
     Retrieves the pre-set VO for a given user DN from the Gridmap table

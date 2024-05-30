@@ -14,6 +14,7 @@
 #   limitations under the License.
 
 from datetime import timedelta
+from optparse import SUPPRESS_HELP
 import json
 import sys
 import time
@@ -81,10 +82,10 @@ class JobSubmitter(Base):
               "files": [
                 {
                   "sources": [
-                    "gsiftp://source.host/file"
+                    "https://source.host/file"
                   ],
                   "destinations": [
-                    "gsiftp://destination.host/file"
+                    "https://destination.host/file"
                   ],
                   "metadata": "file-metadata",
                   "checksum": "ADLER32:1234",
@@ -92,10 +93,10 @@ class JobSubmitter(Base):
                 },
                 {
                   "sources": [
-                    "gsiftp://source.host/file2"
+                    "https://source.host/file2"
                   ],
                   "destinations": [
-                    "gsiftp://destination.host/file2"
+                    "https://destination.host/file2"
                   ],
                   "metadata": "file2-metadata",
                   "checksum": "ADLER32:4321",
@@ -107,7 +108,7 @@ class JobSubmitter(Base):
             ```
             """,
             example="""
-            $ %(prog)s -s https://fts3-devel.cern.ch:8446 gsiftp://source.host/file gsiftp://destination.host/file
+            $ %(prog)s -s https://fts3-devel.cern.ch:8446 https://source.host/file https://destination.host/file
             Job successfully submitted.
             Job id: 9fee8c1e-c46d-11e3-8299-02163e00a17a
 
@@ -194,14 +195,14 @@ class JobSubmitter(Base):
         )
         self.opt_parser.add_option(
             "-t",
-            "--dest-token",
-            dest="destination_token",
+            "--destination-spacetoken",
+            dest="destination_spacetoken",
             help="the destination space token or its description.",
         )
         self.opt_parser.add_option(
             "-S",
-            "--source-token",
-            dest="source_token",
+            "--source-spacetoken",
+            dest="source_spacetoken",
             help="the source space token or its description.",
         )
         self.opt_parser.add_option(
@@ -334,6 +335,18 @@ class JobSubmitter(Base):
             type=int,
             help="SciTag flow label (value must be in the [65, 65535] range)",
         )
+        self.opt_parser.add_option(
+            "--src-access-token",
+            dest="src_access_token",
+            help=SUPPRESS_HELP,
+            # help="The source access token in token-based transfers",
+        )
+        self.opt_parser.add_option(
+            "--dst-access-token",
+            dest="dst_access_token",
+            help=SUPPRESS_HELP,
+            # help="The destination access token in token-based transfers",
+        )
 
     def validate(self):
         self.checksum = None
@@ -349,7 +362,75 @@ class JobSubmitter(Base):
                 self.logger.critical("Too many parameters")
                 sys.exit(1)
 
+        # Both the access and the FTS token is present
+        if self.options.access_token and any(
+            [
+                self.options.src_access_token,
+                self.options.dst_access_token,
+            ]
+        ):
+            self.opt_parser.error(
+                "Cannot use both '--access-token' and '--src/dst-access-token' simultaneously (prefer new token handles: i.e. '--fts-access-token')"
+            )
+
+        # Compatibility for access token
+        if self.options.access_token:
+            self.options.src_access_token = self.options.dst_access_token = (
+                self.options.access_token
+            )
+
+        # Both the certificate and the FTS access token is present
+        if self.options.ucert and any(
+            [
+                self.options.fts_access_token,
+                self.options.src_access_token,
+                self.options.dst_access_token,
+            ]
+        ):
+            self.opt_parser.error(
+                "Cannot use both certificate and tokens simultaneously"
+            )
+
+        if self.options.fts_access_token is None and any(
+            [
+                self.options.src_access_token,
+                self.options.dst_access_token,
+            ]
+        ):
+            self.opt_parser.error(
+                "Source or destination token set, but FTS access token is missing. Please set FTS access token!"
+            )
+
         self._prepare_options()
+
+        # Validation for token submission
+        if self.options.fts_access_token:
+            # Bulk submission
+            if self.options.bulk_file:
+                for transfer in self.transfers:
+                    sources = transfer.get("sources", [])
+                    destinations = transfer.get("destinations", [])
+                    source_tokens = transfer.get("source_tokens", [])
+                    destination_tokens = transfer.get("destination_tokens", [])
+                    if len(sources) != len(source_tokens):
+                        self.opt_parser.error(
+                            "Please specify access token for each source in file submission"
+                        )
+                    if len(destinations) != len(destination_tokens):
+                        self.opt_parser.error(
+                            "Please specify access token for each destination in file submission"
+                        )
+            # Non-bulk submission
+            else:
+                if self.options.src_access_token is None:
+                    self.opt_parser.error(
+                        "Source token doesn't exist. Please specify a source access token"
+                    )
+                if self.options.dst_access_token is None:
+                    self.opt_parser.error(
+                        "Destination token doesn't exist. Please specify a destination access token"
+                    )
+
         if self.params["ipv4"] and self.params["ipv6"]:
             self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
         if (
@@ -387,7 +468,15 @@ class JobSubmitter(Base):
                 self.logger.critical("Could not find any transfers")
                 sys.exit(1)
         else:
-            return [{"sources": [self.source], "destinations": [self.destination]}]
+            transfer = {
+                "sources": [self.source],
+                "destinations": [self.destination],
+            }
+            if self.options.src_access_token:
+                transfer["source_tokens"] = [self.options.src_access_token]
+            if self.options.dst_access_token:
+                transfer["destination_tokens"] = [self.options.dst_access_token]
+            return [transfer]
 
     def _build_params(self, **kwargs):
         params = dict()
@@ -404,7 +493,6 @@ class JobSubmitter(Base):
         for k, v in kwargs.items():
             if v is not None:
                 params[k] = v
-
         # JSONify metadata
         params["job_metadata"] = _metadata(params["job_metadata"])
         params["file_metadata"] = _metadata(params["file_metadata"])
@@ -430,8 +518,8 @@ class JobSubmitter(Base):
             archive_timeout=self.options.archive_timeout,
             timeout=self.options.timeout,
             verify_checksum=checksum_mode[0],
-            spacetoken=self.options.destination_token,
-            source_spacetoken=self.options.source_token,
+            destination_spacetoken=self.options.destination_spacetoken,
+            source_spacetoken=self.options.source_spacetoken,
             fail_nearline=self.options.fail_nearline,
             file_metadata=self.options.file_metadata,
             staging_metadata=self.options.staging_metadata,

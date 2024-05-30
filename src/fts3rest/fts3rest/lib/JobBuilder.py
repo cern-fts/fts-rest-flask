@@ -12,6 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import base64
+import itertools
+import json
 import socket
 import time
 
@@ -19,6 +22,7 @@ from datetime import datetime
 from urllib.parse import urlparse, parse_qsl, ParseResult, urlencode
 from flask import current_app as app
 from .JobBuilder_utils import *
+from fts3rest.lib.middleware.fts3auth import credentials
 
 log = logging.getLogger(__name__)
 
@@ -115,15 +119,38 @@ class JobBuilder:
         """
         From the dictionary file_dict, generate a list of transfers for a job
         """
-        # Extract matching pairs
-        pairs = []
-        for source in file_dict["sources"]:
+        # Extract transfer tuples where each tuple has a source, destination
+        # source token and destionation token.  Source and destination
+        # tokens will be None if the client is using X509 proxy certificates
+        tuples = []
+
+        # Use a combination of empty lists and itertools.zip_longest() to handle
+        # the fact the JSON submit/job request will not contain source or
+        # destination tokens if the client is using X509 proxy certificates
+        src_tokens = file_dict.get("source_tokens", [])
+        dst_tokens = file_dict.get("destination_tokens", [])
+
+        for source, src_token in itertools.zip_longest(
+            file_dict["sources"], src_tokens
+        ):
             source_url = urlparse(source.strip())
             validate_url(source_url)
-            for destination in file_dict["destinations"]:
+            if src_token is not None and not isinstance(src_token, str):
+                raise BadRequest(
+                    f"Source token is not a string: type(src_token)={type(src_token)}"
+                )
+            src_token_id = credentials.generate_token_id(src_token)
+            for destination, dst_token in itertools.zip_longest(
+                file_dict["destinations"], dst_tokens
+            ):
                 dest_url = urlparse(destination.strip())
                 validate_url(dest_url)
-                pairs.append((source_url, dest_url))
+                if dst_token is not None and not isinstance(dst_token, str):
+                    raise BadRequest(
+                        f"Destination token is not a string: type(dst_token)={type(dst_token)}"
+                    )
+                dst_token_id = credentials.generate_token_id(dst_token)
+                tuples.append((source_url, dest_url, src_token_id, dst_token_id))
 
         # Create one File entry per matching pair
         if self.is_bringonline:
@@ -146,7 +173,7 @@ class JobBuilder:
                 shared_hashed_id = generate_hashed_id()
         vo_name = self.user.vos[0]
 
-        for source, destination in pairs:
+        for source, destination, src_token_id, dst_token_id in tuples:
             if len(file_dict["sources"]) > 1 or not is_dest_surl_uuid_enabled(vo_name):
                 dest_uuid = None
             else:
@@ -167,6 +194,7 @@ class JobBuilder:
                 file_index=f_index,
                 dest_surl_uuid=dest_uuid,
                 file_state=initial_file_state,
+                file_state_initial="",
                 source_surl=source.geturl(),
                 dest_surl=destination.geturl(),
                 source_se=get_storage_element(source),
@@ -181,9 +209,11 @@ class JobBuilder:
                 archive_metadata=file_dict.get("archive_metadata", None),
                 activity=file_dict.get("activity", "default"),
                 scitag=validate_scitag(file_dict.get("scitag", None)),
-                hashed_id=shared_hashed_id
-                if shared_hashed_id
-                else generate_hashed_id(),
+                src_token_id=src_token_id,
+                dst_token_id=dst_token_id,
+                hashed_id=(
+                    shared_hashed_id if shared_hashed_id else generate_hashed_id()
+                ),
             )
             if f["file_metadata"] is not None:
                 f["file_metadata"] = metadata(
@@ -325,6 +355,177 @@ class JobBuilder:
                 "Reuse jobs must only contain transfers for the same source ad destination storage"
             )
 
+    def _file_list_contains_a_token_list(self, files_list):
+        """
+        Returns true if the list of file contains at least one list of source or destination tokens
+        """
+
+        for file_dict in files_list:
+            if "source_tokens" in file_dict:
+                return True
+            if "destination_tokens" in file_dict:
+                return True
+        return False
+
+    def _add_missing_tokens_if_necessary(self, files_list):
+        """
+        Adds missing tokens if "single token" end user
+        """
+
+        # If "single token" end user
+        if self.user.method == "oauth2" and not self._file_list_contains_a_token_list(
+            files_list
+        ):
+            # Get bearer token from HTTP headers
+            http_auth_header = self.request.environ["HTTP_AUTHORIZATION"].split()
+            bearer_token = http_auth_header[1]
+
+            # Add bearer token as missing source and destination tokens
+            for file_dict in files_list:
+
+                file_dict["source_tokens"] = []
+                for i in range(len(file_dict["sources"])):
+                    file_dict["source_tokens"].append(bearer_token)
+
+                file_dict["destination_tokens"] = []
+                for i in range(len(file_dict["destinations"])):
+                    file_dict["destination_tokens"].append(bearer_token)
+
+    def _validate_transfer_tokens(self, files_list):
+        for file_dict in files_list:
+            sources = file_dict.get("sources", [])
+            destinations = file_dict.get("destinations", [])
+            source_tokens = file_dict.get("source_tokens", [])
+            destination_tokens = file_dict.get("destination_tokens", [])
+            if source_tokens or destination_tokens:
+                # Both source tokens and destination tokens should exist
+                if not (source_tokens and destination_tokens):
+                    raise BadRequest(
+                        "Both source_tokens and destination_tokens are required if one of them is present."
+                    )
+
+                # Number of source tokens should match the number of sources
+                if len(source_tokens) != len(sources):
+                    raise BadRequest(
+                        "Length of source_tokens should be equal to the length of sources."
+                    )
+
+                # Number of destination tokens should match the number of destinations
+                if len(destination_tokens) != len(destinations):
+                    raise BadRequest(
+                        "Length of destination_tokens should be equal to the length of destinations."
+                    )
+
+                # Check if source and destination token lists are not empty
+                if not source_tokens or not destination_tokens:
+                    raise BadRequest(
+                        "Source tokens and destination tokens lists should not be empty."
+                    )
+
+                # Check if each source and destination has corresponding tokens
+                for source, source_token in zip(sources, source_tokens):
+                    if not source_token:
+                        raise BadRequest(f"Token for source '{source}' is missing.")
+                for destination, destination_token in zip(
+                    destinations, destination_tokens
+                ):
+                    if not destination_token:
+                        raise BadRequest(
+                            f"Token for destination '{destination}' is missing."
+                        )
+
+    def _add_tokens_to_dict(self, tokens_dict, token_list):
+        """
+        Adds the specified tokens to the specified dictionary
+        """
+
+        for token in token_list:
+            token_id = credentials.generate_token_id(token)
+            tokens_dict[token_id] = token
+
+    def _get_jwt_payload(self, token):
+        """
+        Extracts, decodes and parses the payload of the specified token
+        """
+
+        segments = token.split(".")
+        if len(segments) < 3:
+            raise Exception(f"Not enough token segments: min=3 actual={len(segments)}")
+        payload = segments[1]
+        len_payload_mod_4 = len(segments[1]) % 4
+        if len_payload_mod_4 > 0:
+            payload = payload + "=" * (4 - len_payload_mod_4)
+        decoded_payload = base64.urlsafe_b64decode(payload)
+        return json.loads(decoded_payload)
+
+    def _populate_tokens(self, files_list):
+        """
+        Generates the list of tokens ready for the database
+        """
+
+        # Create a self.tokens attribute no matter what
+        self.tokens = []
+
+        if self.user.method != "oauth2" or not files_list:
+            return
+
+        tokens_dict = {}
+        for file_dict in files_list:
+            # Source and destination tokens will not be present when the client is
+            # using X509 proxy certificates
+            src_tokens = file_dict.get("source_tokens", [])
+            dst_tokens = file_dict.get("destination_tokens", [])
+
+            self._add_tokens_to_dict(tokens_dict, src_tokens)
+            self._add_tokens_to_dict(tokens_dict, dst_tokens)
+
+        for token_item in tokens_dict.items():
+            token_id = token_item[0]
+            token = token_item[1]
+
+            try:
+                jwt_payload = self._get_jwt_payload(token)
+            except Exception as ex:
+                log.warning(f"Failed to parse JWT: token_id={token_id} error={ex}")
+                jwt_payload = {}
+
+            token_dict = {
+                "token_id": token_id,
+                "access_token": token,
+                "refresh_token": None,
+            }
+
+            if "iss" in jwt_payload:
+                token_dict["issuer"] = safe_issuer(jwt_payload["iss"])
+            else:
+                raise BadRequest("Token does not contain an iss claim")
+            if "nbf" in jwt_payload:
+                token_dict["nbf"] = jwt_payload["nbf"]
+            else:
+                raise BadRequest("Token does not contain a nbf claim")
+            if "exp" in jwt_payload:
+                token_dict["exp"] = jwt_payload["exp"]
+            else:
+                raise BadRequest("Token does not contain an exp claim")
+            if "scope" in jwt_payload:
+                token_dict["scope"] = jwt_payload["scope"]
+            else:
+                raise BadRequest("Token does not contain a scope claim")
+            if "aud" in jwt_payload:
+                if jwt_payload["aud"] is None:
+                    token_dict["audience"] = None
+                elif isinstance(jwt_payload["aud"], str):
+                    token_dict["audience"] = jwt_payload["aud"]
+                elif isinstance(jwt_payload["aud"], list):
+                    token_dict["audience"] = " ".join(jwt_payload["aud"])
+                else:
+                    raise BadRequest(
+                        f"Token audience must be a null, string or list of strings: actual_type={type(jwt_payload['aud'])}"
+                    )
+            else:
+                raise BadRequest("Token does not contain an aud claim")
+            self.tokens.append(token_dict)
+
     def _populate_transfers(self, files_list):
         """
         Initializes the list of transfers
@@ -403,10 +604,10 @@ class JobBuilder:
             cred_id=None,
             submit_time=datetime.utcnow(),
             priority=max(min(int(self.params["priority"]), 5), 1),
-            space_token=self.params["spacetoken"],
+            destination_spacetoken=self.params["destination_spacetoken"],
             overwrite_flag=overwrite_flag,
             dst_file_report=safe_flag(self.params["dst_file_report"]),
-            source_space_token=self.params["source_spacetoken"],
+            source_spacetoken=self.params["source_spacetoken"],
             copy_pin_lifetime=safe_int(self.params["copy_pin_lifetime"]),
             checksum_method=self.params["verify_checksum"],
             bring_online=safe_int(self.params["bring_online"]),
@@ -414,9 +615,11 @@ class JobBuilder:
             job_metadata=self.params["job_metadata"],
             internal_job_params=self._build_internal_job_params(),
             max_time_in_queue=expiration_time,
-            target_qos=self.params["target_qos"]
-            if "target_qos" in self.params.keys()
-            else None,
+            target_qos=(
+                self.params["target_qos"]
+                if "target_qos" in self.params.keys()
+                else None
+            ),
         )
 
         if "credential" in self.params:
@@ -483,12 +686,14 @@ class JobBuilder:
         else:
             self.params["job_metadata"] = {"auth_method": self.user.method}
 
-    def __init__(self, user, **kwargs):
+    def __init__(self, request, **kwargs):
         """
         Constructor
         """
         try:
-            self.user = user
+            self.request = request
+            self.user = request.environ["fts3.User.Credentials"]
+
             # Get the job parameters
             self.params = self._get_params(kwargs.pop("params", dict()))
 
@@ -497,6 +702,9 @@ class JobBuilder:
 
             files_list = kwargs.pop("files", None)
             datamg_list = kwargs.pop("delete", None)
+
+            # Be backwards compatible with single token clients
+            self._add_missing_tokens_if_necessary(files_list)
 
             if datamg_list is not None:
                 raise MethodNotAllowed(
@@ -517,6 +725,11 @@ class JobBuilder:
             else:
                 self.job_id = str(uuid.uuid1())
             self.files = []
+
+            if self.user.method == "oauth2":
+                self._validate_transfer_tokens(files_list)
+
+            self._populate_tokens(files_list)
 
             if files_list is not None:
                 self._populate_transfers(files_list)

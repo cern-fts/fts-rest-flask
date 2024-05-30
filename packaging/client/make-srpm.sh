@@ -15,8 +15,8 @@ function print_info {
 }
 
 VERSION=$(grep -m1 packaging/client/fts-rest-client.spec -e "^Version:" | awk {'print $2'})
-TIMESTAMP=`date +%y%m%d%H%M`
-GITREF=`git rev-parse --short HEAD`
+TIMESTAMP=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%y%m%d%H%M)
+GITREF=`git rev-parse --short=7 HEAD`
 RELEASE=r${TIMESTAMP}git${GITREF}
 
 if [[ -z ${BRANCH} ]]; then
@@ -25,7 +25,7 @@ else
   printf "Using environment set variable BRANCH=%s\n" "${BRANCH}"
 fi
 
-if [[ $BRANCH =~ ^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-(server|client))?$ ]]; then
+if [[ $BRANCH =~ ^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-(server|client))?(\^0)?$ ]]; then
   RELEASE="${BASH_REMATCH[4]}${BASH_REMATCH[5]}"
 fi
 

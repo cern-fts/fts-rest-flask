@@ -33,6 +33,7 @@ from .exceptions import *
 
 log = logging.getLogger(__name__)
 
+
 # See https://bugzilla.osafoundation.org/show_bug.cgi?id=7530
 # for an explanation on all this mess
 # TL;DR: M2Crypto fails to properly initialize the internal structure, which

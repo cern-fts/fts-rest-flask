@@ -13,23 +13,137 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import types
 import logging
+import json
+import jwt
+import types
+
 from urllib.parse import urlparse
 from datetime import datetime
 from fts3rest.lib.middleware.fts3auth.credentials import (
-    generate_delegation_id,
+    generate_token_delegation_id,
+    gridmap_vo,
     InvalidCredentials,
 )
+from fts3rest.lib.openidconnect import oidc_manager, jwt_options_unverified
 from fts3rest.model.meta import Session
 from fts3rest.model import Credential
+from jwcrypto.jwk import JWK
 
 log = logging.getLogger(__name__)
+
+
+def validate_token_offline(access_token, audience=None):
+    """
+    Validate access token using cached information from the provider
+    When enabled checks if access_token has the right audience
+
+    :param access_token
+    :param audience
+    :return: tuple(valid, credential) or tuple(False, None)
+    :raise Exception: exception on invalid token
+    """
+
+    def _decode(key):
+        log.debug("Attempt decoding using key={}".format(key.export()))
+        try:
+            return jwt.decode(
+                access_token,
+                key.export_to_pem(),
+                algorithms=[algorithm],
+                options={"verify_aud": False},
+            )
+        except Exception:
+            return None
+
+    # Check the token has valid "exp", "iat" and "nbf" claims
+    options = {"verify_exp": True, "verify_nbf": True, "verify_iat": True}
+    if audience:
+        # Verify that audience matches the expected
+        options["verify_aud"] = True
+
+    unverified_payload = jwt.decode(
+        access_token,
+        options=jwt_options_unverified(options),
+        audience=audience,
+    )
+    unverified_header = jwt.get_unverified_header(access_token)
+    issuer = unverified_payload["iss"]
+    key_id = unverified_header.get("kid")
+    algorithm = unverified_header.get("alg")
+    log.debug("issuer={}, key_id={}, alg={}".format(issuer, key_id, algorithm))
+
+    # Find the first key which decodes the token
+    keys = oidc_manager.filter_provider_keys(issuer, key_id, algorithm)
+    jwkeys = [JWK.from_json(json.dumps(key.to_dict())) for key in keys]
+    for jwkey in jwkeys:
+        credential = _decode(jwkey)
+        if credential is not None:
+            log.debug("offline_response::: {}".format(credential))
+            return True, credential
+    log.warning("No key managed to decode the token")
+    return False, None
+
+
+def validate_token_online(access_token, audience=None):
+    """
+    Validate access token using Introspection (RFC 7662).
+    Furthermore, run some FTS specific validations, such as
+    requiring the "offline_access" scope and requiring the right audience
+
+    :param access_token:
+    :param audience:
+    :return: tuple(valid, credential) or tuple(False, None)
+    :raise Exception: exception during introspection
+           or if missing "offline_access" scope
+    """
+    options = {}
+    if audience:
+        options["verify_aud"] = True
+
+    unverified_payload = jwt.decode(
+        access_token, options=jwt_options_unverified(options), audience=audience
+    )
+    issuer = unverified_payload["iss"]
+    log.debug("issuer={}".format(issuer))
+    credential = oidc_manager.introspect(issuer, access_token)
+    log.debug("online_response::: {}".format(credential))
+    if not credential["active"]:
+        return False, None
+    # Perform FTS specific validations
+    scopes = credential.get("scope")
+    if scopes is None:
+        raise ValueError("Scope claim not found in online validation response")
+    if "offline_access" not in scopes:
+        raise ValueError("Scope claim dos not contain offline_access")
+    return True, credential
 
 
 def _oauth2_get_granted_level_for(self, operation):
     # All users authenticated through IAM will be considered root users
     return "all"
+
+
+def _get_vo_from_config(config, issuer):
+    """
+    Searches the specified FTS configuration for the VO for the specified
+    issuer.
+
+    :returns the VO or None if one not found
+    """
+    providers = config.get("fts3.Providers", None)
+    if not providers:
+        return None
+
+    provider = config["fts3.Providers"].get(issuer, None)
+    if not provider:
+        return None
+
+    vo = provider.get("vo", None)
+    if not vo:
+        return None
+
+    return vo
 
 
 def do_authentication(credentials, env, config):
@@ -44,6 +158,8 @@ def do_authentication(credentials, env, config):
     authn = res_provider.get_authorization()
     if authn is None:
         return False
+    if authn.issuer is None or authn.subject is None:
+        return False
     if not authn.is_valid:
         if authn.error is not None:
             log.info("Raising invalid OAuth2 credentials")
@@ -56,18 +172,20 @@ def do_authentication(credentials, env, config):
     credentials.method = "oauth2"
     credentials.user_dn = authn.subject
     credentials.dn.append(authn.subject)
-    _build_vo_from_token_auth(credentials, authn)
-    credentials.delegation_id = generate_delegation_id(
-        credentials.user_dn, credentials.voms_cred
-    )
 
-    # Handle the database part of token authentication
-    # Should be refactored and moved to the delegation process
-    try:
-        _handle_credential_storing(res_provider, credentials, authn)
-    except Exception as ex:
-        log.warning("Error obtaining refresh token: {}".format(ex))
-        raise InvalidCredentials("Error obtaining refresh tokens: {}".format(ex))
+    vo = gridmap_vo(credentials.user_dn)
+    if vo:
+        credentials.vos.append(vo)
+    else:
+        vo = _get_vo_from_config(config, authn.issuer)
+        if vo:
+            credentials.vos.append(vo)
+        else:
+            _build_vo_from_token_auth(credentials, authn)
+
+    credentials.delegation_id = generate_token_delegation_id(
+        authn.issuer, authn.subject
+    )
 
     # Extend UserCredentials object with OAuth2 specific fields
     setattr(credentials, "oauth2_scope", " ".join(authn.scope) if authn.scope else None)
@@ -105,62 +223,3 @@ def _build_vo_from_issuer(issuer):
         return urlparse(issuer).hostname
     except Exception:
         return issuer
-
-
-def _handle_credential_storing(resource_provider, credentials, token_auth):
-    """
-    This method takes care of all database token-related operations.
-
-    Ideally, the token credentials would only touch the database
-    during the delegation process. However, as delegation is not
-    implemented yet for tokens, it happens on every authentication.
-
-    Algorithm:
-        - If a credential already exists in the database but has expired, delete it
-        - If there's no credential anymore, exchange the access token for a refresh token
-        - Store the access/refresh token pair in the database
-
-    :param resource_provider: the OAuth2 Resource Provider object
-    :param credentials: the constructed UserCredential object
-    :param token_auth: the token authorization object
-    """
-    # Check if a credential already exists in the database
-    credential_db = (
-        Session.query(Credential)
-        .filter(Credential.dlg_id == credentials.delegation_id)
-        .first()
-    )
-    # Delete expired credential
-    if credential_db and credential_db.expired():
-        log.info(
-            "Deleting expired credential dlg_id={}".format(credentials.delegation_id)
-        )
-        try:
-            Session.delete(credential_db)
-            Session.commit()
-        except Exception as ex:
-            log.warning("Failed to delete expired credentials: {}".format(ex))
-            Session.rollback()
-        credential_db = None
-    if not credential_db:
-        # Exchange access token for a refresh token if no credential exists
-        log.debug("Obtaining refresh token")
-        access_token, refresh_token = resource_provider.obtain_refresh_token_from_auth(
-            token_auth
-        )
-        # Store access/refresh token pair in the database
-        credential = Credential(
-            dlg_id=credentials.delegation_id,
-            dn=credentials.user_dn,
-            proxy=str(access_token) + ":" + str(refresh_token),
-            voms_attrs=" ".join(credentials.voms_cred)
-            if len(credentials.voms_cred) > 0
-            else "",
-            termination_time=datetime.utcfromtimestamp(token_auth.expiry),
-        )
-        try:
-            Session.merge(credential)
-            Session.commit()
-        except Exception:
-            Session.rollback()
-            raise

@@ -24,11 +24,14 @@ from fts3rest.lib.oauth2lib.provider import (
     ResourceProvider,
 )
 from fts3rest.lib.openidconnect import oidc_manager, jwt_options_unverified
+from fts3rest.lib.middleware.fts3auth.methods import oauth2
 from jwcrypto.jwk import JWK
 from flask import request
 
 from fts3rest.model import CredentialCache
 from fts3rest.model.oauth2 import OAuth2Application, OAuth2Code, OAuth2Token
+
+from werkzeug.exceptions import BadRequest
 
 log = logging.getLogger(__name__)
 
@@ -222,12 +225,17 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
           - Validate access token offline (using cached keys) or online (using introspection RFC 7662)
             -- Offline validation must have valid "exp", "iat" and "nbf" claims
             -- Online validation must include "offline_access" scope
+            -- Token audience must match one of the configured ones
 
         :param access_token:
         :param authorization: attribute to fill-in with token information
         """
+        if "fts3.OAuth2" not in self.config or not self.config.get("fts3.OAuth2"):
+            raise BadRequest("Unsupported authentication method: method=OAuth2")
+
         authorization.is_valid = False
         validation_method = "offline" if self._should_validate_offline() else "online"
+        audience = self.config["fts3.AuthorizedAudiences"]
 
         try:
             if not oidc_manager.token_issuer_supported(access_token):
@@ -240,9 +248,13 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
         try:
             if validation_method == "offline":
-                valid, credential = self._validate_token_offline(access_token)
+                valid, credential = self._validate_token_offline(
+                    access_token, audience=audience
+                )
             else:
-                valid, credential = self._validate_token_online(access_token)
+                valid, credential = self._validate_token_online(
+                    access_token, audience=audience
+                )
             if not valid:
                 return
         except Exception as ex:
@@ -279,82 +291,48 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         )
         authorization.is_valid = authorization.expires_in > timedelta(seconds=0)
 
-    def _validate_token_offline(self, access_token):
-        """
-        Validate access token using cached information from the provider
+        # Invalidate token if it does not have the required FTS scope
+        providers_config = self.config.get("fts3.Providers")
+        if not providers_config:
+            log.info("Invalid token: No token providers have been configured")
+            authorization.is_valid = False
+        else:
+            # Ensure token issuer ends with a '/'
+            if authorization.issuer and authorization.issuer[-1] != "/":
+                token_issuer = authorization.issuer + "/"
+            elif authorization.issuer:
+                token_issuer = authorization.issuer
+            else:
+                token_issuer = ""  # nosec
 
-        :param access_token:
-        :return: tuple(valid, credential) or tuple(False, None)
-        :raise Exception: exception on invalid token
-        """
-
-        def _decode(key):
-            log.debug("Attempt decoding using key={}".format(key.export()))
-            try:
-                audience = None
-                options = {"verify_aud": False}
-                # Check audience only for WLCG tokens
-                if "wlcg" in issuer:
-                    audience = "https://wlcg.cern.ch/jwt/v1/any"
-                    options["verify_aud"] = True
-                return jwt.decode(
-                    access_token,
-                    key.export_to_pem(),
-                    algorithms=[algorithm],
-                    audience=audience,
-                    options=options,
+            providers_config_keys = providers_config.keys()
+            if token_issuer not in providers_config_keys:
+                log.info(
+                    f"Invalid token: Issuer not found in configured providers: issuer={token_issuer}"
                 )
-            except Exception:
-                return None
+                authorization.is_valid = False
+            else:
+                submit_token_provider_config = providers_config[token_issuer]
+                expected_fts_scope = submit_token_provider_config.get(
+                    "oauth_scope_fts", None
+                )
+                if expected_fts_scope:
+                    if not authorization.scope:
+                        log.info(
+                            f"Invalid token: Invalid scope: expected={expected_fts_scope} actual=None"
+                        )
+                        authorization.is_valid = False
+                    elif expected_fts_scope not in authorization.scope:
+                        log.info(
+                            f"Invalid token: Invalid scope: expected={expected_fts_scope} actual={authorization.scope}"
+                        )
+                        authorization.is_valid = False
 
-        unverified_payload = jwt.decode(
-            access_token,
-            options=jwt_options_unverified(
-                {"verify_exp": True, "verify_nbf": True, "verify_iat": True}
-            ),
-        )
-        unverified_header = jwt.get_unverified_header(access_token)
-        issuer = unverified_payload["iss"]
-        key_id = unverified_header.get("kid")
-        algorithm = unverified_header.get("alg")
-        log.debug("issuer={}, key_id={}, alg={}".format(issuer, key_id, algorithm))
+    def _validate_token_offline(self, access_token, audience=None):
+        return oauth2.validate_token_offline(access_token, audience)
 
-        # Find the first key which decodes the token
-        keys = oidc_manager.filter_provider_keys(issuer, key_id, algorithm)
-        jwkeys = [JWK.from_json(json.dumps(key.to_dict())) for key in keys]
-        for jwkey in jwkeys:
-            credential = _decode(jwkey)
-            if credential is not None:
-                log.debug("offline_response::: {}".format(credential))
-                return True, credential
-        log.warning("No key managed to decode the token")
-        return False, None
-
-    def _validate_token_online(self, access_token):
-        """
-        Validate access token using Introspection (RFC 7662).
-        Furthermore, run some FTS specific validations, such as
-        requiring the "offline_access" scope.
-
-        :param access_token:
-        :return: tuple(valid, credential) or tuple(False, None)
-        :raise Exception: exception during introspection
-               or if missing "offline_access" scope
-        """
-        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
-        issuer = unverified_payload["iss"]
-        log.debug("issuer={}".format(issuer))
-        credential = oidc_manager.introspect(issuer, access_token)
-        log.debug("online_response::: {}".format(credential))
-        if not credential["active"]:
-            return False, None
-        # Perform FTS specific validations
-        scopes = credential.get("scope")
-        if scopes is None:
-            raise ValueError("Scope claim not found in online validation response")
-        if "offline_access" not in scopes:
-            raise ValueError("Scope claim dos not contain offline_access")
-        return True, credential
+    def _validate_token_online(self, access_token, audience=None):
+        return oauth2.validate_token_online(access_token, audience)
 
     def _scope_from_credential(self, credential):
         scope = credential.get("scope")

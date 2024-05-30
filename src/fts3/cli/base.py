@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from configparser import ConfigParser
-from optparse import OptionParser, IndentedHelpFormatter
+from optparse import OptionParser, IndentedHelpFormatter, SUPPRESS_HELP
 import logging
 import os
 import socket
@@ -138,7 +138,15 @@ class Base:
         self.opt_parser.add_option(
             "--access-token",
             dest="access_token",
-            help="OAuth2 access token (supported only by some endpoints, takes precedence)",
+            help="Single OAuth2 access-token for FTS submission plus source and destination tokens.",
+            # help="deprecated: Single OAuth2 access-token for FTS submission plus source and destination tokens.",
+            default=None,
+        )
+        self.opt_parser.add_option(
+            "--fts-access-token",
+            dest="fts_access_token",
+            help=SUPPRESS_HELP,
+            # help="OAuth2 access-token for FTS submission.  Source and destination tokens must be specified separately.",
             default=None,
         )
 
@@ -148,6 +156,7 @@ class Base:
             self.options.endpoint = _get_local_endpoint()
         if self.options.verbose:
             self.logger.setLevel(logging.DEBUG)
+        self._access_token_compatibility()
         self.validate()
         return self.run()
 
@@ -173,7 +182,15 @@ class Base:
             ukey=self.options.ukey,
             ucert=self.options.ucert,
             verify=self.options.verify,
-            access_token=self.options.access_token,
+            fts_access_token=self.options.fts_access_token,
             capath=self.options.capath,
             user_agent=user_agent,
         )
+
+    def _access_token_compatibility(self):
+        if self.options.access_token and self.options.fts_access_token:
+            self.opt_parser.error(
+                "Cannot use both '--access-token' and '--fts-access-token' simultaneously. (prefer new '--fts-access-token' handle)"
+            )
+        if self.options.access_token:
+            self.options.fts_access_token = self.options.access_token
