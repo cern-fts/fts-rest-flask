@@ -12,11 +12,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import warnings
 from datetime import timedelta
 
 from fts3.rest.client import Submitter
 from fts3.rest.client import ClientError
 from .delegate import delegate
+
+# Remove line when "spacetoken" field is removed
+warnings.filterwarnings(action="always", category=DeprecationWarning, module="fts3")
 
 
 class JobIdGenerator:
@@ -167,6 +171,7 @@ def new_job(
     s3alternate=False,
     nostreams=1,
     buffer_size=None,
+    **kwargs,
 ):
     """
     Creates a new dictionary representing a job
@@ -215,6 +220,15 @@ def new_job(
             "Bad request: Multiple overwrite flags can not be used at the same time"
         )
 
+    # Deprecate the "spacetoken" field (will be removed in FTS v3.14)
+    if "spacetoken" in kwargs:
+        warnings.warn(
+            "Variable 'spacetoken' is deprecated and will be removed in FTS v3.14. Please use 'destination_spacetoken' instead!",
+            DeprecationWarning,
+        )
+        if kwargs["spacetoken"] and not destination_spacetoken:
+            destination_spacetoken = kwargs["spacetoken"]
+
     params = dict(
         verify_checksum=verify_checksum,
         reuse=reuse,
@@ -255,6 +269,7 @@ def new_staging_job(
     priority=None,
     id_generator=JobIdGenerator.standard,
     sid=None,
+    **kwargs,
 ):
     """
         Creates a new dictionary representing a staging job
@@ -298,6 +313,15 @@ def new_staging_job(
                 staging_metadata=staging_meta,
             )
         )
+
+    # Deprecate the "spacetoken" field (will be removed in FTS v3.14)
+    if "spacetoken" in kwargs:
+        warnings.warn(
+            "Variable 'spacetoken' is deprecated and will be removed in FTS v3.14. Please use 'destination_spacetoken' instead!",
+            DeprecationWarning,
+        )
+        if kwargs["spacetoken"] and not destination_spacetoken:
+            destination_spacetoken = kwargs["spacetoken"]
 
     params = dict(
         source_spacetoken=source_spacetoken,
