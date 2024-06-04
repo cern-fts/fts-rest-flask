@@ -37,7 +37,6 @@ class Delegator(Base):
             action="store_true",
             help="force the delegation",
         )
-
         self.opt_parser.add_option(
             "-H",
             "--hours",
@@ -46,12 +45,21 @@ class Delegator(Base):
             type="int",
             help="Duration of the delegation in hours (Default: 12)",
         )
+        self.opt_parser.add_option(
+            "--legacy-mode",
+            dest="legacy_mode",
+            default=False,
+            action="store_true",
+            help="Conserve the Globus legacy delegation behavior for proxies (will not add the RFC3820 extension)",
+        )
 
     def run(self):
         context = self._create_context()
         delegator = Deleg(context)
         delegation_id = delegator.delegate(
-            lifetime=timedelta(hours=self.options.duration), force=self.options.force
+            lifetime=timedelta(hours=self.options.duration),
+            force=self.options.force,
+            legacy_mode=self.options.legacy_mode,
         )
         self.logger.info("Delegation id: %s" % delegation_id)
         self.logger.debug(
