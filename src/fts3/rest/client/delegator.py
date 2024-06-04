@@ -88,11 +88,6 @@ def _workaround_new_extension(name, value, critical=False, issuer=None, _pyfree=
     return x509_ext
 
 
-def _m2crypto_extensions_broken():
-    # SL5 is out support
-    return False
-
-
 def _add_rfc3820_extensions(proxy):
     proxy.add_ext(
         X509.new_extension(
@@ -174,29 +169,23 @@ class Delegator(object):
         proxy.set_issuer(self.context.x509.get_subject())
         proxy.set_pubkey(x509_request.get_pubkey())
 
-        # Extensions are broken in SL5!!
-        if _m2crypto_extensions_broken():
-            log.warning("X509v3 extensions disabled!")
-        else:
-            # X509v3 Basic Constraints
-            proxy.add_ext(
-                X509.new_extension("basicConstraints", "CA:FALSE", critical=True)
+        # X509v3 Basic Constraints
+        proxy.add_ext(X509.new_extension("basicConstraints", "CA:FALSE", critical=True))
+        # X509v3 Key Usage
+        proxy.add_ext(
+            X509.new_extension(
+                "keyUsage", "Digital Signature, Key Encipherment", critical=True
             )
-            # X509v3 Key Usage
-            proxy.add_ext(
-                X509.new_extension(
-                    "keyUsage", "Digital Signature, Key Encipherment", critical=True
-                )
-            )
-            # X509v3 Authority Key Identifier
-            identifier_ext = _workaround_new_extension(
-                "authorityKeyIdentifier",
-                "keyid",
-                critical=False,
-                issuer=self.context.x509,
-            )
-            if identifier_ext:
-                proxy.add_ext(identifier_ext)
+        )
+        # X509v3 Authority Key Identifier
+        identifier_ext = _workaround_new_extension(
+            "authorityKeyIdentifier",
+            "keyid",
+            critical=False,
+            issuer=self.context.x509,
+        )
+        if identifier_ext:
+            proxy.add_ext(identifier_ext)
 
         any_rfc_proxies = False
         # FTS-1217 Ignore the user input and select the min proxy lifetime available on the list
@@ -215,14 +204,7 @@ class Delegator(object):
         proxy.set_not_before(not_before)
 
         if any_rfc_proxies:
-            if _m2crypto_extensions_broken():
-                raise NotImplementedError(
-                    "X509v3 extensions are disabled, so RFC proxies can not be generated!"
-                )
-            else:
-                _add_rfc3820_extensions(proxy)
-
-        if any_rfc_proxies:
+            _add_rfc3820_extensions(proxy)
             m2.x509_name_set_by_nid(
                 proxy_subject._ptr(),
                 X509.X509_Name.nid["commonName"],
