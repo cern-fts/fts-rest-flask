@@ -25,7 +25,7 @@ else
   printf "Using environment set variable BRANCH=%s\n" "${BRANCH}"
 fi
 
-if [[ $BRANCH =~ ^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-(server|client))?(\^0)?$ ]]; then
+if [[ $BRANCH =~ ^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-server)?(\^0)?$ ]]; then
   RELEASE="${BASH_REMATCH[4]}${BASH_REMATCH[5]}"
 fi
 
