@@ -149,7 +149,7 @@ class Delegator(object):
         # Return
         return x509_request
 
-    def _sign_request(self, x509_request, lifetime):
+    def _sign_request(self, x509_request, lifetime, legacy_mode):
         not_before = ASN1.ASN1_UTCTIME()
         not_before.set_datetime(datetime.now(UTC))
         not_after = ASN1.ASN1_UTCTIME()
@@ -203,17 +203,18 @@ class Delegator(object):
         proxy.set_not_after(not_after)
         proxy.set_not_before(not_before)
 
-        if any_rfc_proxies:
-            _add_rfc3820_extensions(proxy)
-            m2.x509_name_set_by_nid(
-                proxy_subject._ptr(),
-                X509.X509_Name.nid["commonName"],
-                str(int(time.time())).encode("utf-8"),
-            )
+        proxy_common_name = str(int(time.time()))
+
+        if not any_rfc_proxies and legacy_mode:
+            proxy_common_name = "proxy"
         else:
-            m2.x509_name_set_by_nid(
-                proxy_subject._ptr(), X509.X509_Name.nid["commonName"], b"proxy"
-            )
+            _add_rfc3820_extensions(proxy)
+
+        m2.x509_name_set_by_nid(
+            proxy_subject._ptr(),
+            X509.X509_Name.nid["commonName"],
+            proxy_common_name.encode("utf-8"),
+        )
 
         proxy.set_subject(proxy_subject)
         proxy.set_version(2)
@@ -240,6 +241,7 @@ class Delegator(object):
         lifetime=timedelta(hours=7),
         force=False,
         delegate_when_lifetime_lt=timedelta(hours=2),
+        legacy_mode=False,
     ):
         try:
             delegation_id = self._get_delegation_id()
@@ -267,7 +269,7 @@ class Delegator(object):
 
             # Sign request
             log.debug("Signing request")
-            x509_proxy = self._sign_request(x509_request, lifetime)
+            x509_proxy = self._sign_request(x509_request, lifetime, legacy_mode)
             x509_proxy_pem = self._full_proxy_chain(x509_proxy)
 
             # Send the signed proxy
