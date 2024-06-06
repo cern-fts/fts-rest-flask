@@ -205,6 +205,12 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
             quote_plus(fts3cfg["fts3.DbPassword"]),
             fts3cfg["fts3.DbConnectString"],
         )
+    elif fts3cfg["fts3.DbType"] == "postgresql":
+        fts3cfg["sqlalchemy.url"] = "postgresql+psycopg2://%s:%s@%s" % (
+            fts3cfg["fts3.DbUserName"],
+            quote_plus(fts3cfg["fts3.DbPassword"]),
+            fts3cfg["fts3.DbConnectString"],
+        )
     else:
         raise ValueError(
             "Database type '%s' is not recognized" % fts3cfg["fts3.DbType"]
