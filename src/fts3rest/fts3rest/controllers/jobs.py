@@ -944,9 +944,9 @@ def _get_link_counts(files):
     return result
 
 
-def _update_t_link_stats_row(dbconn, source_se, dest_se, nb_submitted):
+def _update_t_link_row(dbconn, source_se, dest_se, nb_submitted):
     sql = """
-        INSERT INTO t_link_stats (
+        INSERT INTO t_link (
             source_se,
             dest_se,
             nb_submitted
@@ -957,15 +957,15 @@ def _update_t_link_stats_row(dbconn, source_se, dest_se, nb_submitted):
         )
         ON CONFLICT (source_se, dest_se) DO
             UPDATE SET nb_submitted =
-                t_link_stats.nb_submitted + EXCLUDED.nb_submitted
+                t_link.nb_submitted + EXCLUDED.nb_submitted
     """
     params = {"source_se": source_se, "dest_se": dest_se, "nb_submitted": nb_submitted}
     dbconn.execute(sql, params)
 
 
-def _update_link_stats(dbconn, linkcounts):
+def _update_link(dbconn, linkcounts):
     for (source_se, dest_se), count in linkcounts.items():
-        _update_t_link_stats_row(dbconn, source_se, dest_se, count)
+        _update_t_link_row(dbconn, source_se, dest_se, count)
 
 
 @authorize(TRANSFER)
@@ -1081,7 +1081,7 @@ def submit():
         Session.execute(File.__table__.insert(), populated.files)
         if current_app.config["fts3.DbType"] == "postgresql":
             linkcounts = _get_link_counts(populated.files)
-            _update_link_stats(Session.connection(), linkcounts)
+            _update_link(Session.connection(), linkcounts)
         log.info(
             "Inserted files into database: job_id={} db_secs={}".format(
                 populated.job_id, str(time.perf_counter() - start_insert_files)
