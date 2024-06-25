@@ -34,7 +34,7 @@ class TestConfigLinks(TestController):
                 "max_active": 150,
                 "optimizer_mode": 5,
             },
-            status=200,
+            status=201,
         ).json
 
         audits = Session.query(ConfigAudit).all()
@@ -104,7 +104,7 @@ class TestConfigLinks(TestController):
                 "max_active": 150,
                 "optimizer_mode": 5,
             },
-            status=200,
+            status=201,
         ).json
 
         audits = Session.query(ConfigAudit).all()
