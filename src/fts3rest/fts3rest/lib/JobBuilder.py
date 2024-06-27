@@ -20,6 +20,7 @@ import time
 
 from datetime import datetime
 from urllib.parse import urlparse, parse_qsl, ParseResult, urlencode
+from itertools import chain
 from flask import current_app as app
 from .JobBuilder_utils import *
 from fts3rest.lib.middleware.fts3auth import credentials
@@ -401,6 +402,31 @@ class JobBuilder:
             return "D"
         return None
 
+    def _validate_overwrite_disk_destination(self, job_type, files_list):
+        """
+        When the "overwrite-when-only-on-disk" feature is enabled,
+        restrict usage only to HTTP/DAV target endpoints (capable of Tape REST API).
+        According to the job type:
+            - Multihop jobs: the final destination must be checked
+            - All other job types: all destinations must be checked
+
+        If an invalid submission is detected, raises a user error
+        """
+
+        def _is_http_endpoint(endpoint):
+            if not endpoint.startswith(tuple(["https://", "davs://"])):
+                raise BadRequest(
+                    "'overwrite-when-only-on-disk' requires destination "
+                    "to be HTTPs endpoint (Tape REST API required)"
+                )
+
+        if job_type == "H":
+            destinations = files_list[-1]["destinations"]
+        else:
+            destinations = [file_dict["destinations"] for file_dict in files_list]
+            destinations = list(chain.from_iterable(destinations))
+        any(map(_is_http_endpoint, destinations))
+
     def _file_list_contains_a_token_list(self, files_list):
         """
         Returns true if the list of file contains at least one list of source or destination tokens
@@ -628,6 +654,8 @@ class JobBuilder:
                     )
 
         overwrite_flag = self._validate_overwrite_flag()
+        if overwrite_flag in ["D", "Q"]:
+            self._validate_overwrite_disk_destination(job_type, files_list)
 
         self.job = dict(
             job_id=self.job_id,
