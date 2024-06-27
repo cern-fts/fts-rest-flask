@@ -76,7 +76,7 @@ function getSubForm(form, klass)
     subset.udt = parseInt(subform.find("input[name='udt']").val());
     subset.debug_level = parseInt(subform.find("input[name='debug_level']").val());
     subset.skip_eviction = parseInt(subform.find("input[name='skip_eviction']").val());
-    subset.tape_endpoint = parseInt(subform.find("input[name='tape_endpoint']").val());
+    subset.overwrite_disk_enabled = parseInt(subform.find("input[name='overwrite_disk_enabled']").val());
     subset.tpc_support = subform.find("select[name='tpc_support']").val() || null;
     return subset;
 }

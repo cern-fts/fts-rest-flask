@@ -144,7 +144,7 @@ def get_se_config():
             "debug_level",
             "skip_eviction",
             "tpc_support",
-            "tape_endpoint",
+            "overwrite_disk_enabled",
         ]:
             se_info[attr] = getattr(opt, attr)
         config["se_info"] = se_info
