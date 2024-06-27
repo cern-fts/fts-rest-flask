@@ -36,18 +36,13 @@ Grid storage configuration
 """
 
 
-def _translate_tcp_mode(mode):
-    if mode == "FULL":
-        supported_mode = "Full support"
-    elif mode == "PULL":
-        supported_mode = "Pull only"
-    elif mode == "PUSH":
-        supported_mode = "Push only"
-    elif mode == "NONE":
-        supported_mode = "Not supported"
-    else:
-        supported_mode = None
-    return supported_mode
+def _validate_tpc_support(key, value):
+    valid_tpc_role = ["FULL", "PULL", "PUSH", "NONE"]
+    if value not in valid_tpc_role:
+        raise BadRequest(
+            "Field %s is expected to be one of the following: %s"
+            % (key, ", ".join(valid_tpc_role))
+        )
 
 
 @authorize(CONFIG)
@@ -68,8 +63,15 @@ def set_se_config():
                 if not se_info:
                     se_info = Se(storage=storage)
                 for key, value in se_info_new.items():
-                    value = validate_type(Se, key, value)
-                    setattr(se_info, key, value)
+                    if value is not None:  # Only proceed if value is not None
+                        value = validate_type(
+                            Se, key, value
+                        )  # Validate data type for DB
+                        if key == "tpc_support":
+                            _validate_tpc_support(
+                                key, value
+                            )  # Check tpc_support has a valid value
+                        setattr(se_info, key, value)
 
                 audit_configuration(
                     "set-se-config", "Set config %s: %s" % (storage, json.dumps(cfg))
@@ -144,10 +146,7 @@ def get_se_config():
             "tpc_support",
             "tape_endpoint",
         ]:
-            if attr == "tpc_support":
-                se_info[attr] = _translate_tcp_mode(getattr(opt, attr))
-            else:
-                se_info[attr] = getattr(opt, attr)
+            se_info[attr] = getattr(opt, attr)
         config["se_info"] = se_info
         response[se] = config
 

@@ -63,12 +63,12 @@
 									<input id="tape_endpoint_hidden" class="form-control" type="number" name="tape_endpoint" value="{{se_info.tape_endpoint}}" min="0" max="1"/>
 								</div>
 								<div class="from-group">
-									<label>TCP Support</label>
+									<label>Third-Party-Copy Support</label>
 									<select id="tpc_support_hidden" name="tpc_support" class="form-control">
-										<option value="test" hidden selected>{{se_info.tpc_support}}</option>
+										<option value="{{se_info.tpc_support}}" hidden selected>{{translateTPCSupport se_info.tpc_support}}</option>
 										<option value="FULL">Full support</option>
-										<option value="PULL">Pull only</option>
-										<option value="PUSH">Push only</option>
+										<option value="PULL">Pull mode only</option>
+										<option value="PUSH">Push mode only</option>
 										<option value="NONE">Not supported</option>
 									</select>
 								</div>
@@ -220,15 +220,15 @@
 								<input class="form-control" name="tape_endpoint" id="tape_endpoint" type="number" min="0" max="1"/>
 							</div>
 							<div class="form-group">
-								<label for="tpc_support">TPC support <i
+								<label for="tpc_support">Third-Party-Copy Support <i
 										class="glyphicon glyphicon-question-sign"
 										title="Configure supported Third-Party-Copy modes. If not set defaults to full TPC support"></i>
 								</label>
 								<select id="tpc_support" name="tpc_support" class="form-control">
 									<option value="" disabled selected>Select supported mode</option>
 									<option value="FULL">Full support</option>
-									<option value="PULL">Pull only</option>
-									<option value="PUSH">Push only</option>
+									<option value="PULL">Pull mode only</option>
+									<option value="PUSH">Push mode only</option>
 									<option value="NONE">Not supported</option>
 								</select>
 							</div>

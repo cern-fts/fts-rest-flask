@@ -303,3 +303,33 @@ class TestConfigSe(TestController):
 
         se = Session.query(Se).filter(Se.storage == "test.cern.ch").all()
         self.assertEqual(0, len(se))
+
+    def test_invalid_tpc_role(self):
+        """
+        Configure SE with invalid TPC role
+        """
+        config = {
+            "test.cern.ch": {
+                "se_info": {
+                    "ipv6": 1,
+                    "outbound_max_active": 88,
+                    "inbound_max_active": 11,
+                    "inbound_max_throughput": 10,
+                    "tpc_support": "whatever",
+                },
+            }
+        }
+        self.app.post_json("/config/se", params=config, status=400)
+
+        audits = Session.query(ConfigAudit).all()
+        self.assertEqual(0, len(audits))
+
+        ops = (
+            Session.query(OperationConfig)
+            .filter(OperationConfig.host == "test.cern.ch")
+            .all()
+        )
+        self.assertEqual(0, len(ops))
+
+        se = Session.query(Se).filter(Se.storage == "test.cern.ch").all()
+        self.assertEqual(0, len(se))
