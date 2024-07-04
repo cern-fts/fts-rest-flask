@@ -20,7 +20,7 @@ ARG dmcrepo=https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo
 ADD $dmcrepo /etc/yum.repos.d/dmc.repo
 
 # Add FTS repo from build artifacts stored in the alma9 directory
-ADD server_rpm_alma9 /repo/fts
+ADD server_rpm /repo/fts
 RUN createrepo /repo/fts
 RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
 RUN dnf clean metadata

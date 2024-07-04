@@ -12,11 +12,6 @@ rm -rf build/client/
 
 # Install build dependencies
 cd build/client/
-
-if [[ -f /usr/bin/dnf ]]; then
-  dnf builddep -y SRPMS/*
-else
-  yum-builddep -y SRPMS/*
-fi
+dnf builddep -y SRPMS/*
 
 rpmbuild --rebuild SRPMS/* --define "_topdir ${PWD}"

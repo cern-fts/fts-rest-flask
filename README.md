@@ -10,6 +10,10 @@ The project consists of an Apache module running Python3 + Flask.
 It is also a direct continuation of the former [fts-rest][1], where the migration 
 decision and evaluation can be seen [here][2].
 
+The officially supported platform is Alma9. The server part is provided via RPMs
+for the official platform. The client is provided via EPEL for multiple platforms,
+as well as via [PyPi/fts3][3].
+
 ## Installation
 
 The project should be installed via RPMs, provided via the FTS repository.
@@ -17,22 +21,22 @@ The project should be installed via RPMs, provided via the FTS repository.
 ### Installing the client
 
 Make sure to have the FTS repositories enabled:
-- [production][3] repository: official RPMs deemed ready for production
-- [development][4] repository: RPMs built on the latest `develop` branch commit
+- [production][4] repository: official RPMs deemed ready for production
+- [development][5] repository: RPMs built on the latest `develop` branch commit
 
 #### Installing the client:
 ```shell
-$ yum install -y fts-rest-client
+$ dnf install -y fts-rest-client
 ```
 
 #### Installing the server
 
-The project needs `mod_wsgi` built for Python 3.6, which on Centos 7 is provided by the `rh-python36-mod_wsgi` package.
-All other requirements are specified in the spec files.
+The project relies on `mod_wsgi` built for Python 3.9. Some of the dependencies
+require the `crb` (CodeReady Linux Builder) repository to be enabled.
+All requirements are specified and should be brought-in via the spec file.
 ```shell
-$ yum-config-manager --enable centos-sclo-rh
-$ yum install -y rh-python36-mod_wsgi
-$ yum install -y fts-rest-server
+$ dnf-config-manager --enable crb
+$ dnf install -y fts-rest-server
 ```
 
 Configuring the server is done via the following two configuration files:
@@ -41,14 +45,14 @@ Configuring the server is done via the following two configuration files:
 
 ## Development
 
-The project is tracked using JIRA, under the [FTS Project][5] (requires CERN log-in). 
+The project is tracked using JIRA, under the [FTS Project][6] (requires CERN log-in). 
 Soon the project will be mirrored on GitHub, where issues and pull requests are also accepted (and encouraged!). 
 
 For development purposes, using a virtual environment is encouraged.
 
 ### Git Workflow
 
-This project follows a simplified [GitFlow][6] model. The main branch is the `develop` branch,
+This project follows a simplified [GitFlow][7] model. The main branch is the `develop` branch,
 with `master` being reserved only for tagged released.
 
 Feature branches are developed separately and merged into the `develop` branch.
@@ -71,7 +75,7 @@ When taking on a task, the following workflow model should be followed:
 
 ### Continuous Integration
 
-The project uses Gitlab-CI for CI/CD. The [pipeline][7] runs for every push, in every branch:
+The project uses Gitlab-CI for CI/CD. The [pipeline][8] runs for every push, in every branch:
 - black: checks code must be formatted with `black`
 - pylint: checks for syntax errors (runs for every supported Python3 version)
   - If you are sure that pylint is mistaken, add `# pylint: skip-file` at the beginning of the relevant file
@@ -83,7 +87,7 @@ The project uses Gitlab-CI for CI/CD. The [pipeline][7] runs for every push, in 
 - deploy: upload client and server RPM to the FTS testing repository
 
 Merge requests will proceed only if the pipeline succeeds.  
-In case of emergency the pipeline can be [skipped][8].
+In case of emergency the pipeline can be [skipped][9].
 
 The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the `.gitlab-ci` directory and the 
 image is hosted in the container registry of this project. The image contains the pre-installed Python environment 
@@ -108,7 +112,7 @@ $ ./precommit_install.sh
 
 ### Python dependencies
 
-The project uses [pip-tools][9] to manage dependencies:
+The project uses [pip-tools][10] to manage dependencies:
 - `requirements.in`: list of dependencies for the production app
 - `dev-requirements.in`: extra list of packages used for development (e.g. static code analysis)
 
@@ -190,13 +194,11 @@ $ tree "build/server/RPMS"
 
 [1]: https://gitlab.cern.ch/fts/fts-rest
 [2]: https://its.cern.ch/jira/browse/FTS-1496
-[3]: https://fts-repo.web.cern.ch/fts-repo/el7/x86_64/
-[4]: https://fts-repo.web.cern.ch/fts-repo/testing/el7/x86_64/
-[5]: https://its.cern.ch/jira/projects/FTS/issues
-[6]: https://nvie.com/posts/a-successful-git-branching-model/
-[7]: https://gitlab.cern.ch/fts/fts-rest-flask/-/pipelines
-[8]: https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs
-[9]: https://github.com/jazzband/pip-tools
-
-[10]: https://fts3-docs.web.cern.ch/fts3-docs/fts-rest/docs/index.html
-[11]: https://www.apache.org/licenses/LICENSE-2.0
+[3]: https://pypi.org/project/fts3/
+[4]: https://fts-repo.web.cern.ch/fts-repo/el9/x86_64/
+[5]: https://fts-repo.web.cern.ch/fts-repo/testing/el9/x86_64/
+[6]: https://its.cern.ch/jira/projects/FTS/issues
+[7]: https://nvie.com/posts/a-successful-git-branching-model/
+[8]: https://gitlab.cern.ch/fts/fts-rest-flask/-/pipelines
+[9]: https://docs.gitlab.com/ee/ci/yaml/#skipping-jobs
+[10]: https://github.com/jazzband/pip-tools

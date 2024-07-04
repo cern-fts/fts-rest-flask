@@ -119,19 +119,11 @@ client_wheel_sdist:
     paths:
       - dist/
 
-client_rpm_cc7:
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  <<: *client-build-template_definition
-
-client_rpm_alma9:
+client_rpm:
   image: gitlab-registry.cern.ch/linuxsupport/alma9-base
   <<: *client-build-template_definition
 
-server_rpm_cc7:
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  <<: *server-build-template_definition
-
-server_rpm_alma9:
+server_rpm:
   image: gitlab-registry.cern.ch/linuxsupport/alma9-base
   <<: *server-build-template_definition
 
@@ -155,47 +147,25 @@ server_rpm_alma9:
 # Docker build jobs
 #--------------------------
 
-docker_build_cc7:
-  <<: *kaniko_build-template
-  variables:
-    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el7.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:latest-cc7
-    IMAGE: Dockerfile-ci-cc7
-  needs:
-    - job: server_rpm_cc7
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "develop"
-
-docker_build_alma9:
+docker_latest:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-devel-el9.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:latest-alma9
-    IMAGE: Dockerfile-ci-alma9
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:latest
+    IMAGE: Dockerfile-ci
   needs:
-    - job: server_rpm_alma9
+    - job: server_rpm
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
 
-docker_tag_cc7:
-  <<: *kaniko_build-template
-  variables:
-    DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el7.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}-cc7
-    IMAGE: Dockerfile-ci-cc7
-  needs:
-    - job: server_rpm_cc7
-  rules:
-    - if: $CI_COMMIT_TAG != null
-
-docker_tag_alma9:
+docker_tag:
   <<: *kaniko_build-template
   variables:
     DMC_REPO: https://dmc-repo.web.cern.ch/dmc-repo/dmc-rc-el9.repo
-    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}-alma9
-    IMAGE: Dockerfile-ci-alma9
+    DESTINATION: gitlab-registry.cern.ch/fts/fts-rest-flask:${CI_COMMIT_TAG}
+    IMAGE: Dockerfile-ci
   needs:
-    - job: server_rpm_alma9
+    - job: server_rpm
   rules:
     - if: $CI_COMMIT_TAG != null
 
@@ -262,26 +232,13 @@ functional_tests38:
 functional_tests39:
   <<: *functional_tests_definition
 
-server_rpm_cc7-test:
-  before_script:
-    - yum install -y dnf
-  <<: *rpm_tests_definition
-  image: gitlab-registry.cern.ch/linuxsupport/cc7-base
-  dependencies:
-    - server_rpm_cc7
-  needs:
-    - server_rpm_cc7
-  variables:
-    FTS3TESTCONFIG: /usr/lib/python3.6/site-packages/fts3rest/tests/fts3testconfig
-    FTS3TESTPATH: /usr/lib/python3.6/site-packages/fts3rest/tests/functional/
-
-server_rpm_alma9-test:
+server_rpm-test:
   <<: *rpm_tests_definition
   image: gitlab-registry.cern.ch/linuxsupport/alma9-base
   dependencies:
-    - server_rpm_alma9
+    - server_rpm
   needs:
-    - server_rpm_alma9
+    - server_rpm
   variables:
     FTS3TESTCONFIG: /usr/lib/python3.9/site-packages/fts3rest/tests/fts3testconfig
     FTS3TESTPATH: /usr/lib/python3.9/site-packages/fts3rest/tests/functional/
@@ -294,15 +251,13 @@ server_rpm_alma9-test:
   stage: publish
   image: gitlab-registry.cern.ch/eos/gitlab-eos/alma9:latest
   dependencies:
-    - client_rpm_cc7
-    - server_rpm_cc7
-    - client_rpm_alma9
-    - server_rpm_alma9
+    - client_rpm
+    - server_rpm
   script:
     - automount
     - cat "$repo_passwd" | kinit "$repo_user"
     - |
-      for package in server_rpm_cc7 client_rpm_cc7 server_rpm_alma9 client_rpm_alma9; do
+      for package in client_rpm server_rpm ; do
         packaging/fts-repo-manager.py --action add --base /eos/workspace/f/fts/repo/www/repos/ --arch-dir x86_64 --ref ${CI_COMMIT_REF_NAME} --packages ${package}/RPMS/*/*.rpm ${package}/SRPMS/*
       done
   tags:
