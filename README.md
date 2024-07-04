@@ -35,7 +35,7 @@ The project relies on `mod_wsgi` built for Python 3.9. Some of the dependencies
 require the `crb` (CodeReady Linux Builder) repository to be enabled.
 All requirements are specified and should be brought-in via the spec file.
 ```shell
-$ dnf-config-manager --enable crb
+$ dnf config-manager --enable crb
 $ dnf install -y fts-rest-server
 ```
 
@@ -92,7 +92,7 @@ In case of emergency the pipeline can be [skipped][9].
 The pipeline runs in a container from the image tagged as `ci`. The dockerfile is in the `.gitlab-ci` directory and the 
 image is hosted in the container registry of this project. The image contains the pre-installed Python environment 
 in order to speed up CI execution. When new environment is desired (such as new or upgraded dependencies), 
-a new image must be created via the `.gitlab-ci/docker/docker_push.sh` script.
+a new image must be created via the `.gitlab-ci/docker/create-ci-image.sh` script.
 
 #### During development
 
