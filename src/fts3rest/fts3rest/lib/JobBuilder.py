@@ -69,6 +69,8 @@ class JobBuilder:
             param_list.append("buffersize:%d" % int(self.params["buffer_size"]))
         if self.params.get("strict_copy", False):
             param_list.append("strict")
+        if self.params.get("disable_cleanup", False):
+            param_list.append("disable-cleanup")
         if self.params.get("ipv4", False):
             param_list.append("ipv4")
         elif self.params.get("ipv6", False):

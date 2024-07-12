@@ -69,6 +69,10 @@ paramSchema = {
             "type": ["boolean", "null"],
             "title": "Disable all checks, just copy the file",
         },
+        "disable_cleanup": {
+            "type": ["boolean", "null"],
+            "title": "Enable/disable the copy clean-up happening when a transfer fails",
+        },
         "priority": {"type": ["integer", "null"], "title": "Job priority"},
         "ipv4": {
             "type": ["boolean", "null"],
