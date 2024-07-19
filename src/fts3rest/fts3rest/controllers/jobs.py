@@ -936,39 +936,6 @@ def decode_token(raw):
     return token
 
 
-def _get_link_counts(files):
-    result = {}
-    for file in files:
-        link = (file["source_se"], file["dest_se"])
-        result[link] = 1 if link not in result else result[link] + 1
-    return result
-
-
-def _inc_t_link_counter(dbconn, source_se, dest_se, counter_col, delta):
-    sql = f"""
-        INSERT INTO t_link (
-            source_se,
-            dest_se,
-            {counter_col}
-        ) VALUES (
-            %(source_se)s,
-            %(dest_se)s,
-            %(delta)s
-        )
-        ON CONFLICT (source_se, dest_se) DO
-            UPDATE SET {counter_col} =
-                t_link.{counter_col} + EXCLUDED.{counter_col}
-    """  # nosec
-    params = {"source_se": source_se, "dest_se": dest_se, "delta": delta}
-    dbconn.execute(sql, params)
-
-
-def _update_link(dbconn, auth_method, linkcounts):
-    for (source_se, dest_se), count in linkcounts.items():
-        counter_col = "nb_token_prep" if auth_method == "oauth2" else "nb_submitted"
-        _inc_t_link_counter(dbconn, source_se, dest_se, counter_col, count)
-
-
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -1080,9 +1047,6 @@ def submit():
 
         start_insert_files = time.perf_counter()
         Session.execute(File.__table__.insert(), populated.files)
-        if current_app.config["fts3.DbType"] == "postgresql":
-            linkcounts = _get_link_counts(populated.files)
-            _update_link(Session.connection(), user.method, linkcounts)
         log.info(
             "Inserted files into database: job_id={} db_secs={}".format(
                 populated.job_id, str(time.perf_counter() - start_insert_files)
