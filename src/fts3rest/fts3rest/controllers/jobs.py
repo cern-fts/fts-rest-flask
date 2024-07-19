@@ -26,7 +26,14 @@ import logging
 import functools
 import time
 
-from fts3rest.model import Job, File, JobActiveStates, FileActiveStates, Token
+from fts3rest.model import (
+    Job,
+    File,
+    JobActiveStates,
+    FileActiveStates,
+    Token,
+    PostgresFile,
+)
 from fts3rest.model import DataManagement, DataManagementActiveStates
 from fts3rest.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
@@ -936,6 +943,135 @@ def decode_token(raw):
     return token
 
 
+def _get_queue_counts(files):
+    result = {}
+    for file in files:
+        key = (
+            file["vo_name"],
+            file["source_se"],
+            file["dest_se"],
+            file["activity"],
+            file["file_state"].upper(),  # DB file_state values are uppercase
+        )
+        result[key] = 1 if key not in result else result[key] + 1
+    return result
+
+
+def _inc_t_queue_counter(
+    dbconn, vo_name, source_se, dest_se, activity, file_state, delta
+):
+    # Assume for now the t_queue row exists
+    update_sql = """
+        UPDATE
+            t_queue
+        SET
+            nb_files = nb_files + %(delta)s
+        WHERE
+            vo_name = %(vo_name)s
+        AND
+            source_se = %(source_se)s
+        AND
+            dest_se = %(dest_se)s
+        AND
+            activity = %(activity)s
+        AND
+            file_state = %(file_state)s
+        RETURNING
+            queue_id
+    """
+    update_params = {
+        "delta": delta,
+        "vo_name": vo_name,
+        "source_se": source_se,
+        "dest_se": dest_se,
+        "activity": activity,
+        "file_state": file_state,
+    }
+    rows = dbconn.execute(update_sql, update_params).fetchall()
+    if len(rows) > 0:
+        queue_id = rows[0][0]
+        return queue_id
+
+    # The t_queue row did not exist so create one
+    insert_sql = """
+        INSERT INTO t_queue (
+            vo_name,
+            source_se,
+            dest_se,
+            activity,
+            file_state,
+            nb_files
+        ) VALUES (
+            %(vo_name)s,
+            %(source_se)s,
+            %(dest_se)s,
+            %(activity)s,
+            %(file_state)s,
+            %(delta)s
+        )
+        ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO
+            UPDATE SET nb_files =
+                t_queue.nb_files + EXCLUDED.nb_files
+        RETURNING
+            queue_id
+    """
+    insert_params = {
+        "vo_name": vo_name,
+        "source_se": source_se,
+        "dest_se": dest_se,
+        "activity": activity,
+        "file_state": file_state,
+        "delta": delta,
+    }
+    rows = dbconn.execute(insert_sql, insert_params).fetchall()
+    if len(rows) != 1:
+        raise Exception(
+            f"Failed to increment t_queue counter: vo_name={vo_name} source_se={source_se} dest_se={dest_se} file_state={file_state} delta={delta}"
+        )
+    queue_id = rows[0][0]
+    return queue_id
+
+
+def _inc_t_queue_counters(dbconn, auth_method, queue_counts):
+    result = {}
+    counter_col = "nb_token_prep" if auth_method == "oauth2" else "nb_submitted"
+
+    for (
+        vo_name,
+        source_se,
+        dest_se,
+        activity,
+        file_state,
+    ), count in queue_counts.items():
+        queue_id = _inc_t_queue_counter(
+            dbconn=dbconn,
+            vo_name=vo_name,
+            source_se=source_se,
+            dest_se=dest_se,
+            activity=activity,
+            file_state=file_state,
+            delta=count,
+        )
+        composite_queue_id = (vo_name, source_se, dest_se, activity)
+        result[composite_queue_id] = queue_id
+    return result
+
+
+def _create_postgres_files(mysql_files, composite_queue_id_to_id):
+    postgres_files = []
+    for mysql_file in mysql_files:
+        postgres_file = mysql_file.copy()
+        composite_queue_id = (
+            mysql_file["vo_name"],
+            mysql_file["source_se"],
+            mysql_file["dest_se"],
+            mysql_file["activity"],
+        )
+        postgres_file["queue_id"] = composite_queue_id_to_id[composite_queue_id]
+        postgres_files.append(postgres_file)
+    return postgres_files
+
+
 @authorize(TRANSFER)
 @profile_request
 @jsonify
@@ -1046,7 +1182,17 @@ def submit():
             raise Conflict("The sid provided by the user is duplicated")
 
         start_insert_files = time.perf_counter()
-        Session.execute(File.__table__.insert(), populated.files)
+        if current_app.config["fts3.DbType"] == "mysql":
+            Session.execute(File.__table__.insert(), populated.files)
+        else:
+            queue_counts = _get_queue_counts(populated.files)
+            composite_queue_id_to_id = _inc_t_queue_counters(
+                Session.connection(), user.method, queue_counts
+            )
+            postgres_files = _create_postgres_files(
+                populated.files, composite_queue_id_to_id
+            )
+            Session.execute(PostgresFile.__table__.insert(), postgres_files)
         log.info(
             "Inserted files into database: job_id={} db_secs={}".format(
                 populated.job_id, str(time.perf_counter() - start_insert_files)

@@ -111,6 +111,10 @@ class File(Base):
         return str(self.file_id)
 
 
+class PostgresFile(File):
+    queue_id = Column(Integer)
+
+
 class ArchivedFile(Base):
     __tablename__ = "t_file_backup"
 
