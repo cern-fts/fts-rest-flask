@@ -235,6 +235,9 @@ class JobBuilder:
                     name_hint="Archive metadata",
                     size_limit=app.config["fts3.ArchiveMetadataSizeLimit"],
                 )
+            # Account for the fact file_dict may contain an activity set to None
+            if f["activity"] is None:
+                f["activity"] = "default"
             self.files.append(f)
 
     def _apply_selection_strategy(self):
