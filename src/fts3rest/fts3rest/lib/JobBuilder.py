@@ -657,6 +657,8 @@ class JobBuilder:
                     )
 
         overwrite_flag = self._validate_overwrite_flag()
+        if overwrite_flag in ["M", "Q"] and job_type != "H":
+            raise BadRequest("'overwrite-hop' requires multihop job submission")
         if overwrite_flag in ["D", "Q"]:
             self._validate_overwrite_disk_destination(job_type, files_list)
 
