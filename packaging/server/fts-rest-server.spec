@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.13.0
+Version:        3.13.2
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -14,7 +14,7 @@ Requires:       python3
 Requires:       httpd
 Requires:       httpd-devel
 Requires:       gridsite
-Requires:       gfal2-python3
+Requires:       python3-gfal2
 Requires:       gfal2-plugin-mock
 Requires:       python3-mod_wsgi
 Requires:       python%{python3_pkgversion}-m2crypto
@@ -116,6 +116,10 @@ fi
 %files selinux
 
 %changelog
+* Thu Aug 01 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.2
+- "Overwrite-when-only-on-disk" feature
+- Drop CC7 build
+
 * Thu May 30 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.0
 - Alma9 release
 
