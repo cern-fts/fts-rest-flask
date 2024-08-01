@@ -63,6 +63,7 @@ class Se(Base):
     outbound_max_active = Column(Integer)
     outbound_max_throughput = Column(Float)
     tpc_support = Column(String(10))
+    overwrite_disk_enabled = Column(Integer)
 
     def __str__(self):
         return self.storage

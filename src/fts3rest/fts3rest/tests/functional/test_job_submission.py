@@ -33,7 +33,7 @@ class TestJobSubmission(TestController):
 
         self.assertEqual(job.source_se, "root://source.es")
         self.assertEqual(job.dest_se, "root://dest.ch")
-        self.assertEqual(job.overwrite_flag, True)
+        self.assertEqual(job.overwrite_flag, "Y")
         self.assertEqual(job.verify_checksum, "b")
         self.assertEqual(job.job_type, "N")
         self.assertEqual(job.priority, 3)
@@ -1262,3 +1262,280 @@ class TestJobSubmission(TestController):
         ).json["message"]
         self.assertIn("Must be an integer", message)
         self.assertIn("65", message)
+
+    def test_submit_overwrite_all(self):
+        """
+        Submit jobs with all "overwrite" values
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                }
+            ]
+        }
+
+        overwrite_submissions = [
+            ({"overwrite": True}, "Y"),
+            ({"overwrite_on_retry": True}, "R"),
+            ({"overwrite_hop": True, "multihop": True}, "M"),
+            ({"overwrite_when_only_on_disk": True, "archive_timeout": 86400}, "D"),
+            (
+                {
+                    "overwrite_when_only_on_disk": True,
+                    "overwrite_hop": True,
+                    "archive_timeout": 86400,
+                    "multihop": True,
+                },
+                "Q",
+            ),
+        ]
+
+        for submission in overwrite_submissions:
+            job["params"] = submission[0]
+
+            job_id = self.app.put(
+                url="/jobs",
+                content_type="application/json",
+                params=json.dumps(job),
+                status=200,
+            ).json["job_id"]
+
+            # Make sure it was committed to the DB
+            self.assertGreater(len(job_id), 0)
+
+            _job = Session.query(Job).get(job_id)
+            self.assertEqual(_job.overwrite_flag, submission[1])
+
+    def test_submit_overwrite_multiple_flags_invalid(self):
+        """
+        Submit jobs with incompatible overwrite flags
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                }
+            ]
+        }
+
+        overwrite_pairs = [
+            # Combinations of 2 flags
+            {"overwrite": True, "overwrite_on_retry": True},
+            {"overwrite": True, "overwrite_when_only_on_disk": True},
+            {"overwrite": True, "overwrite_hop": True},
+            {"overwrite_on_retry": True, "overwrite_when_only_on_disk": True},
+            {"overwrite_on_retry": True, "overwrite_hop": True},
+            # Combinations of 3 flags
+            {
+                "overwrite": True,
+                "overwrite_on_retry": True,
+                "overwrite_when_only_on_disk": True,
+            },
+            {
+                "overwrite": True,
+                "overwrite_on_retry": True,
+                "overwrite_hop": True,
+            },
+            {
+                "overwrite": True,
+                "overwrite_when_only_on_disk": True,
+                "overwrite_hop": True,
+            },
+            {
+                "overwrite_on_retry": True,
+                "overwrite_when_only_on_disk": True,
+                "overwrite_hop": True,
+            },
+            # Combination of all 4 flags
+            {
+                "overwrite": True,
+                "overwrite_on_retry": True,
+                "overwrite_when_only_on_disk": True,
+                "overwrite_hop": True,
+            },
+        ]
+
+        for overwrite_pair in overwrite_pairs:
+            job["params"] = overwrite_pair
+
+            message = self.app.put(
+                url="/jobs",
+                content_type="application/json",
+                params=json.dumps(job),
+                status=400,
+            ).json["message"]
+            self.assertIn("incompatible", message.lower())
+
+    def test_submit_overwrite_disk_invalid_no_archive_timeout(self):
+        """
+        Submit "overwrite-when-only-on-disk" job without "archive-timeout" parameter
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                }
+            ],
+            "params": {"overwrite_when_only_on_disk": True},
+        }
+
+        message = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        ).json["message"]
+        self.assertIn("archive-timeout", message)
+
+    def test_submit_overwrite_disk_invalid_non_http_destination(self):
+        """
+        Submit "overwrite-when-only-on-disk" job for non-HTTP destination
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                },
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": ["root://dest.ch/file"],
+                },
+            ],
+            "params": {
+                "overwrite_when_only_on_disk": True,
+                "archive_timeout": 86400,
+            },
+        }
+
+        message = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        ).json["message"]
+        self.assertIn("HTTPs endpoint", message)
+
+    def test_submit_overwrite_disk_multihop_valid(self):
+        """
+        Submit "overwrite-when-only-on-disk" job for multihop with valid final HTTP destination
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["root://source.ch/file"],
+                    "destinations": ["root://dest.ch/file"],
+                },
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": ["davs://dest.ch/file"],
+                },
+            ],
+            "params": {
+                "multihop": True,
+                "overwrite_hop": True,
+                "overwrite_when_only_on_disk": True,
+                "archive_timeout": 86400,
+            },
+        }
+
+        job_id = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        # Make sure it was committed to the DB
+        self.assertGreater(len(job_id), 0)
+
+        _job = Session.query(Job).get(job_id)
+        self.assertEqual(_job.overwrite_flag, "Q")
+
+    def test_submit_overwrite_hop_multihop_constraint(self):
+        """
+        Submit "overwrite-hop" option for non-multihop job
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["root://source.ch/file"],
+                    "destinations": ["root://intermediary.ch/file"],
+                },
+                {
+                    "sources": ["https://intermediary.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                },
+            ]
+        }
+
+        overwrite_invalid = [
+            {"overwrite_hop": True},
+            {
+                "overwrite_hop": True,
+                "overwrite_when_only_on_disk": True,
+                "archive_timeout": 86400,
+            },
+        ]
+
+        overwrite_valid = [
+            ({"overwrite_hop": True, "multihop": True}, "M"),
+            (
+                {
+                    "overwrite_hop": True,
+                    "overwrite_when_only_on_disk": True,
+                    "archive_timeout": 86400,
+                    "multihop": True,
+                },
+                "Q",
+            ),
+        ]
+
+        for overwrite_submission in overwrite_invalid:
+            job["params"] = overwrite_submission
+
+            message = self.app.put(
+                url="/jobs",
+                content_type="application/json",
+                params=json.dumps(job),
+                status=400,
+            ).json["message"]
+            self.assertIn("requires multihop job", message)
+
+        for overwrite_submission in overwrite_valid:
+            job["params"] = overwrite_submission[0]
+
+            job_id = self.app.put(
+                url="/jobs",
+                content_type="application/json",
+                params=json.dumps(job),
+                status=200,
+            ).json["job_id"]
+
+            # Make sure it was committed to the DB
+            self.assertGreater(len(job_id), 0)
+
+            _job = Session.query(Job).get(job_id)
+            self.assertEqual(_job.overwrite_flag, overwrite_submission[1])

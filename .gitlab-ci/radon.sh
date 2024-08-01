@@ -34,7 +34,7 @@ then
     exit 1
 fi
 
-radon_output="$(radon mi --min B ./src)"
+radon_output="$(radon mi --min C ./src)"
 if [ $? -ne 0 ]
 then 
     FAIL "radon exited with an error"

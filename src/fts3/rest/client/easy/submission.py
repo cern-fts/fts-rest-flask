@@ -151,6 +151,7 @@ def new_job(
     reuse=None,
     overwrite=False,
     overwrite_on_retry=False,
+    overwrite_when_only_on_disk=False,
     overwrite_hop=False,
     multihop=False,
     source_spacetoken=None,
@@ -177,29 +178,30 @@ def new_job(
     Creates a new dictionary representing a job
 
     Args:
-        transfers:              Initial list of transfers
-        deletion:               Delete files
-        verify_checksum:        Enable checksum verification: source, destination, both or none
-        reuse:                  Enable reuse (all transfers are handled by the same process)
-        overwrite:              Overwrite the destinations if exist
-        overwrite_on_retry:     Enable overwrite files only during FTS retries
-        overwrite_hop:          Overwrite all files expect final destination in a multihop job
-        multihop:               Treat the transfer as a multihop transfer
-        source_spacetoken:      Source space token
-        destination_spacetoken: Destination space token
-        bring_online:           Bring online timeout
-        dst_file_report:        Report on the destination tape file if it already exists and overwrite is off
-        archive_timeout:        Archive timeout
-        copy_pin_lifetime:      Pin lifetime
-        retry:                  Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
-        metadata:               Metadata to bind to the job
-        priority:               Job priority
-        max_time_in_queue:      Maximum number
-        id_generator:           Job id generator algorithm
-        sid:                    Specific id given by the client
-        s3alternate:            Use S3 alternate url schema
-        nostreams:              Number of streams
-        buffer_size:            Tcp buffer size (in bytes) that will be used for the given transfer-job
+        transfers:                   Initial list of transfers
+        deletion:                    Delete files
+        verify_checksum:             Enable checksum verification: source, destination, both or none
+        reuse:                       Enable reuse (all transfers are handled by the same process)
+        overwrite:                   Overwrite the destinations if exist
+        overwrite_on_retry:          Enable overwrite files only during FTS retries
+        overwrite_when_only_on_disk: Overwrite file when file locality is only disk
+        overwrite_hop:               Overwrite all files expect final destination in a multihop job
+        multihop:                    Treat the transfer as a multihop transfer
+        source_spacetoken:           Source space token
+        destination_spacetoken:      Destination space token
+        bring_online:                Bring online timeout
+        dst_file_report:             Report on the destination tape file if it already exists and overwrite is off
+        archive_timeout:             Archive timeout
+        copy_pin_lifetime:           Pin lifetime
+        retry:                       Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
+        metadata:                    Metadata to bind to the job
+        priority:                    Job priority
+        max_time_in_queue:           Maximum number
+        id_generator:                Job id generator algorithm
+        sid:                         Specific id given by the client
+        s3alternate:                 Use S3 alternate URL schema
+        nostreams:                   Number of streams
+        buffer_size:                 TCP buffer size (in bytes) that will be used for the given transfer-job
 
     Returns:
         An initialized dictionary representing a job
@@ -215,9 +217,21 @@ def new_job(
                 "Bad request: verify_checksum does not contain a valid value"
             )
 
-    if sum([overwrite, overwrite_on_retry, overwrite_hop]) > 1:
+    overwrite_flags_count = sum(
+        [overwrite, overwrite_on_retry, overwrite_when_only_on_disk, overwrite_hop]
+    )
+    # "overwrite_hop" and "overwrite_when_only_on_disk" allowed to work together
+    if overwrite_flags_count > 1 and not (
+        overwrite_flags_count == 2 and overwrite_hop and overwrite_when_only_on_disk
+    ):
         raise ClientError(
-            "Bad request: Multiple overwrite flags can not be used at the same time"
+            "Bad request: Incompatible overwrite flags used at the same time"
+        )
+    if overwrite_when_only_on_disk and (
+        archive_timeout is None or archive_timeout <= 0
+    ):
+        raise ClientError(
+            "Bad request: 'overwrite_when_only_on_disk' requires 'archive_timeout' to be set"
         )
 
     # Deprecate the "spacetoken" field (will be removed in FTS v3.14)
@@ -241,6 +255,7 @@ def new_job(
         source_spacetoken=source_spacetoken,
         overwrite=overwrite,
         overwrite_on_retry=overwrite_on_retry,
+        overwrite_when_only_on_disk=overwrite_when_only_on_disk,
         overwrite_hop=overwrite_hop,
         multihop=multihop,
         retry=retry,

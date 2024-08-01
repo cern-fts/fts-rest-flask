@@ -58,14 +58,17 @@
 									<label>Skip Eviction</label>
 									<input id="skip_eviction_hidden" class="form-control" type="number" name="skip_eviction" value="{{se_info.skip_eviction}}" min="0" max="1"/>
 								</div>
+								<div class="form-group">
+									<label>"Overwrite-when-only-on-disk" Feature Enabled</label>
+									<input id="overwrite_disk_enabled_hidden" class="form-control" type="number" name="overwrite_disk_enabled" value="{{se_info.overwrite_disk_enabled}}" min="0" max="1"/>
+								</div>
 								<div class="from-group">
-									<label>TCP Support</label>
-
+									<label>Third-Party-Copy Support</label>
 									<select id="tpc_support_hidden" name="tpc_support" class="form-control">
-										<option value="test" hidden selected>{{se_info.tpc_support}}</option>
+										<option value="{{se_info.tpc_support}}" hidden selected>{{translateTPCSupport se_info.tpc_support}}</option>
 										<option value="FULL">Full support</option>
-										<option value="PULL">Pull only</option>
-										<option value="PUSH">Push only</option>
+										<option value="PULL">Pull mode only</option>
+										<option value="PUSH">Push mode only</option>
 										<option value="NONE">Not supported</option>
 									</select>
 								</div>
@@ -191,7 +194,7 @@
 									<input class="form-control" name="ipv6" id="ipv6" type="number" min="0" max="1"/> 
 							</div>
 							<div class="form-group">
-								<label for="udt"> UDT <i
+								<label for="udt">UDT<i
 									class="glyphicon glyphicon-question-sign"
 									title="If set, FTS3 will enable UDT for this endpoint, but will fallback to non-UDT on error"></i>
 								</label> 
@@ -203,22 +206,29 @@
 								type="number" min="0" max="3"/>
 							</div>
 							<div class="form-group">
-								<label for="skip_eviction"> Eviction <i
+								<label for="skip_eviction">Eviction <i
 									class="glyphicon glyphicon-question-sign"
 									title="If set, after a successful transfer, FTS3 will not evict the source file from the endpoint."></i>
 								</label> 
 								<input class="form-control" name="skip_eviction" id="skip_eviction" type="number" min="0" max="1"/>
 							</div>
 							<div class="form-group">
-								<label for="tpc_support">TPC support <i
+								<label for="overwrite_disk_enabled">Enable "Overwrite-when-only-on-disk" Feature <i
+										class="glyphicon glyphicon-question-sign"
+										title="Configure FTS to support the 'overwrite-when-only-on-disk' feature for this (tape) storage endpoint"></i>
+								</label>
+								<input class="form-control" name="overwrite_disk_enabled" id="overwrite_disk_enabled" type="number" min="0" max="1"/>
+							</div>
+							<div class="form-group">
+								<label for="tpc_support">Third-Party-Copy Support <i
 										class="glyphicon glyphicon-question-sign"
 										title="Configure supported Third-Party-Copy modes. If not set defaults to full TPC support"></i>
 								</label>
 								<select id="tpc_support" name="tpc_support" class="form-control">
 									<option value="" disabled selected>Select supported mode</option>
 									<option value="FULL">Full support</option>
-									<option value="PULL">Pull only</option>
-									<option value="PUSH">Push only</option>
+									<option value="PULL">Pull mode only</option>
+									<option value="PUSH">Push mode only</option>
 									<option value="NONE">Not supported</option>
 								</select>
 							</div>

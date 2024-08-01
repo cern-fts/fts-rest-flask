@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.13.0
+Version:        3.13.2
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -14,61 +14,28 @@ Requires:       python3
 Requires:       httpd
 Requires:       httpd-devel
 Requires:       gridsite
-Requires:       gfal2-python3
+Requires:       python3-gfal2
 Requires:       gfal2-plugin-mock
+Requires:       python3-mod_wsgi
 Requires:       python%{python3_pkgversion}-m2crypto
 Requires:       python%{python3_pkgversion}-requests
 Requires:       python%{python3_pkgversion}-flask
 Requires:       python%{python3_pkgversion}-dateutil
 Requires:       python%{python3_pkgversion}-jwt
-Obsoletes:      fts-rest
-
-# WSGI package has a different name on RHEL7
-%if 0%{?rhel} == 7
-Requires:       rh-python36-mod_wsgi
-%else
-Requires:       python3-mod_wsgi
-%endif
-
-### The packages below are not found in CC7 community repos and were packaged by us
-### Unfortunately thy were built with a different name than their counterparts on on RHEL9
-%if 0%{?rhel} == 7
-Requires:       typing_extensions
-Requires:       SQLAlchemy >= 1.1.15
-Obsoletes:      python36-sqlalchemy
-Requires:       mysqlclient
-Requires:       jwcrypto
-Requires:       dirq
-Requires:       Mako
-Requires:       pyjwkest
-Requires:       Beaker
-Requires:       oic
-
-### The following packages are dependencies of some packages build by us
-### Needed for jwcrypto:
-Requires:       python%{python3_pkgversion}-cryptography
-### Needed for oic
-Requires:       python%{python3_pkgversion}-defusedxml
-Requires:       python%{python3_pkgversion}-pycryptodomex
-### Needed for mako
-Requires:       python%{python3_pkgversion}-markupsafe
-
-%else
 Requires:       python%{python3_pkgversion}-typing-extensions
 Requires:       python%{python3_pkgversion}-sqlalchemy >= 1.1.15
 Requires:       python%{python3_pkgversion}-mysqlclient
 Requires:       python%{python3_pkgversion}-jwcrypto
 Requires:       python%{python3_pkgversion}-dirq
 Requires:       python%{python3_pkgversion}-mako
-
 ### The following three packages are still not found in community repositories on RHEL9 and were build by us
 ### They follow the naming convention for python packages on RHEL9
 Requires:       python%{python3_pkgversion}-pyjwkest = 1.4.2-1.el9.cern
 Requires:       python%{python3_pkgversion}-beaker = 1.11.0-1.el9.cern
 Requires:       python%{python3_pkgversion}-oic = 1.4.0-1.git64c5e3b.el9.cern
-%endif
 
 BuildArch:      noarch
+Obsoletes:      fts-rest < 3.12.0
 
 %description
 File Transfer Service (FTS) -- Python3 HTTP API Server
@@ -77,10 +44,8 @@ File Transfer Service (FTS) -- Python3 HTTP API Server
 Summary:        SELinux support for FTS-REST
 Group:          Applications/Internet
 Requires:       %{name} = %{version}-%{release}
-%if 0%{?rhel} == 9
 Requires:       policycoreutils-python-utils
-%endif
-Obsoletes:      fts-rest-selinux
+Obsoletes:      fts-rest-selinux < 3.12.0
 
 %description selinux
 SELinux support for the FTS HTTP API Server
@@ -93,7 +58,7 @@ python3 -m compileall fts3rest/fts3rest
 
 # Check https://docs.fedoraproject.org/en-US/packaging-guidelines/Python/
 # Program files go in /usr/lib/python3.6/site-packages
-# Where does the WSGI file go? /usr/libexec
+# WSGI files go in /usr/libexec
 %install
 mkdir -p %{buildroot}%{python3_sitelib}
 mkdir -p %{buildroot}%{_libexecdir}/fts3rest
@@ -151,6 +116,10 @@ fi
 %files selinux
 
 %changelog
+* Thu Aug 01 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.2
+- "Overwrite-when-only-on-disk" feature
+- Drop CC7 build
+
 * Thu May 30 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.0
 - Alma9 release
 

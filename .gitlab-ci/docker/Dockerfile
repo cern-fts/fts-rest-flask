@@ -23,13 +23,10 @@ RUN mkdir /var/log/fts3rest && chown ci:ci /var/log/fts3rest
 WORKDIR /home/ci
 USER ci
 
-# Previous versions running on "fts/fts-rest-flask:ci-cc7-old" image
-# These versions are built on a Centos7 image
-#ENV PY36 3.6.10
-#ENV PY37 3.7.7
-#ENV PY38 3.8.2
-
+# Python versions selected for the CI environment
 ENV PY39 3.9.18
+ENV PY310 3.10.12
+ENV PY311 3.11.8
 
 # Install "pyenv" following instructions from https://github.com/pyenv/pyenv
 RUN git clone --depth 1 --branch v2.4.0 https://github.com/pyenv/pyenv.git ~/.pyenv && \
@@ -37,7 +34,9 @@ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc && \
 echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc && \
 echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init --path)"\n  eval "$(pyenv init -)"\nfi' >> ~/.bashrc && \
 source ~/.bashrc && \
-pyenv install $PY39
+pyenv install $PY39 && \
+pyenv install $PY310 && \
+pyenv install $PY311
 
 # Needed for pip-tools
 ENV LC_ALL en_US.utf-8
@@ -51,9 +50,19 @@ USER ci
 
 # Prepare virtual environments
 ENV VENV_39 /home/ci/venv_39
+ENV VENV_310 /home/ci/venv_310
+ENV VENV_311 /home/ci/venv_311
 
 RUN . ~/.bashrc && pyenv global $PY39 && python3 -m venv $VENV_39 && \
     . $VENV_39/bin/activate && pip install --upgrade pip && pip install pip-tools && \
+    . ./pipcompile.sh --sync && deactivate
+
+RUN . ~/.bashrc && pyenv global $PY310 && python3 -m venv $VENV_310 && \
+    . $VENV_310/bin/activate && pip install --upgrade pip && pip install pip-tools && \
+    . ./pipcompile.sh --sync && deactivate
+
+RUN . ~/.bashrc && pyenv global $PY311 && python3 -m venv $VENV_311 && \
+    . $VENV_311/bin/activate && pip install --upgrade pip && pip install pip-tools && \
     . ./pipcompile.sh --sync && deactivate
 
 # Run on Python3.9 by default

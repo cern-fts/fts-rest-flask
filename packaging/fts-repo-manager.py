@@ -159,8 +159,14 @@ class Repository(object):
         if not os.path.isdir(self.base):
             bailout("Not a directory: {0}".format(self.base))
 
-    def store(self, ref, packages, arch_dir):
+    def store(self, ref, packages, arch_dir, package_paths):
         platforms = set([x.platform for x in packages])
+
+        if len(platforms) == 0:
+            print("No eligible RPMs found for ref '{0}'! Skipping...".format(ref))
+            print("\n".join(package_paths))
+            return
+
         if len(platforms) != 1:
             raise ValueError(
                 "Cannot mix packages of different platforms in the same invocation: {0}".format(
@@ -300,21 +306,19 @@ def main():
     if (
         re.compile("""^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-client)$""").match(
             args.ref
-        )
-        != None
+        ) is not None
     ):
         packages = [Package(x) for x in args.packages if "fts-rest-client" in x]
     elif (
         re.compile("""^(tags\/)?(v)[.0-9]+(-(rc)?([0-9]+))?(-server)$""").match(
             args.ref
-        )
-        != None
+        ) is not None
     ):
         packages = [Package(x) for x in args.packages if "fts-rest-server" in x]
     else:
         packages = [Package(x) for x in args.packages]
 
-    repository.store(args.ref, packages, args.arch_dir)
+    repository.store(args.ref, packages, args.arch_dir, args.packages)
 
 
 if __name__ == "__main__":

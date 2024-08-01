@@ -76,7 +76,8 @@ function getSubForm(form, klass)
     subset.udt = parseInt(subform.find("input[name='udt']").val());
     subset.debug_level = parseInt(subform.find("input[name='debug_level']").val());
     subset.skip_eviction = parseInt(subform.find("input[name='skip_eviction']").val());
-    subset.tpc_support = subform.find("select[name='tpc_support']").val();
+    subset.overwrite_disk_enabled = parseInt(subform.find("input[name='overwrite_disk_enabled']").val());
+    subset.tpc_support = subform.find("select[name='tpc_support']").val() || null;
     return subset;
 }
 
@@ -238,6 +239,28 @@ function compileTemplates()
         $("#se-template").html()
     );
 }
+
+/**
+ *  Register helper function to translate TPC support values
+ */
+Handlebars.registerHelper('translateTPCSupport', function(tpcSupportValue) {
+    switch (tpcSupportValue) {
+        case 'FULL':
+            return 'Full support';
+        case null:  // If it's not set we assume the storage fully supports TPC
+            return 'Full support';
+        case '':    // If it's not set we assume the storage fully supports TPC
+            return 'Full support';
+        case 'PULL':
+            return 'Pull mode only';
+        case 'PUSH':
+            return 'Push mode only';
+        case 'NONE':
+            return 'Not supported';
+        default:
+            return 'Unknown'; // Fallback for unexpected values; We should never reach this
+    }
+});
 
 /**
  * Initializes the SE view

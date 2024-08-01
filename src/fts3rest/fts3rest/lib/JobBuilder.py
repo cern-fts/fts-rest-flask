@@ -20,6 +20,7 @@ import time
 
 from datetime import datetime
 from urllib.parse import urlparse, parse_qsl, ParseResult, urlencode
+from itertools import chain
 from flask import current_app as app
 from .JobBuilder_utils import *
 from fts3rest.lib.middleware.fts3auth import credentials
@@ -234,6 +235,9 @@ class JobBuilder:
                     name_hint="Archive metadata",
                     size_limit=app.config["fts3.ArchiveMetadataSizeLimit"],
                 )
+            # Account for the fact file_dict may contain an activity set to None
+            if f["activity"] is None:
+                f["activity"] = "default"
             self.files.append(f)
 
     def _apply_selection_strategy(self):
@@ -354,6 +358,77 @@ class JobBuilder:
             raise BadRequest(
                 "Reuse jobs must only contain transfers for the same source ad destination storage"
             )
+
+    def _validate_overwrite_flag(self):
+        """
+        Validates and returns the correct overwrite flag
+        If an invalid combination is detected, a user error is raised.
+
+        Y -- overwrite enabled
+        R -- overwrite enabled only on FTS retries
+        M -- overwrite enabled only for intermediary hops
+        D -- overwrite-when-only-on-disk feature enabled (overwrite if destination file has only disk locality)
+        Q -- overwrite-hop + overwrite-when-only-on-disk behavior
+        """
+
+        overwrite_flags_count = sum(
+            [
+                safe_flag(self.params["overwrite"]),
+                safe_flag(self.params["overwrite_on_retry"]),
+                safe_flag(self.params["overwrite_when_only_on_disk"]),
+                safe_flag(self.params["overwrite_hop"]),
+            ]
+        )
+        # "overwrite_hop" and "overwrite_when_only_on_disk" allowed to work together
+        if overwrite_flags_count > 1 and not (
+            overwrite_flags_count == 2
+            and self.params["overwrite_hop"]
+            and self.params["overwrite_when_only_on_disk"]
+        ):
+            raise BadRequest("Incompatible overwrite flags used at the same time")
+        if (
+            self.params["overwrite_when_only_on_disk"]
+            and safe_int(self.params["archive_timeout"]) <= 0
+        ):
+            raise BadRequest(
+                "'overwrite-when-only-on-disk' requires 'archive-timeout' to be set"
+            )
+        if self.params["overwrite"]:
+            return "Y"
+        if self.params["overwrite_on_retry"]:
+            return "R"
+        if self.params["overwrite_hop"] and self.params["overwrite_when_only_on_disk"]:
+            return "Q"  # Multihop + overwrite disk
+        if self.params["overwrite_hop"]:
+            return "M"
+        if self.params["overwrite_when_only_on_disk"]:
+            return "D"
+        return None
+
+    def _validate_overwrite_disk_destination(self, job_type, files_list):
+        """
+        When the "overwrite-when-only-on-disk" feature is enabled,
+        restrict usage only to HTTP/DAV target endpoints (capable of Tape REST API).
+        According to the job type:
+            - Multihop jobs: the final destination must be checked
+            - All other job types: all destinations must be checked
+
+        If an invalid submission is detected, raises a user error
+        """
+
+        def _is_http_endpoint(endpoint):
+            if not endpoint.startswith(tuple(["https://", "davs://"])):
+                raise BadRequest(
+                    "'overwrite-when-only-on-disk' requires destination "
+                    "to be HTTPs endpoint (Tape REST API required)"
+                )
+
+        if job_type == "H":
+            destinations = files_list[-1]["destinations"]
+        else:
+            destinations = [file_dict["destinations"] for file_dict in files_list]
+            destinations = list(chain.from_iterable(destinations))
+        any(map(_is_http_endpoint, destinations))
 
     def _file_list_contains_a_token_list(self, files_list):
         """
@@ -581,14 +656,11 @@ class JobBuilder:
                         + " seconds apart"
                     )
 
-        if self.params["overwrite"]:
-            overwrite_flag = "Y"
-        elif self.params["overwrite_on_retry"]:
-            overwrite_flag = "R"
-        elif self.params["overwrite_hop"]:
-            overwrite_flag = "M"
-        else:
-            overwrite_flag = None
+        overwrite_flag = self._validate_overwrite_flag()
+        if overwrite_flag in ["M", "Q"] and job_type != "H":
+            raise BadRequest("'overwrite-hop' requires multihop job submission")
+        if overwrite_flag in ["D", "Q"]:
+            self._validate_overwrite_disk_destination(job_type, files_list)
 
         self.job = dict(
             job_id=self.job_id,

@@ -26,6 +26,7 @@ DEFAULT_PARAMS = {
     "checksum": "ADLER32",
     "overwrite": False,
     "overwrite_on_retry": False,
+    "overwrite_when_only_on_disk": False,
     "overwrite_hop": False,
     "reuse": False,
     "job_metadata": None,
@@ -161,6 +162,12 @@ class JobSubmitter(Base):
             dest="overwrite_on_retry",
             action="store_true",
             help="overwrite files on retries.",
+        )
+        self.opt_parser.add_option(
+            "--overwrite-when-only-on-disk",
+            dest="overwrite_when_only_on_disk",
+            action="store_true",
+            help="overwrite file when file locality is only disk.",
         )
         self.opt_parser.add_option(
             "--overwrite-hop",
@@ -433,19 +440,31 @@ class JobSubmitter(Base):
 
         if self.params["ipv4"] and self.params["ipv6"]:
             self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
+
+        overwrite_flags_count = sum(
+            [
+                self.params["overwrite"],
+                self.params["overwrite_on_retry"],
+                self.params["overwrite_when_only_on_disk"],
+                self.params["overwrite_hop"],
+            ]
+        )
+        # "overwrite_hop" and "overwrite_when_only_on_disk" allowed to work together
+        if overwrite_flags_count > 1 and not (
+            overwrite_flags_count == 2
+            and self.params["overwrite_hop"]
+            and self.params["overwrite_when_only_on_disk"]
+        ):
+            self.opt_parser.error("Incompatible overwrite flags used at the same time!")
+
         if (
-            sum(
-                [
-                    self.params["overwrite"],
-                    self.params["overwrite_on_retry"],
-                    self.params["overwrite_hop"],
-                ]
-            )
-            > 1
+            self.params["overwrite_when_only_on_disk"]
+            and self.params["archive_timeout"] <= 0
         ):
             self.opt_parser.error(
-                "Multiple overwrite flags can not be used at the same time"
+                "Using 'overwrite-when-only-on-disk' requires 'archive-timeout' to be set"
             )
+
         if self.params.get("scitag") is not None and not (
             65 <= self.params["scitag"] <= 65535
         ):
@@ -529,6 +548,7 @@ class JobSubmitter(Base):
             job_metadata=self.options.job_metadata,
             overwrite=self.options.overwrite,
             overwrite_on_retry=self.options.overwrite_on_retry,
+            overwrite_when_only_on_disk=self.options.overwrite_when_only_on_disk,
             overwrite_hop=self.options.overwrite_hop,
             copy_pin_lifetime=self.options.pin_lifetime,
             reuse=self.options.reuse,

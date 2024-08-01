@@ -94,7 +94,7 @@ class OIDCmanager:
         # List of Keys (from pyjwkest)
         keys = client.keyjar.get_issuer_keys(issuer)
         filtered_keys = [key for key in keys if key.kid == kid or key.alg == alg]
-        if len(filtered_keys) is 0:
+        if len(filtered_keys) == 0:
             return keys
         return filtered_keys
 

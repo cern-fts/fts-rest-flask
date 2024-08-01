@@ -20,7 +20,7 @@ from flask import request
 from werkzeug.exceptions import BadRequest
 
 from fts3rest.model import *
-from fts3rest.controllers.config import audit_configuration
+from fts3rest.controllers.config import audit_configuration, validate_type
 from fts3rest.lib.helpers.accept import accept
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.misc import get_input_as_dict
@@ -36,18 +36,13 @@ Grid storage configuration
 """
 
 
-def _translate_tcp_mode(mode):
-    if mode == "FULL":
-        supported_mode = "Full support"
-    elif mode == "PULL":
-        supported_mode = "Pull only"
-    elif mode == "PUSH":
-        supported_mode = "Push only"
-    elif mode == "NONE":
-        supported_mode = "Not supported"
-    else:
-        supported_mode = None
-    return supported_mode
+def _validate_tpc_support(key, value):
+    valid_tpc_role = ["FULL", "PULL", "PUSH", "NONE"]
+    if value not in valid_tpc_role:
+        raise BadRequest(
+            "Field %s is expected to be one of the following: %s"
+            % (key, ", ".join(valid_tpc_role))
+        )
 
 
 @authorize(CONFIG)
@@ -68,36 +63,46 @@ def set_se_config():
                 if not se_info:
                     se_info = Se(storage=storage)
                 for key, value in se_info_new.items():
-                    # value = validate_type(Se, key, value)
-                    setattr(se_info, key, value)
+                    if value is not None:  # Only proceed if value is not None
+                        value = validate_type(
+                            Se, key, value
+                        )  # Validate data type for DB
+                        if key == "tpc_support":
+                            _validate_tpc_support(
+                                key, value
+                            )  # Check tpc_support has a valid value
+                        setattr(se_info, key, value)
 
                 audit_configuration(
                     "set-se-config", "Set config %s: %s" % (storage, json.dumps(cfg))
                 )
                 Session.merge(se_info)
 
-                # Operation limits
-                operations = cfg.get("operations", None)
-                if operations:
-                    for vo, limits in operations.items():
-                        for op, limit in limits.items():
-                            limit = int(limit)
-                            new_limit = Session.query(OperationConfig).get(
-                                (vo, storage, op)
-                            )
-                            if limit > 0:
-                                if not new_limit:
-                                    new_limit = OperationConfig(
-                                        vo_name=vo, host=storage, operation=op
-                                    )
-                                new_limit.concurrent_ops = limit
-                                Session.merge(new_limit)
-                            elif new_limit:
-                                Session.delete(new_limit)
-                    audit_configuration(
-                        "set-se-limits",
-                        "Set limits for %s: %s" % (storage, json.dumps(operations)),
-                    )
+            # Operation limits
+            operations = cfg.get("operations", None)
+            if operations:
+                for vo, limits in operations.items():
+                    vo = validate_type(OperationConfig, "vo_name", vo)
+                    for op, limit in limits.items():
+                        op = validate_type(OperationConfig, "operation", op)
+                        limit = validate_type(OperationConfig, "concurrent_ops", limit)
+                        limit = int(limit)
+                        new_limit = Session.query(OperationConfig).get(
+                            (vo, storage, op)
+                        )
+                        if limit > 0:
+                            if not new_limit:
+                                new_limit = OperationConfig(
+                                    vo_name=vo, host=storage, operation=op
+                                )
+                            new_limit.concurrent_ops = limit
+                            Session.merge(new_limit)
+                        elif new_limit:
+                            Session.delete(new_limit)
+                audit_configuration(
+                    "set-se-limits",
+                    "Set limits for %s: %s" % (storage, json.dumps(operations)),
+                )
         Session.commit()
     except (AttributeError, ValueError):
         Session.rollback()
@@ -139,11 +144,9 @@ def get_se_config():
             "debug_level",
             "skip_eviction",
             "tpc_support",
+            "overwrite_disk_enabled",
         ]:
-            if attr == "tpc_support":
-                se_info[attr] = _translate_tcp_mode(getattr(opt, attr))
-            else:
-                se_info[attr] = getattr(opt, attr)
+            se_info[attr] = getattr(opt, attr)
         config["se_info"] = se_info
         response[se] = config
 

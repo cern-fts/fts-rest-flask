@@ -349,8 +349,8 @@ class request(Delegation):
             credential_cache = CredentialCache(
                 dlg_id=user.delegation_id,
                 dn=user.user_dn,
-                cert_request=x509_request.as_pem(),
-                priv_key=private_key.as_pem(cipher=None),
+                cert_request=x509_request.as_pem().decode("utf-8"),
+                priv_key=private_key.as_pem(cipher=None).decode("utf-8"),
                 voms_attrs=" ".join(user.voms_cred),
             )
             try:
@@ -406,7 +406,7 @@ class credential(Delegation):
         credential = Credential(
             dlg_id=user.delegation_id,
             dn=user.user_dn,
-            proxy=x509_full_proxy_pem,
+            proxy=x509_full_proxy_pem.decode("utf-8"),
             voms_attrs=credential_cache.voms_attrs,
             termination_time=expiration_time,
         )

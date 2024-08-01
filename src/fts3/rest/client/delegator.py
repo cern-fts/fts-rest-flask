@@ -88,11 +88,6 @@ def _workaround_new_extension(name, value, critical=False, issuer=None, _pyfree=
     return x509_ext
 
 
-def _m2crypto_extensions_broken():
-    # SL5 is out support
-    return False
-
-
 def _add_rfc3820_extensions(proxy):
     proxy.add_ext(
         X509.new_extension(
@@ -154,7 +149,7 @@ class Delegator(object):
         # Return
         return x509_request
 
-    def _sign_request(self, x509_request, lifetime):
+    def _sign_request(self, x509_request, lifetime, legacy_mode):
         not_before = ASN1.ASN1_UTCTIME()
         not_before.set_datetime(datetime.now(UTC))
         not_after = ASN1.ASN1_UTCTIME()
@@ -174,29 +169,23 @@ class Delegator(object):
         proxy.set_issuer(self.context.x509.get_subject())
         proxy.set_pubkey(x509_request.get_pubkey())
 
-        # Extensions are broken in SL5!!
-        if _m2crypto_extensions_broken():
-            log.warning("X509v3 extensions disabled!")
-        else:
-            # X509v3 Basic Constraints
-            proxy.add_ext(
-                X509.new_extension("basicConstraints", "CA:FALSE", critical=True)
+        # X509v3 Basic Constraints
+        proxy.add_ext(X509.new_extension("basicConstraints", "CA:FALSE", critical=True))
+        # X509v3 Key Usage
+        proxy.add_ext(
+            X509.new_extension(
+                "keyUsage", "Digital Signature, Key Encipherment", critical=True
             )
-            # X509v3 Key Usage
-            proxy.add_ext(
-                X509.new_extension(
-                    "keyUsage", "Digital Signature, Key Encipherment", critical=True
-                )
-            )
-            # X509v3 Authority Key Identifier
-            identifier_ext = _workaround_new_extension(
-                "authorityKeyIdentifier",
-                "keyid",
-                critical=False,
-                issuer=self.context.x509,
-            )
-            if identifier_ext:
-                proxy.add_ext(identifier_ext)
+        )
+        # X509v3 Authority Key Identifier
+        identifier_ext = _workaround_new_extension(
+            "authorityKeyIdentifier",
+            "keyid",
+            critical=False,
+            issuer=self.context.x509,
+        )
+        if identifier_ext:
+            proxy.add_ext(identifier_ext)
 
         any_rfc_proxies = False
         # FTS-1217 Ignore the user input and select the min proxy lifetime available on the list
@@ -214,24 +203,18 @@ class Delegator(object):
         proxy.set_not_after(not_after)
         proxy.set_not_before(not_before)
 
-        if any_rfc_proxies:
-            if _m2crypto_extensions_broken():
-                raise NotImplementedError(
-                    "X509v3 extensions are disabled, so RFC proxies can not be generated!"
-                )
-            else:
-                _add_rfc3820_extensions(proxy)
+        proxy_common_name = str(int(time.time()))
 
-        if any_rfc_proxies:
-            m2.x509_name_set_by_nid(
-                proxy_subject._ptr(),
-                X509.X509_Name.nid["commonName"],
-                str(int(time.time())).encode("utf-8"),
-            )
+        if not any_rfc_proxies and legacy_mode:
+            proxy_common_name = "proxy"
         else:
-            m2.x509_name_set_by_nid(
-                proxy_subject._ptr(), X509.X509_Name.nid["commonName"], b"proxy"
-            )
+            _add_rfc3820_extensions(proxy)
+
+        m2.x509_name_set_by_nid(
+            proxy_subject._ptr(),
+            X509.X509_Name.nid["commonName"],
+            proxy_common_name.encode("utf-8"),
+        )
 
         proxy.set_subject(proxy_subject)
         proxy.set_version(2)
@@ -258,6 +241,7 @@ class Delegator(object):
         lifetime=timedelta(hours=7),
         force=False,
         delegate_when_lifetime_lt=timedelta(hours=2),
+        legacy_mode=False,
     ):
         try:
             delegation_id = self._get_delegation_id()
@@ -285,7 +269,7 @@ class Delegator(object):
 
             # Sign request
             log.debug("Signing request")
-            x509_proxy = self._sign_request(x509_request, lifetime)
+            x509_proxy = self._sign_request(x509_request, lifetime, legacy_mode)
             x509_proxy_pem = self._full_proxy_chain(x509_proxy)
 
             # Send the signed proxy

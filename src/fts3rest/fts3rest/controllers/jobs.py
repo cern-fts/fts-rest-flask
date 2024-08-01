@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from flask import request, Response
+from flask import request, Response, current_app
 from werkzeug.exceptions import Forbidden, BadRequest, NotFound, Conflict
 
 from datetime import datetime, timedelta
@@ -857,26 +857,34 @@ def insert_tokens(job_id, tokens):
         access_token_refresh_after = token_dict["nbf"] + lifetime_sec * 0.5
 
         try:
+            timestamp_func = (
+                "to_timestamp"
+                if current_app.config["fts3.DbType"] == "postgresql"
+                else "from_unixtime"
+            )
+            sql = f"""
+            INSERT INTO t_token(
+              token_id,
+              access_token,
+              access_token_not_before,
+              access_token_expiry,
+              access_token_refresh_after,
+              issuer,
+              scope,
+              audience
+            ) VALUES (
+              :token_id,
+              :access_token,
+              {timestamp_func}(:access_token_not_before),
+              {timestamp_func}(:access_token_expiry),
+              {timestamp_func}(:access_token_refresh_after),
+              :issuer,
+              :scope,
+              :audience
+            )
+            """  # nosec
             Session.execute(
-                "INSERT INTO t_token("
-                "  token_id,"
-                "  access_token,"
-                "  access_token_not_before,"
-                "  access_token_expiry,"
-                "  access_token_refresh_after,"
-                "  issuer,"
-                "  scope,"
-                "  audience"
-                ") VALUES ("
-                "  :token_id,"
-                "  :access_token,"
-                "  from_unixtime(:access_token_not_before),"
-                "  from_unixtime(:access_token_expiry),"
-                "  from_unixtime(:access_token_refresh_after),"
-                "  :issuer,"
-                "  :scope,"
-                "  :audience"
-                ")",
+                sql,
                 params={
                     "token_id": token_dict["token_id"],
                     "access_token": token_dict["access_token"],
