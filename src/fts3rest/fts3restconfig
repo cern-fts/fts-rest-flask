@@ -54,6 +54,11 @@ Alias =
 # No enforcement if config setting is missing
 #BringOnlineAndExpirationDelta = 3d
 
+# Enforce "overwrite-hop" validation for multihop jobs (default true)
+# When the flag is turned on, "overwrite-hop" flag may be used only on multihop jobs,
+# otherwise the job submission will be refused
+#OverwriteHopValidation = True
+
 # Enable or disable AutoSessionReuse (default false)
 #AutoSessionReuse = False
 # Min number of files per session reuse
