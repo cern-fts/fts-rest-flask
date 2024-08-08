@@ -1539,3 +1539,49 @@ class TestJobSubmission(TestController):
 
             _job = Session.query(Job).get(job_id)
             self.assertEqual(_job.overwrite_flag, overwrite_submission[1])
+
+    def test_submit_overwrite_hop_disable_multihop_constraint(self):
+        """
+        Submit "overwrite-hop" option for non-multihop job
+        but with the overwrite-hop validation disabled
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["root://source.ch/file"],
+                    "destinations": ["root://intermediary.ch/file"],
+                },
+                {
+                    "sources": ["https://intermediary.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                },
+            ],
+            "params": {"overwrite_hop": True},
+        }
+
+        # Submission should fail due to "overwrite-hop" validation
+        message = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        ).json["message"]
+        self.assertIn("requires multihop job", message)
+
+        # Disable "overwrite-hop" validation
+        self.flask_app.config["fts3.OverwriteHopValidation"] = False
+
+        # Submission should work and return overwrite "M" flag
+        job_id = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        self.assertGreater(len(job_id), 0)
+        _job = Session.query(Job).get(job_id)
+        self.assertEqual(_job.overwrite_flag, "M")

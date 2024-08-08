@@ -27,6 +27,11 @@ StagingMetadataSizeLimit=1024
 #Limit Archive Metadata with specified Size Limit (default: 1024 bytes)
 ArchiveMetadataSizeLimit=1024
 
+# Enforce "overwrite-hop" validation for multihop jobs (default true)
+# When the flag is turned on, "overwrite-hop" flag may be used only on multihop jobs,
+# otherwise the job submission will be refused
+OverwriteHopValidation = True
+
 #OpenID parameters
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
