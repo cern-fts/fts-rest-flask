@@ -82,6 +82,10 @@ TokenRefreshDaemonIntervalInSeconds=600
 # If the token has an "aud" field, it must contain at least one of the configured values
 #AuthorizedAudiences=https://wlcg.cern.ch/jwt/v1/any;https://fts3-devel.cern.ch:8446
 
+# Tell the FTS system to not manage access tokens that don't meet certain criteria
+# (e.g.: missing "offline_access" scope) (default false)
+#NonManagedTokens = False
+
 #[providers]
 #provider1 = https://wlcg.cloud.cnaf.infn.it
 #provider_ClientId = <client-id>

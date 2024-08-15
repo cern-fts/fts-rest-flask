@@ -785,11 +785,15 @@ def get_refreshless_token_ids(token_ids):
     return refreshless_token_ids
 
 
-def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
+def set_file_states_to_token_prep_as_necessary(job_id, file_rows, token_rows):
     """
     Sets the file_state column of the specified t_file table rows to TOKEN_PREP
     if either the associated source or destination access token does not yet
     have a refresh token.
+
+    A second restraint was added:
+    Manage the token lifecycle only if the involved token
+    contains the "offline_access" scope
 
     The initial file state is stored under t_file.file_state_initial
     """
@@ -804,10 +808,36 @@ def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
         f" nb_refreshless_tokens={len(refreshless_token_ids)}"
     )
 
+    eligible_token_ids = refreshless_token_ids
+
+    if current_app.config.get("fts3.NonManagedTokens", False):
+        # Create a list of tokens that have "offline_access" scope
+        valid_scope_token_ids = set(
+            [
+                token["token_id"]
+                for token in token_rows
+                if "offline_access" in token["scope"]
+            ]
+        )
+
+        # Keep only the intersection between the tokens that have "offline_access"
+        # and the tokens that don't have an associated refresh token
+        eligible_token_ids = set.intersection(
+            refreshless_token_ids, valid_scope_token_ids
+        )
+
+        log.info(
+            f"Got tokens with 'offline_access' scope:"
+            f" job_id={job_id}"
+            f" nb_tokens_checked={len(token_rows)}"
+            f" nb_valid_scope_tokens={len(valid_scope_token_ids)}"
+            f" nb_eligible_tokens={len(eligible_token_ids)}"
+        )
+
     for file_row in file_rows:
         if (
-            file_row["src_token_id"] in refreshless_token_ids
-            or file_row["dst_token_id"] in refreshless_token_ids
+            file_row["src_token_id"] in eligible_token_ids
+            or file_row["dst_token_id"] in eligible_token_ids
         ):
             file_row["file_state_initial"] = file_row["file_state"]
             file_row["file_state"] = "TOKEN_PREP"
@@ -1167,7 +1197,7 @@ def submit():
 
         if user.method == "oauth2":
             set_file_states_to_token_prep_as_necessary(
-                populated.job_id, populated.files
+                populated.job_id, populated.files, populated.tokens
             )
 
         try:
