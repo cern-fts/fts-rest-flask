@@ -29,7 +29,7 @@ class Submitter:
                 file_key = key
             if key in params:
                 for f in files:
-                    if key not in f:
+                    if file_key not in f:
                         f[file_key] = params[key]
                 del params[key]
 

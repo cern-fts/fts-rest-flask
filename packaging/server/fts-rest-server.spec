@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.13.2
+Version:        3.13.3
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -116,17 +116,21 @@ fi
 %files selinux
 
 %changelog
-* Thu Aug 01 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.2
+* Tue Aug 20 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.3-1
+- "Overwrite-hop" submission validation config option
+- "Disable-cleanup" feature
+
+* Thu Aug 01 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.2-1
 - "Overwrite-when-only-on-disk" feature
 - Drop CC7 build
 
-* Thu May 30 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.0
+* Thu May 30 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.0-1
 - Alma9 release
 
-* Thu Oct 19 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4
+* Thu Oct 19 2023 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.12.4-1
 - Allow sending Scitag label for transfers
 
-* Tue Aug 08 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.3
+* Tue Aug 08 2023 Joao Lopes <joao.pedro.batista.lopes@cern.ch> - 3.12.3-1
 - Disable deletion submissions via the FTS-REST
 - Refuse FTS job submissions if archive/staging metadata exceeds configurable size
 - Allow configuring the TPC role per Storage Endpoint

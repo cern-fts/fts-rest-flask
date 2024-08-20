@@ -69,6 +69,8 @@ class JobBuilder:
             param_list.append("buffersize:%d" % int(self.params["buffer_size"]))
         if self.params.get("strict_copy", False):
             param_list.append("strict")
+        if self.params.get("disable_cleanup", False):
+            param_list.append("disable-cleanup")
         if self.params.get("ipv4", False):
             param_list.append("ipv4")
         elif self.params.get("ipv6", False):
@@ -657,7 +659,11 @@ class JobBuilder:
                     )
 
         overwrite_flag = self._validate_overwrite_flag()
-        if overwrite_flag in ["M", "Q"] and job_type != "H":
+        if (
+            overwrite_flag in ["M", "Q"]
+            and job_type != "H"
+            and app.config.get("fts3.OverwriteHopValidation", True)
+        ):
             raise BadRequest("'overwrite-hop' requires multihop job submission")
         if overwrite_flag in ["D", "Q"]:
             self._validate_overwrite_disk_destination(job_type, files_list)

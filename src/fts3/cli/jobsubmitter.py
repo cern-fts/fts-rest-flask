@@ -54,6 +54,7 @@ DEFAULT_PARAMS = {
     "ipv6": False,
     "buffer_size": None,
     "strict_copy": False,
+    "disable_cleanup": False,
     "activity": None,
     "scitag": None,
 }
@@ -331,6 +332,12 @@ class JobSubmitter(Base):
             help="disable all checks, just copy the file",
         )
         self.opt_parser.add_option(
+            "--disable-cleanup",
+            dest="disable_cleanup",
+            action="store_true",
+            help="disable the copy clean-up happening when a transfer fails",
+        )
+        self.opt_parser.add_option(
             "--activity",
             dest="activity",
             type="string",
@@ -562,6 +569,7 @@ class JobSubmitter(Base):
             target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
             strict_copy=self.options.strict_copy,
+            disable_cleanup=self.options.disable_cleanup,
             activity=self.options.activity,
             scitag=self.options.scitag,
         )
