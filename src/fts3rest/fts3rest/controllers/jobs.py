@@ -902,6 +902,15 @@ def insert_tokens(job_id, tokens):
             Session.rollback()
             if '"Duplicate entry ' in str(e):
                 nb_duplicate = nb_duplicate + 1
+                try:
+                    # Existing token might already be in 'retired' state
+                    # (will not be refreshed by tokenrefresherd)
+                    sql = "UPDATE t_token SET retired = 0 WHERE token_id = :token_id"
+                    Session.execute(sql, {"token_id": token_dict["token_id"]})
+                    Session.commit()
+                except Exception:
+                    Session.rollback()
+                    raise
             else:
                 raise
 
