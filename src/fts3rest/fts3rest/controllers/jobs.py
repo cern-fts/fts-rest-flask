@@ -904,11 +904,11 @@ def insert_tokens(job_id, tokens):
                 },
             )
             Session.commit()
-            nb_inserted = nb_inserted + 1
+            nb_inserted += 1
         except IntegrityError as e:
             Session.rollback()
-            if '"Duplicate entry ' in str(e):
-                nb_duplicate = nb_duplicate + 1
+            if "Duplicate entry" in str(e) or "duplicate key" in str(e):
+                nb_duplicate += 1
             else:
                 raise
 
