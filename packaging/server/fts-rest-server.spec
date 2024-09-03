@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.13.3
+Version:        3.13.4
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -116,6 +116,10 @@ fi
 %files selinux
 
 %changelog
+* Tue Sep 03 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.4-1
+- Allow unamanged tokens if the "offline_access" scope is missing
+- Un-retire existing access tokens when referenced again by submitted transfers
+
 * Tue Aug 20 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.3-1
 - "Overwrite-hop" submission validation config option
 - "Disable-cleanup" feature

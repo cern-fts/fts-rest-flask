@@ -1,12 +1,12 @@
 Name:           fts-rest-client
-Version:        3.13.3
+Version:        3.13.4
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 Client and CLI
 
 License:        ASL 2.0
 URL:            https://fts.web.cern.ch/
-# git clone --depth=1 --branch v3.13.3 https://gitlab.cern.ch/fts/fts-rest-flask.git fts-rest-client-3.13.3
-# tar -C fts-rest-client-3.13.3/ -czf fts-rest-client-3.13.3.tar.gz src/cli src/fts3 LICENSE setup.py setup.cfg --transform "s|^|fts-rest-client-3.13.3/|" --show-transformed-names
+# git clone --depth=1 --branch v3.13.4 https://gitlab.cern.ch/fts/fts-rest-flask.git fts-rest-client-3.13.4
+# tar -C fts-rest-client-3.13.4/ -czf fts-rest-client-3.13.4.tar.gz src/cli src/fts3 LICENSE setup.py setup.cfg --transform "s|^|fts-rest-client-3.13.4/|" --show-transformed-names
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  python3-devel
@@ -42,6 +42,9 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 %{_bindir}/fts-rest-*
 
 %changelog
+* Tue Sep 03 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.4-1
+- New server release (no client changes)
+
 * Tue Aug 20 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.3-1
 - "Disable clean-up" feature
 
