@@ -170,6 +170,8 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
         "AutoSessionReuse": False,
         "OAuth2": False,
         "OverwriteHopValidation": True,
+        "NonManagedTokens": False,
+        "ExperimentalPostgresSupport": False,
     }
 
     for key in options:

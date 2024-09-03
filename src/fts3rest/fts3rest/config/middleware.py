@@ -96,6 +96,17 @@ def create_app(default_config_file=None, test=False):
     fts3cfg = _load_configuration(config_file, test)
     log = logging.getLogger(__name__)
 
+    if (
+        fts3cfg["fts3.DbType"] == "postgresql"
+        and not fts3cfg["fts3.ExperimentalPostgresSupport"]
+    ):
+        raise ValueError(
+            "Failed to create fts3rest web application: "
+            "Invalid configuration file: "
+            "fts3.DbType cannot be set to postgresql if fts3.ExperimentalPostgresSupport is not set to true: "
+            f"config_file={config_file}"
+        )
+
     # Add configuration
     app.config.update(fts3cfg)
 

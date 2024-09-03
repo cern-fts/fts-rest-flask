@@ -26,7 +26,14 @@ import logging
 import functools
 import time
 
-from fts3rest.model import Job, File, JobActiveStates, FileActiveStates, Token
+from fts3rest.model import (
+    Job,
+    File,
+    JobActiveStates,
+    FileActiveStates,
+    Token,
+    PostgresFile,
+)
 from fts3rest.model import DataManagement, DataManagementActiveStates
 from fts3rest.model import Credential, FileRetryLog
 from fts3rest.model.meta import Session
@@ -778,11 +785,15 @@ def get_refreshless_token_ids(token_ids):
     return refreshless_token_ids
 
 
-def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
+def set_file_states_to_token_prep_as_necessary(job_id, file_rows, token_rows):
     """
     Sets the file_state column of the specified t_file table rows to TOKEN_PREP
     if either the associated source or destination access token does not yet
     have a refresh token.
+
+    A second restraint was added:
+    Manage the token lifecycle only if the involved token
+    contains the "offline_access" scope
 
     The initial file state is stored under t_file.file_state_initial
     """
@@ -797,10 +808,36 @@ def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
         f" nb_refreshless_tokens={len(refreshless_token_ids)}"
     )
 
+    eligible_token_ids = refreshless_token_ids
+
+    if current_app.config.get("fts3.NonManagedTokens", False):
+        # Create a list of tokens that have "offline_access" scope
+        valid_scope_token_ids = set(
+            [
+                token["token_id"]
+                for token in token_rows
+                if "offline_access" in token["scope"]
+            ]
+        )
+
+        # Keep only the intersection between the tokens that have "offline_access"
+        # and the tokens that don't have an associated refresh token
+        eligible_token_ids = set.intersection(
+            refreshless_token_ids, valid_scope_token_ids
+        )
+
+        log.info(
+            f"Got tokens with 'offline_access' scope:"
+            f" job_id={job_id}"
+            f" nb_tokens_checked={len(token_rows)}"
+            f" nb_valid_scope_tokens={len(valid_scope_token_ids)}"
+            f" nb_eligible_tokens={len(eligible_token_ids)}"
+        )
+
     for file_row in file_rows:
         if (
-            file_row["src_token_id"] in refreshless_token_ids
-            or file_row["dst_token_id"] in refreshless_token_ids
+            file_row["src_token_id"] in eligible_token_ids
+            or file_row["dst_token_id"] in eligible_token_ids
         ):
             file_row["file_state_initial"] = file_row["file_state"]
             file_row["file_state"] = "TOKEN_PREP"
@@ -902,6 +939,15 @@ def insert_tokens(job_id, tokens):
             Session.rollback()
             if '"Duplicate entry ' in str(e):
                 nb_duplicate = nb_duplicate + 1
+                try:
+                    # Existing token might already be in 'retired' state
+                    # (will not be refreshed by tokenrefresherd)
+                    sql = "UPDATE t_token SET retired = 0 WHERE token_id = :token_id"
+                    Session.execute(sql, {"token_id": token_dict["token_id"]})
+                    Session.commit()
+                except Exception:
+                    Session.rollback()
+                    raise
             else:
                 raise
 
@@ -934,6 +980,135 @@ def decode_token(raw):
     token["signature"] = split_raw[2]
 
     return token
+
+
+def _get_queue_counts(files):
+    result = {}
+    for file in files:
+        key = (
+            file["vo_name"],
+            file["source_se"],
+            file["dest_se"],
+            file["activity"],
+            file["file_state"].upper(),  # DB file_state values are uppercase
+        )
+        result[key] = 1 if key not in result else result[key] + 1
+    return result
+
+
+def _inc_t_queue_counter(
+    dbconn, vo_name, source_se, dest_se, activity, file_state, delta
+):
+    # Assume for now the t_queue row exists
+    update_sql = """
+        UPDATE
+            t_queue
+        SET
+            nb_files = nb_files + %(delta)s
+        WHERE
+            vo_name = %(vo_name)s
+        AND
+            source_se = %(source_se)s
+        AND
+            dest_se = %(dest_se)s
+        AND
+            activity = %(activity)s
+        AND
+            file_state = %(file_state)s
+        RETURNING
+            queue_id
+    """
+    update_params = {
+        "delta": delta,
+        "vo_name": vo_name,
+        "source_se": source_se,
+        "dest_se": dest_se,
+        "activity": activity,
+        "file_state": file_state,
+    }
+    rows = dbconn.execute(update_sql, update_params).fetchall()
+    if len(rows) > 0:
+        queue_id = rows[0][0]
+        return queue_id
+
+    # The t_queue row did not exist so create one
+    insert_sql = """
+        INSERT INTO t_queue (
+            vo_name,
+            source_se,
+            dest_se,
+            activity,
+            file_state,
+            nb_files
+        ) VALUES (
+            %(vo_name)s,
+            %(source_se)s,
+            %(dest_se)s,
+            %(activity)s,
+            %(file_state)s,
+            %(delta)s
+        )
+        ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO
+            UPDATE SET nb_files =
+                t_queue.nb_files + EXCLUDED.nb_files
+        RETURNING
+            queue_id
+    """
+    insert_params = {
+        "vo_name": vo_name,
+        "source_se": source_se,
+        "dest_se": dest_se,
+        "activity": activity,
+        "file_state": file_state,
+        "delta": delta,
+    }
+    rows = dbconn.execute(insert_sql, insert_params).fetchall()
+    if len(rows) != 1:
+        raise Exception(
+            f"Failed to increment t_queue counter: vo_name={vo_name} source_se={source_se} dest_se={dest_se} file_state={file_state} delta={delta}"
+        )
+    queue_id = rows[0][0]
+    return queue_id
+
+
+def _inc_t_queue_counters(dbconn, auth_method, queue_counts):
+    result = {}
+    counter_col = "nb_token_prep" if auth_method == "oauth2" else "nb_submitted"
+
+    for (
+        vo_name,
+        source_se,
+        dest_se,
+        activity,
+        file_state,
+    ), count in queue_counts.items():
+        queue_id = _inc_t_queue_counter(
+            dbconn=dbconn,
+            vo_name=vo_name,
+            source_se=source_se,
+            dest_se=dest_se,
+            activity=activity,
+            file_state=file_state,
+            delta=count,
+        )
+        composite_queue_id = (vo_name, source_se, dest_se, activity)
+        result[composite_queue_id] = queue_id
+    return result
+
+
+def _create_postgres_files(mysql_files, composite_queue_id_to_id):
+    postgres_files = []
+    for mysql_file in mysql_files:
+        postgres_file = mysql_file.copy()
+        composite_queue_id = (
+            mysql_file["vo_name"],
+            mysql_file["source_se"],
+            mysql_file["dest_se"],
+            mysql_file["activity"],
+        )
+        postgres_file["queue_id"] = composite_queue_id_to_id[composite_queue_id]
+        postgres_files.append(postgres_file)
+    return postgres_files
 
 
 @authorize(TRANSFER)
@@ -1031,7 +1206,7 @@ def submit():
 
         if user.method == "oauth2":
             set_file_states_to_token_prep_as_necessary(
-                populated.job_id, populated.files
+                populated.job_id, populated.files, populated.tokens
             )
 
         try:
@@ -1046,7 +1221,17 @@ def submit():
             raise Conflict("The sid provided by the user is duplicated")
 
         start_insert_files = time.perf_counter()
-        Session.execute(File.__table__.insert(), populated.files)
+        if current_app.config["fts3.DbType"] == "mysql":
+            Session.execute(File.__table__.insert(), populated.files)
+        else:
+            queue_counts = _get_queue_counts(populated.files)
+            composite_queue_id_to_id = _inc_t_queue_counters(
+                Session.connection(), user.method, queue_counts
+            )
+            postgres_files = _create_postgres_files(
+                populated.files, composite_queue_id_to_id
+            )
+            Session.execute(PostgresFile.__table__.insert(), postgres_files)
         log.info(
             "Inserted files into database: job_id={} db_secs={}".format(
                 populated.job_id, str(time.perf_counter() - start_insert_files)
