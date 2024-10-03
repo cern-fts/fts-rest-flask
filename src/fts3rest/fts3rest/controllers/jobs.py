@@ -999,26 +999,18 @@ def _get_queue_counts(files):
 def _inc_t_queue_counter(
     dbconn, vo_name, source_se, dest_se, activity, file_state, delta
 ):
-    # Assume for now the t_queue row exists
-    update_sql = """
-        UPDATE
-            t_queue
-        SET
-            nb_files = nb_files + %(delta)s
-        WHERE
-            vo_name = %(vo_name)s
-        AND
-            source_se = %(source_se)s
-        AND
-            dest_se = %(dest_se)s
-        AND
-            activity = %(activity)s
-        AND
-            file_state = %(file_state)s
-        RETURNING
-            queue_id
+    sql = """
+        SELECT
+            inc_queue_counter(
+                _vo_name => %(vo_name)s,
+                _source_se => %(source_se)s,
+                _dest_se => %(dest_se)s,
+                _activity => %(activity)s,
+                _file_state => %(file_state)s,
+                _delta => %(delta)s
+            ) AS queue_id
     """
-    update_params = {
+    params = {
         "delta": delta,
         "vo_name": vo_name,
         "source_se": source_se,
@@ -1026,43 +1018,7 @@ def _inc_t_queue_counter(
         "activity": activity,
         "file_state": file_state,
     }
-    rows = dbconn.execute(update_sql, update_params).fetchall()
-    if len(rows) > 0:
-        queue_id = rows[0][0]
-        return queue_id
-
-    # The t_queue row did not exist so create one
-    insert_sql = """
-        INSERT INTO t_queue (
-            vo_name,
-            source_se,
-            dest_se,
-            activity,
-            file_state,
-            nb_files
-        ) VALUES (
-            %(vo_name)s,
-            %(source_se)s,
-            %(dest_se)s,
-            %(activity)s,
-            %(file_state)s,
-            %(delta)s
-        )
-        ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO
-            UPDATE SET nb_files =
-                t_queue.nb_files + EXCLUDED.nb_files
-        RETURNING
-            queue_id
-    """
-    insert_params = {
-        "vo_name": vo_name,
-        "source_se": source_se,
-        "dest_se": dest_se,
-        "activity": activity,
-        "file_state": file_state,
-        "delta": delta,
-    }
-    rows = dbconn.execute(insert_sql, insert_params).fetchall()
+    rows = dbconn.execute(sql, params).fetchall()
     if len(rows) != 1:
         raise Exception(
             f"Failed to increment t_queue counter: vo_name={vo_name} source_se={source_se} dest_se={dest_se} file_state={file_state} delta={delta}"
