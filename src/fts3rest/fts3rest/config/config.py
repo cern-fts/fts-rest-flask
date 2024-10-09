@@ -172,6 +172,7 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
         "OverwriteHopValidation": True,
         "NonManagedTokens": False,
         "ExperimentalPostgresSupport": False,
+        "VerifyAudience": True,
     }
 
     for key in options:

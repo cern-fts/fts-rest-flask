@@ -235,7 +235,11 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
         authorization.is_valid = False
         validation_method = "offline" if self._should_validate_offline() else "online"
-        audience = self.config["fts3.AuthorizedAudiences"]
+        verify_audience = self.config["fts3.VerifyAudience"]
+        audience = None
+        if verify_audience:
+            # Should only verify audience if configured
+            audience = self.config["fts3.AuthorizedAudiences"]
 
         try:
             if not oidc_manager.token_issuer_supported(access_token):
