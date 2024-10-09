@@ -885,13 +885,13 @@ def insert_tokens(job_id, tokens):
     nb_duplicate = 0
     started = time.perf_counter()
     for token_dict in tokens:
-        # Refresh a token half way through its lifetime
+        # Refresh the token halfway between now and its expiration time
+        # If it is already expired set the lifetime to zero
+        curr_time = int(time.time())
         lifetime_sec = (
-            token_dict["exp"] - token_dict["nbf"]
-            if token_dict["exp"] > token_dict["nbf"]
-            else 0
+            token_dict["exp"] - curr_time if token_dict["exp"] > curr_time else 0
         )
-        access_token_refresh_after = token_dict["nbf"] + lifetime_sec * 0.5
+        access_token_refresh_after = token_dict["exp"] - lifetime_sec * 0.5
 
         try:
             timestamp_func = (
@@ -1139,7 +1139,6 @@ def submit():
             if "aud" not in fts_submit_token["payload"]:
                 raise BadRequest("Token does not contain an aud claim")
             fts_submit_token_aud = fts_submit_token["payload"]["aud"]
-
 
         if not issuer_is_known(fts_submit_token_issuer):
             raise BadRequest(
