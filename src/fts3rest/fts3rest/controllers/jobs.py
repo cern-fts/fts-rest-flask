@@ -1047,7 +1047,7 @@ def _inc_t_queue_counters(dbconn, auth_method, queue_counts):
             file_state=file_state,
             delta=count,
         )
-        composite_queue_id = (vo_name, source_se, dest_se, activity)
+        composite_queue_id = (vo_name, source_se, dest_se, activity, file_state)
         result[composite_queue_id] = queue_id
     return result
 
@@ -1061,6 +1061,7 @@ def _create_postgres_files(mysql_files, composite_queue_id_to_id):
             mysql_file["source_se"],
             mysql_file["dest_se"],
             mysql_file["activity"],
+            mysql_file["file_state"],
         )
         postgres_file["queue_id"] = composite_queue_id_to_id[composite_queue_id]
         postgres_files.append(postgres_file)
