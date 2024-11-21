@@ -74,7 +74,7 @@ def profile_request(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         user = request.environ["fts3.User.Credentials"]
-        vo = user.vos[0]
+        vo = user.vos[0] if len(user.vos) else None
         request_type = request.method
         request_path = request.path
         response = func(*args, **kwargs)
