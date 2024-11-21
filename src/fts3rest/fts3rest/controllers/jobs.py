@@ -848,9 +848,14 @@ def issuer_is_known(issuer):
     Returns true if the specified token issuer is in the t_token_provider
     table.
     """
+    # Handle both '/' terminated and not '/' terminated issuer
+    issuer_slash = issuer if issuer.endswith("/") else issuer + "/"
+    issuer_no_slash = issuer if not issuer.endswith("/") else issuer[:-1]
+
     result = Session.execute(
-        "SELECT issuer FROM t_token_provider WHERE issuer = :issuer",
-        params={"issuer": issuer},
+        "SELECT issuer FROM t_token_provider "
+        "  WHERE (issuer = :issuer_slash OR issuer = :issuer_no_slash)",
+        params={"issuer_slash": issuer_slash, "issuer_no_slash": issuer_no_slash},
     )
     for _ in result:
         return True
