@@ -70,13 +70,12 @@ class TestConfigAuthz(TestController):
         """
         Miss dn or op
         """
-        config = {"dn": "/DN=a.test.user", "operation": "config"}
+        config_tmpl = {"dn": "/DN=a.test.user", "operation": "config"}
 
-        for i in config:
-            k = config
-            k[i] = ""
-            self.app.post(url="/config/authorize", params=k, status=400)
-            return config
+        for key in config_tmpl:
+            config = config_tmpl
+            config[key] = ""
+            self.app.post(url="/config/authorize", params=config, status=400)
 
     def test_add_authz_admin_level(self):
         """

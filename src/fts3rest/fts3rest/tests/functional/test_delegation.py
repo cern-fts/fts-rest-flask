@@ -100,7 +100,6 @@ class TestDelegation(TestController):
 
         proxy = Session.query(Credential).get((creds.delegation_id, creds.user_dn))
         self.assertNotEqual(None, proxy)
-        return proxy
 
     def test_dn_mismatch(self):
         """

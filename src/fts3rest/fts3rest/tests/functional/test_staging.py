@@ -51,8 +51,6 @@ class TestSubmitToStaging(TestController):
         self.assertEqual(db_job.job_state, "STAGING")
         self.assertEqual(db_job.files[0].file_state, "STAGING")
 
-        return job_id
-
     def test_submit_to_staging_no_lifetime(self):
         """
         Submit a job into staging, with pin lifetime not set
@@ -87,8 +85,6 @@ class TestSubmitToStaging(TestController):
         db_job = Session.query(Job).get(job_id)
         self.assertEqual(db_job.job_state, "STAGING")
         self.assertEqual(db_job.files[0].file_state, "STAGING")
-
-        return job_id
 
     def test_multiple_bringonline(self):
         """
@@ -180,5 +176,3 @@ class TestSubmitToStaging(TestController):
         db_job = Session.query(Job).get(job_id)
         self.assertEqual(db_job.job_state, "STAGING")
         self.assertEqual(db_job.files[0].file_state, "STAGING")
-
-        return job_id

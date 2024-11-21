@@ -92,8 +92,6 @@ class TestJobSubmission(TestController):
 
         self._validate_submitted(Session.query(Job).get(job_id))
 
-        return str(job_id)
-
     def test_submit_no_reuse(self):
         """
         Submit a valid job no reuse
@@ -126,8 +124,6 @@ class TestJobSubmission(TestController):
         self.assertTrue(job_id)
 
         self._validate_submitted(Session.query(Job).get(job_id))
-
-        return str(job_id)
 
     def test_submit_no_reuse_N(self):
         """
@@ -162,8 +158,6 @@ class TestJobSubmission(TestController):
 
         self._validate_submitted(Session.query(Job).get(job_id))
 
-        return str(job_id)
-
     def test_submit_reuse(self):
         """
         Submit a valid reuse job
@@ -197,8 +191,6 @@ class TestJobSubmission(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.job_type, "Y")
-
-        return job_id
 
     def test_submit_Y(self):
         """
@@ -267,8 +259,6 @@ class TestJobSubmission(TestController):
 
         self._validate_submitted(Session.query(Job).get(job_id))
 
-        return job_id
-
     def test_submit_with_port(self):
         """
         Submit a valid job where the port is explicit in the url.
@@ -308,8 +298,6 @@ class TestJobSubmission(TestController):
 
         self.assertEqual(db_job.files[0].source_se, "srm://source.es")
         self.assertEqual(db_job.files[0].dest_se, "srm://dest.ch")
-
-        return job_id
 
     def test_submit_only_query(self):
         """
@@ -354,8 +342,6 @@ class TestJobSubmission(TestController):
         self.assertEqual(db_job.copy_pin_lifetime, 3600)
         self.assertEqual(db_job.bring_online, 60)
 
-        return job_id
-
     def test_null_checksum(self):
         """
         Valid job, with checksum explicitly set to null
@@ -389,8 +375,6 @@ class TestJobSubmission(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.files[0].checksum, "ADLER32")
-
-        return job_id
 
     def test_checksum_no_verify(self):
         """
@@ -428,8 +412,6 @@ class TestJobSubmission(TestController):
         self.assertEqual(job.files[0].checksum, "1234F")
         self.assertEqual(job.verify_checksum, "t")
 
-        return job_id
-
     def test_verify_checksum_target(self):
         """
         Valid job, verify checksum in destination.
@@ -466,8 +448,6 @@ class TestJobSubmission(TestController):
         self.assertEqual(job.files[0].checksum, "1234F")
         self.assertEqual(job.verify_checksum, "t")
 
-        return job_id
-
     def test_verify_checksum_source(self):
         """
         Valid job, verify checksum in source.
@@ -502,8 +482,6 @@ class TestJobSubmission(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.files[0].checksum, "1234F")
         self.assertEqual(job.verify_checksum, "s")
-
-        return job_id
 
     def test_verify_checksum_both(self):
         """
@@ -540,8 +518,6 @@ class TestJobSubmission(TestController):
         self.assertEqual(job.files[0].checksum, "1234F")
         self.assertEqual(job.verify_checksum, "b")
 
-        return job_id
-
     def test_verify_checksum_none(self):
         """
         Valid job, verify checksum none.
@@ -575,8 +551,6 @@ class TestJobSubmission(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.verify_checksum, "n")
 
-        return job_id
-
     def test_null_user_filesize(self):
         """
         Valid job, with filesize explicitly set to null
@@ -609,8 +583,6 @@ class TestJobSubmission(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.files[0].user_filesize, 0)
-
-        return job_id
 
     def test_no_vo(self):
         """
