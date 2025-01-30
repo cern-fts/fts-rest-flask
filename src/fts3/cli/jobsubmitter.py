@@ -58,6 +58,7 @@ DEFAULT_PARAMS = {
     "activity": None,
     "scitag": None,
     "unmanaged_tokens": False,
+    "priority": 0,
 }
 
 
@@ -183,6 +184,14 @@ class JobSubmitter(Base):
             dest="reuse",
             action="store_true",
             help="enable session reuse for the transfer job.",
+        )
+        self.opt_parser.add_option(
+            "-p",
+            "--priority",
+            dest="priority",
+            type="int",
+            default=3,
+            help="job priority from 1 to 5 (default 3).",
         )
         self.opt_parser.add_option(
             "--job-metadata", dest="job_metadata", help="transfer job metadata."
@@ -578,6 +587,7 @@ class JobSubmitter(Base):
             activity=self.options.activity,
             scitag=self.options.scitag,
             unmanaged_tokens=self.options.unmanaged_tokens,
+            priority=self.options.priority,
         )
 
     def _do_submit(self, context):
