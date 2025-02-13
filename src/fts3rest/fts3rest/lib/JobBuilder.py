@@ -276,6 +276,9 @@ class JobBuilder:
         self.job["checksum_method"] = self.job["checksum_method"][0]
 
     def _apply_auto_session_reuse(self):
+        # Return early if SessionReuse not allowed
+        if not app.config.get("fts3.AllowSessionReuse", True):
+            return False
         # Return early if job type is already "Session Reuse"
         if self.job["job_type"] == "Y":
             return False
@@ -345,6 +348,15 @@ class JobBuilder:
                     file["hashed_id"] = shared_hashed_id
                 return True
         return False
+
+    def _apply_job_type(self):
+        if self.params["multihop"]:
+            return "H"
+        if safe_flag(self.params["reuse"]) and app.config.get(
+            "fts3.AllowSessionReuse", True
+        ):
+            return "Y"
+        return "N"
 
     def _validate_job_type_preconditions(self, unique_files):
         if self.is_multiple_replica:
@@ -611,12 +623,7 @@ class JobBuilder:
         """
         Initializes the list of transfers
         """
-
-        job_type = "N"
-        if self.params["multihop"]:
-            job_type = "H"
-        elif safe_flag(self.params["reuse"]):
-            job_type = "Y"
+        job_type = self._apply_job_type()
 
         self.is_bringonline = (
             safe_int(self.params["copy_pin_lifetime"]) > 0

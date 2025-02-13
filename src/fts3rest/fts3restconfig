@@ -56,6 +56,8 @@ Alias =
 # otherwise the job submission will be refused
 #OverwriteHopValidation = True
 
+# Allow or disallow session reuse transfers (default true)
+#AllowSessionReuse = True
 # Enable or disable AutoSessionReuse (default false)
 #AutoSessionReuse = False
 # Min number of files per session reuse
