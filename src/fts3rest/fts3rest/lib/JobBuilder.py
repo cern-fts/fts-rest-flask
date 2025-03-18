@@ -431,7 +431,7 @@ class JobBuilder:
         """
 
         def _is_http_endpoint(endpoint):
-            if not endpoint.startswith(tuple(["https://", "davs://"])):
+            if not endpoint.startswith(tuple(["https://", "davs://", "mock://"])):
                 raise BadRequest(
                     "'overwrite-when-only-on-disk' requires destination "
                     "to be HTTPs endpoint (Tape REST API required)"
