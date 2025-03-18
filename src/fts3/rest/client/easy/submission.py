@@ -305,9 +305,11 @@ def new_staging_job(
     Returns:
         An initialized dictionary representing a staging job
     """
-    if bring_online <= 0 and copy_pin_lifetime <= 0:
+    if (bring_online is None or bring_online <= 0) and (
+        copy_pin_lifetime is None or copy_pin_lifetime <= 0
+    ):
         raise ClientError(
-            "Bad request: bring_online and copy_pin_lifetime are not positive numbers"
+            "Bad request: both 'bring_online' and 'copy_pin_lifetime' are not positive numbers"
         )
 
     transfers = []
