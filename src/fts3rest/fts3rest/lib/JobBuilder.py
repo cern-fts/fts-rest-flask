@@ -123,7 +123,7 @@ class JobBuilder:
         From the dictionary file_dict, generate a list of transfers for a job
         """
         # Extract transfer tuples where each tuple has a source, destination
-        # source token and destionation token.  Source and destination
+        # source token and destination token.  Source and destination
         # tokens will be None if the client is using X509 proxy certificates
         tuples = []
 
@@ -552,6 +552,10 @@ class JobBuilder:
         Generates the list of tokens ready for the database
         """
 
+        self.unmanaged_tokens = safe_flag(self.params["unmanaged_tokens"])
+        if self.unmanaged_tokens and not app.config.get("fts3.AllowNonManagedTokens"):
+            raise BadRequest("Unmanaged tokens are not allowed!")
+
         # Create a self.tokens attribute no matter what
         self.tokens = []
 
@@ -582,6 +586,7 @@ class JobBuilder:
                 "token_id": token_id,
                 "access_token": token,
                 "refresh_token": None,
+                "unmanaged": self.unmanaged_tokens,
             }
 
             if "iss" in jwt_payload:

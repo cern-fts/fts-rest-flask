@@ -117,7 +117,7 @@ fi
 
 %changelog
 * Tue Sep 03 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.4-1
-- Allow unamanged tokens if the "offline_access" scope is missing
+- Allow unmanaged tokens if the "offline_access" scope is missing
 - Un-retire existing access tokens when referenced again by submitted transfers
 
 * Tue Aug 20 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.3-1

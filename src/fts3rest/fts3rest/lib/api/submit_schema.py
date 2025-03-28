@@ -82,6 +82,10 @@ paramSchema = {
             "type": ["boolean", "null"],
             "title": "Force IPv6 if the underlying protocol supports it",
         },
+        "unmanaged_tokens": {
+            "type": ["boolean", "null"],
+            "title": "Instruct server to not manage the token lifecycle",
+        },
     },
 }
 

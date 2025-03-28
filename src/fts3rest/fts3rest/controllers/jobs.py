@@ -785,15 +785,14 @@ def get_refreshless_token_ids(token_ids):
     return refreshless_token_ids
 
 
-def set_file_states_to_token_prep_as_necessary(job_id, file_rows, token_rows):
+def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
     """
     Sets the file_state column of the specified t_file table rows to TOKEN_PREP
     if either the associated source or destination access token does not yet
     have a refresh token.
 
-    A second restraint was added:
-    Manage the token lifecycle only if the involved token
-    contains the "offline_access" scope
+    This function is called only when FTS is supposed to manage the tokens lifecycle
+    (i.e.: the submission does not set the "unmanaged_tokens" flag)
 
     The initial file state is stored under t_file.file_state_initial
     """
@@ -808,36 +807,10 @@ def set_file_states_to_token_prep_as_necessary(job_id, file_rows, token_rows):
         f" nb_refreshless_tokens={len(refreshless_token_ids)}"
     )
 
-    eligible_token_ids = refreshless_token_ids
-
-    if current_app.config.get("fts3.NonManagedTokens", False):
-        # Create a list of tokens that have "offline_access" scope
-        valid_scope_token_ids = set(
-            [
-                token["token_id"]
-                for token in token_rows
-                if "offline_access" in token["scope"]
-            ]
-        )
-
-        # Keep only the intersection between the tokens that have "offline_access"
-        # and the tokens that don't have an associated refresh token
-        eligible_token_ids = set.intersection(
-            refreshless_token_ids, valid_scope_token_ids
-        )
-
-        log.info(
-            f"Got tokens with 'offline_access' scope:"
-            f" job_id={job_id}"
-            f" nb_tokens_checked={len(token_rows)}"
-            f" nb_valid_scope_tokens={len(valid_scope_token_ids)}"
-            f" nb_eligible_tokens={len(eligible_token_ids)}"
-        )
-
     for file_row in file_rows:
         if (
-            file_row["src_token_id"] in eligible_token_ids
-            or file_row["dst_token_id"] in eligible_token_ids
+            file_row["src_token_id"] in refreshless_token_ids
+            or file_row["dst_token_id"] in refreshless_token_ids
         ):
             file_row["file_state_initial"] = file_row["file_state"]
             file_row["file_state"] = "TOKEN_PREP"
@@ -888,6 +861,11 @@ def insert_tokens(job_id, tokens):
 
     nb_inserted = 0
     nb_duplicate = 0
+    unmanaged = False
+    if len(tokens) > 0:
+        # Cache value for log print at end of the function
+        unmanaged = tokens[0]["unmanaged"]
+
     started = time.perf_counter()
     for token_dict in tokens:
         # Refresh the token halfway between now and its expiration time
@@ -913,7 +891,8 @@ def insert_tokens(job_id, tokens):
               access_token_refresh_after,
               issuer,
               scope,
-              audience
+              audience,
+              unmanaged
             ) VALUES (
               :token_id,
               :access_token,
@@ -922,7 +901,8 @@ def insert_tokens(job_id, tokens):
               {timestamp_func}(:access_token_refresh_after),
               :issuer,
               :scope,
-              :audience
+              :audience,
+              :unmanaged
             )
             """  # nosec
             Session.execute(
@@ -936,6 +916,7 @@ def insert_tokens(job_id, tokens):
                     "issuer": token_dict["issuer"],
                     "scope": token_dict["scope"],
                     "audience": token_dict["audience"],
+                    "unmanaged": token_dict["unmanaged"],
                 },
             )
             Session.commit()
@@ -958,7 +939,7 @@ def insert_tokens(job_id, tokens):
 
     db_secs = time.perf_counter() - started
     log.info(
-        f"Inserted tokens into database: job_id={job_id} db_secs={db_secs} nb_inserted={nb_inserted} nb_duplicate={nb_duplicate}"
+        f"Inserted tokens into database: job_id={job_id} db_secs={db_secs} nb_inserted={nb_inserted} nb_duplicate={nb_duplicate} unmanaged={unmanaged}"
     )
 
 
@@ -1081,9 +1062,9 @@ def submit():
         # What was supposed to be the initial file state is stored in "t_file.file_state_initial".
         # The FTS server will reset the file state to its initial value after obtaining the refresh token
 
-        if user.method == "oauth2":
+        if user.method == "oauth2" and not populated.unmanaged_tokens:
             set_file_states_to_token_prep_as_necessary(
-                populated.job_id, populated.files, populated.tokens
+                populated.job_id, populated.files
             )
 
         try:
