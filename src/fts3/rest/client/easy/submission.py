@@ -173,6 +173,7 @@ def new_job(
     s3alternate=False,
     nostreams=1,
     buffer_size=None,
+    unmanaged_tokens=False,
     **kwargs,
 ):
     """
@@ -195,14 +196,19 @@ def new_job(
         archive_timeout:             Archive timeout
         copy_pin_lifetime:           Pin lifetime
         retry:                       Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
+        retry_delay:                 Minutes to wait before next retry
         metadata:                    Metadata to bind to the job
         priority:                    Job priority
+        strict_copy:                 Execute only the TPC part of a transfer (no other preparation)
+        disable_cleanup:             Do not perform the destination file clean-up on transfer failure
         max_time_in_queue:           Maximum number
+        timeout:                     Transfer timeout
         id_generator:                Job id generator algorithm
         sid:                         Specific id given by the client
         s3alternate:                 Use S3 alternate URL schema
         nostreams:                   Number of streams
         buffer_size:                 TCP buffer size (in bytes) that will be used for the given transfer-job
+        unmanaged_tokens:            Instruct server to not manage the token lifecycle
 
     Returns:
         An initialized dictionary representing a job
@@ -271,6 +277,7 @@ def new_job(
         s3alternate=s3alternate,
         nostreams=nostreams,
         buffer_size=buffer_size,
+        unmanaged_tokens=unmanaged_tokens,
     )
     job = dict(files=transfers, delete=deletion, params=params)
     return job

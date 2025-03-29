@@ -57,6 +57,7 @@ DEFAULT_PARAMS = {
     "disable_cleanup": False,
     "activity": None,
     "scitag": None,
+    "unmanaged_tokens": False,
 }
 
 
@@ -361,6 +362,12 @@ class JobSubmitter(Base):
             help=SUPPRESS_HELP,
             # help="The destination access token in token-based transfers",
         )
+        self.opt_parser.add_option(
+            "--unmanaged-tokens",
+            dest="unmanaged_tokens",
+            action="store_true",
+            help="instruct server to not manage the token lifecycle",
+        )
 
     def validate(self):
         self.checksum = None
@@ -572,6 +579,7 @@ class JobSubmitter(Base):
             disable_cleanup=self.options.disable_cleanup,
             activity=self.options.activity,
             scitag=self.options.scitag,
+            unmanaged_tokens=self.options.unmanaged_tokens,
         )
 
     def _do_submit(self, context):
