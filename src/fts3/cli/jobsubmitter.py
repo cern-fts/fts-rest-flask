@@ -353,14 +353,12 @@ class JobSubmitter(Base):
         self.opt_parser.add_option(
             "--src-access-token",
             dest="src_access_token",
-            help=SUPPRESS_HELP,
-            # help="The source access token in token-based transfers",
+            help="The source access token in token-based transfers",
         )
         self.opt_parser.add_option(
             "--dst-access-token",
             dest="dst_access_token",
-            help=SUPPRESS_HELP,
-            # help="The destination access token in token-based transfers",
+            help="The destination access token in token-based transfers",
         )
         self.opt_parser.add_option(
             "--unmanaged-tokens",
