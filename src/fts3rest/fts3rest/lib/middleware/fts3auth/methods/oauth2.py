@@ -194,7 +194,7 @@ def do_authentication(credentials, env, config):
     # Override get_granted_level_for to allow filtering by scope claim
     setattr(
         credentials,
-        "get_granted_level_for_overriden",
+        "get_granted_level_for_overridden",
         credentials.get_granted_level_for,
     )
     setattr(
