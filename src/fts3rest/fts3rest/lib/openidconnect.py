@@ -120,42 +120,6 @@ class OIDCmanager:
         )
         return response
 
-    def refresh_access_token(self, credential):
-        """
-        Request new access token
-        :param credential: Credential from DB containing an access token and a refresh token
-        :return: Updated credential containing new access token
-        """
-        access_token, refresh_token = credential.proxy.split(":")
-        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
-        issuer = unverified_payload["iss"]
-        client = self.clients[issuer]
-        log.debug(
-            "refresh_access_token::: issuer={} subject={}".format(issuer, credential.dn)
-        )
-
-        # Prepare and make request
-        refresh_session_state = rndstr(50)
-        client.grant[refresh_session_state] = Grant()
-        client.grant[refresh_session_state].grant_expiration_time = (
-            time_util.utc_time_sans_frac() + 60
-        )
-        resp = AccessTokenResponse()
-        resp["refresh_token"] = refresh_token
-        client.grant[refresh_session_state].tokens.append(Token(resp))
-        new_credential = client.do_access_token_refresh(
-            authn_method="client_secret_basic", state=refresh_session_state
-        )
-        # A new refresh token is optional
-        refresh_token = new_credential.get("refresh_token", refresh_token)
-        access_token = new_credential.get("access_token")
-        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
-        expiration_time = unverified_payload["exp"]
-        credential.proxy = new_credential["access_token"] + ":" + refresh_token
-        credential.termination_time = datetime.utcfromtimestamp(expiration_time)
-
-        return credential
-
     @staticmethod
     def jwt_options_unverified(options=None):
         options_unverified = {

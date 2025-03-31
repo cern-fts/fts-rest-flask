@@ -11,7 +11,6 @@ from werkzeug.exceptions import HTTPException
 
 from fts3rest.config.config import fts3_config_load
 from fts3rest.config.routing import base, cstorage
-from fts3rest.lib.IAMTokenRefresher import IAMTokenRefresher
 from fts3rest.lib.helpers.connection_validator import (
     connection_validator,
     connection_set_sqlmode,
@@ -155,8 +154,6 @@ def create_app(default_config_file=None, test=False):
     # Start OIDC clients
     if "fts3.Providers" in app.config and app.config["fts3.Providers"]:
         oidc_manager.setup(app.config)
-        if not test:
-            IAMTokenRefresher("fts_token_refresh_daemon", app.config).start()
     else:
         log.info("OpenID Connect support disabled. Providers not found in config")
 
