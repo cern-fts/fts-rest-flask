@@ -45,7 +45,7 @@ class OIDCmanager:
                 client.store_registration_info(client_reg)
                 issuer = client.provider_info["issuer"]
                 if "introspection_endpoint" not in client.provider_info:
-                    log.warning("{} -- missing introspection endpoint".format(issuer))
+                    log.info("{} -- missing introspection endpoint".format(issuer))
                 self.clients[issuer] = client
                 # Store custom configuration options for this provider
                 self.clients_config[issuer] = providers_config[provider]["custom"]
@@ -119,121 +119,6 @@ class OIDCmanager:
             authn_method="client_secret_basic",
         )
         return response
-
-    def generate_refresh_token(self, issuer, token, audience=None, scope=None):
-        """
-        Exchange an access token for a refresh token.
-        If the scopes are specified, ensure "offline_access" is part of the claim.
-        If the audience is not specified, use the client ID.
-        :param issuer: issuer of the access token
-        :param audience: audience of the access token
-        :param scope: scope string of the access token
-        :param token: the access token
-        :return: refresh token
-        :raise Exception: If refresh token cannot be obtained
-        """
-        client = self.clients[issuer]
-        body = {
-            "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-            "requested_token_type": "urn:ietf:params:oauth:token-type:refresh_token",
-            "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
-            "subject_token": token,
-        }
-
-        # Handle custom audience from config
-        if "audience" in self.clients_config[issuer]:
-            config_audience = self.clients_config[issuer]["audience"]
-            log.debug(
-                'Using client_config_options["{}"]["audience"]={}'.format(
-                    issuer, config_audience
-                )
-            )
-            if audience is None:
-                audience = config_audience
-            else:
-                if isinstance(audience, str):
-                    audience = [audience]
-                audience.append(config_audience)
-
-        # Handle "requested_token_type" grant
-        if "no_requested_token_type" in self.clients_config[issuer]:
-            del body["requested_token_type"]
-
-        if scope:
-            body["scope"] = " ".join(scope)
-            if "offline_access" not in scope:
-                body["scope"] += " offline_access"
-        if audience:
-            body["audience"] = audience
-
-        log.debug(
-            "generate_refresh_token: issuer={} audience={} scope={}".format(
-                issuer, audience, scope
-            )
-        )
-
-        try:
-            response = client.do_any(
-                Message,
-                request_args=body,
-                endpoint=client.provider_info["token_endpoint"],
-                body_type="json",
-                method="POST",
-                authn_method="client_secret_basic",
-            )
-            response = response.json()
-            log.debug("generate_refresh_token response::: {}".format(response))
-            access_token = response.get("access_token", token)
-            refresh_token = response.get("refresh_token")
-            if access_token == refresh_token:
-                access_token = token
-        except Exception as ex:
-            log.warning("Exception during refresh token request: {}".format(ex))
-            raise Exception("Exception during refresh token request: {}".format(ex))
-        if refresh_token is None:
-            errmsg = "No refresh token returned during token exchange"
-            if scope is None:
-                errmsg += '. Is "offline_access" scope included?'
-            elif "offline_access" not in scope:
-                errmsg += ". Token must contain offline_access scope!"
-            raise Exception(errmsg)
-        return access_token, refresh_token
-
-    def refresh_access_token(self, credential):
-        """
-        Request new access token
-        :param credential: Credential from DB containing an access token and a refresh token
-        :return: Updated credential containing new access token
-        """
-        access_token, refresh_token = credential.proxy.split(":")
-        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
-        issuer = unverified_payload["iss"]
-        client = self.clients[issuer]
-        log.debug(
-            "refresh_access_token::: issuer={} subject={}".format(issuer, credential.dn)
-        )
-
-        # Prepare and make request
-        refresh_session_state = rndstr(50)
-        client.grant[refresh_session_state] = Grant()
-        client.grant[refresh_session_state].grant_expiration_time = (
-            time_util.utc_time_sans_frac() + 60
-        )
-        resp = AccessTokenResponse()
-        resp["refresh_token"] = refresh_token
-        client.grant[refresh_session_state].tokens.append(Token(resp))
-        new_credential = client.do_access_token_refresh(
-            authn_method="client_secret_basic", state=refresh_session_state
-        )
-        # A new refresh token is optional
-        refresh_token = new_credential.get("refresh_token", refresh_token)
-        access_token = new_credential.get("access_token")
-        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
-        expiration_time = unverified_payload["exp"]
-        credential.proxy = new_credential["access_token"] + ":" + refresh_token
-        credential.termination_time = datetime.utcfromtimestamp(expiration_time)
-
-        return credential
 
     @staticmethod
     def jwt_options_unverified(options=None):
