@@ -45,7 +45,7 @@ class OIDCmanager:
                 client.store_registration_info(client_reg)
                 issuer = client.provider_info["issuer"]
                 if "introspection_endpoint" not in client.provider_info:
-                    log.warning("{} -- missing introspection endpoint".format(issuer))
+                    log.info("{} -- missing introspection endpoint".format(issuer))
                 self.clients[issuer] = client
                 # Store custom configuration options for this provider
                 self.clients_config[issuer] = providers_config[provider]["custom"]
