@@ -24,3 +24,5 @@ class Token_provider(Base):
     issuer = Column(String(1024), primary_key=True)
     client_id = Column(String(255))
     client_secret = Column(String(255))
+    required_submission_scope = Column(String(255))
+    vo_mapping = Column(String(100))
