@@ -90,11 +90,6 @@ TokenRefreshDaemonIntervalInSeconds=600
 # (FTS does not manage the token lifecycle for non-managed submission)
 #AllowNonManagedTokens = False
 
-#[providers]
-#provider1 = https://wlcg.cloud.cnaf.infn.it
-#provider_ClientId = <client-id>
-#provider_ClientSecret = <client-secret>
-
 # Authorization roles
 # Detailed roles syntax is explained in the FTS3 documentation (Installation Guide/FTS3)
 [roles]

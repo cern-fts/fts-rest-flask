@@ -22,7 +22,6 @@ class OIDCmanager:
 
     def __init__(self):
         self.clients = {}
-        self.clients_config = {}
         self.config = None
 
     def setup(self, config):
@@ -47,8 +46,6 @@ class OIDCmanager:
                 if "introspection_endpoint" not in client.provider_info:
                     log.info("{} -- missing introspection endpoint".format(issuer))
                 self.clients[issuer] = client
-                # Store custom configuration options for this provider
-                self.clients_config[issuer] = providers_config[provider]["custom"]
             except Exception as ex:
                 log.warning("Exception registering provider: {}".format(provider))
                 log.warning(ex)
