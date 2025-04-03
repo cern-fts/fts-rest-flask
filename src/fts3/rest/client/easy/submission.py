@@ -162,8 +162,8 @@ def new_job(
     copy_pin_lifetime=None,
     retry=-1,
     retry_delay=0,
-    metadata=None,
     priority=None,
+    metadata=None,
     strict_copy=False,
     disable_cleanup=False,
     max_time_in_queue=None,
@@ -197,8 +197,8 @@ def new_job(
         copy_pin_lifetime:           Pin lifetime
         retry:                       Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
         retry_delay:                 Minutes to wait before next retry
-        metadata:                    Metadata to bind to the job
         priority:                    Job priority
+        metadata:                    Metadata to bind to the job
         strict_copy:                 Execute only the TPC part of a transfer (no other preparation)
         disable_cleanup:             Do not perform the destination file clean-up on transfer failure
         max_time_in_queue:           Maximum number

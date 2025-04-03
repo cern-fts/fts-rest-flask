@@ -45,6 +45,7 @@ DEFAULT_PARAMS = {
     "timeout": None,
     "fail_nearline": False,
     "retry": 0,
+    "priority": None,
     "multihop": False,
     "credential": None,
     "nostreams": None,
@@ -287,6 +288,13 @@ class JobSubmitter(Base):
             "If negative, there will be no retries.",
         )
         self.opt_parser.add_option(
+            "-p",
+            "--priority",
+            dest="priority",
+            type="int",
+            help="job priority from 1 to 5 (default 3 server-side)",
+        )
+        self.opt_parser.add_option(
             "-m",
             "--multi-hop",
             dest="multihop",
@@ -477,6 +485,11 @@ class JobSubmitter(Base):
                 "Using 'overwrite-when-only-on-disk' requires 'archive-timeout' to be set"
             )
 
+        if self.params.get("priority") is not None and not (
+            1 <= self.params["priority"] <= 5
+        ):
+            self.opt_parser.error("Priority must be between 1 and 5")
+
         if self.params.get("scitag") is not None and not (
             65 <= self.params["scitag"] <= 65535
         ):
@@ -565,6 +578,7 @@ class JobSubmitter(Base):
             copy_pin_lifetime=self.options.pin_lifetime,
             reuse=self.options.reuse,
             retry=self.options.retry,
+            priority=self.options.priority,
             multihop=self.options.multihop,
             credential=self.options.cloud_cred,
             nostreams=self.options.nostreams,
