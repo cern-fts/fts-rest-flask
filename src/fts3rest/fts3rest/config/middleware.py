@@ -187,9 +187,9 @@ def create_app(default_config_file=None, test=False):
         Heartbeat("fts_rest", int(app.config.get("fts3.HeartBeatInterval", 60))).start()
 
     # Start OIDC clients
-    if "fts3.Providers" in app.config and app.config["fts3.Providers"]:
+    if app.config["fts3.Providers"]:
         oidc_manager.setup(app.config)
     else:
-        log.info("OpenID Connect support disabled. Providers not found in config")
+        log.info("OpenID Connect support disabled. No providers found in database")
 
     return app
