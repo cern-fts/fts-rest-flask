@@ -49,7 +49,6 @@ DEFAULT_PARAMS = {
     "credential": None,
     "nostreams": None,
     "s3alternate": False,
-    "target_qos": None,
     "ipv4": False,
     "ipv6": False,
     "buffer_size": None,
@@ -321,12 +320,6 @@ class JobSubmitter(Base):
             help="use S3 alternate URL",
         )
         self.opt_parser.add_option(
-            "--target-qos",
-            dest="target_qos",
-            type="string",
-            help="define the target QoS for this transfer for CDMI endpoints",
-        )
-        self.opt_parser.add_option(
             "--buffer-size",
             "--buff-size",
             dest="buffer_size",
@@ -589,7 +582,6 @@ class JobSubmitter(Base):
             ipv4=self.options.ipv4,
             ipv6=self.options.ipv6,
             s3alternate=self.options.s3alternate,
-            target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
             strict_copy=self.options.strict_copy,
             disable_cleanup=self.options.disable_cleanup,
@@ -648,8 +640,6 @@ class JobSubmitter(Base):
                 "STAGING",
                 "ACTIVE",
                 "ARCHIVING",
-                "QOS_TRANSITION",
-                "QOS_REQUEST_SUBMITTED",
             ]:
                 self.logger.info("Job in state %s" % job["job_state"])
                 time.sleep(self.options.poll_interval)

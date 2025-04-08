@@ -158,8 +158,6 @@ class JobBuilder:
         # Create one File entry per matching pair
         if self.is_bringonline:
             initial_file_state = "STAGING"
-        elif self.is_qos_cdmi_transfer:
-            initial_file_state = "QOS_TRANSITION"
         else:
             initial_file_state = "SUBMITTED"
 
@@ -635,14 +633,8 @@ class JobBuilder:
             or safe_int(self.params["bring_online"]) > 0
         )
 
-        self.is_qos_cdmi_transfer = (
-            self.params["target_qos"] if "target_qos" in self.params.keys() else None
-        ) is not None
-
         if self.is_bringonline:
             job_initial_state = "STAGING"
-        elif self.is_qos_cdmi_transfer:
-            job_initial_state = "QOS_TRANSITION"
         else:
             job_initial_state = "SUBMITTED"
 
@@ -725,11 +717,6 @@ class JobBuilder:
             job_metadata=self.params["job_metadata"],
             internal_job_params=self._build_internal_job_params(),
             max_time_in_queue=expiration_time,
-            target_qos=(
-                self.params["target_qos"]
-                if "target_qos" in self.params.keys()
-                else None
-            ),
         )
 
         if "credential" in self.params:

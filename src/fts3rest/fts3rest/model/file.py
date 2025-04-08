@@ -27,8 +27,6 @@ FileActiveStates = [
     "READY",
     "ACTIVE",
     "ARCHIVING",
-    "QOS_TRANSITION",
-    "QOS_REQUEST_SUBMITTED",
     "FORCE_START",
 ]
 FileTokenStates = [
