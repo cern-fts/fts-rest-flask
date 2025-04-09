@@ -122,6 +122,17 @@ class JobBuilder:
         """
         From the dictionary file_dict, generate a list of transfers for a job
         """
+
+        # FTS4: Fail all transfers if there are multiple destinations
+        if (
+            app.config["fts3.DbType"] == "postgresql"
+            and app.config["fts3.ExperimentalPostgresSupport"]
+        ):
+            if len(file_dict["destinations"]) > 1:
+                raise BadRequest(
+                    "File transfers with multiple destinations are not allowed."
+                )
+
         # Extract transfer tuples where each tuple has a source, destination
         # source token and destination token.  Source and destination
         # tokens will be None if the client is using X509 proxy certificates
