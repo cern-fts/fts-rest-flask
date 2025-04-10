@@ -11,3 +11,4 @@ jwcrypto
 wrapt<1.14  # dependency management for conflicting versions 'jwcrypto --> wrapt' and 'bandit --> wrapt'
 oic
 Mako
+jsonschema

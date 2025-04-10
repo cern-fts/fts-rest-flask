@@ -28,6 +28,7 @@ Requires:       python%{python3_pkgversion}-mysqlclient
 Requires:       python%{python3_pkgversion}-jwcrypto
 Requires:       python%{python3_pkgversion}-dirq
 Requires:       python%{python3_pkgversion}-mako
+Requires:       python%{python3_pkgversion}-jsonschema
 ### The following three packages are still not found in community repositories on RHEL9 and were build by us
 ### They follow the naming convention for python packages on RHEL9
 Requires:       python%{python3_pkgversion}-pyjwkest = 1.4.2-1.el9.cern
