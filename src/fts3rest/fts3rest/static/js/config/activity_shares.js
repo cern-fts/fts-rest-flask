@@ -22,7 +22,7 @@ function handleActivityShareSave(form)
     var setup = {};
     var vo = form.find("input[name='vo']").val();
 
-    var tbody = form.find(".share-list");
+    var tbody = form.find(".activity-share-list");
     var rows = tbody.find("tr");
     var shares = {};
 
@@ -129,7 +129,7 @@ function refreshActivityShares()
             var submitBtn = $("<button class='btn btn-primary' name='save_" +voName +"'>Save</button>");
 
             var shareTable = $("<table class='table'></table>");
-            var shareTbody = $("<tbody class='share-list'></tbody>");
+            var shareTbody = $("<tbody class='activity-share-list'></tbody>");
 
             $.each(shareConfig.share, function(share, weight) {
                 var tr = $("<tr></tr>");
@@ -225,14 +225,14 @@ function setupActivityShares()
         event.preventDefault();
         handleActivityShareSave($("#activity-share-add-frm"))
         .done(function(data, textStatus, jqXHR) {
-	   $(".share-list td").trigger("reset"); 
+	   $(".activity-share-list td").trigger("reset"); 
            refreshActivityShares();
         })
         .fail(function(jqXHR) {
             errorMessage(jqXHR);
         })
 	.always(function(){
-	$("#activity-share-add .share-list tr").remove();
+	$("#activity-share-add .activity-share-list tr").remove();
 });
     });
 
