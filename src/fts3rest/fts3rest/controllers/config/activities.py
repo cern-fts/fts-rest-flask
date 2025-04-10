@@ -113,7 +113,7 @@ def set_activity_shares():
     # Make sure the share weights are numbers
     for entry in input_dict["share"]:
         # Make sure the share list has right format: [{"A": 1}, {"B": 2}]
-        if not isinstance(entry, dict) and len(entry) != 1:
+        if not isinstance(entry, dict) or len(entry) != 1:
             raise BadRequest(
                 "share is expected to be a single JSON object with activity names and respective weights"
             )
