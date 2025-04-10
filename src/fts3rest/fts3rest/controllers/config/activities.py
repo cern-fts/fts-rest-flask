@@ -13,13 +13,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 import json
+import jsonschema
 import logging
 
-from flask import request, Response
+from flask import current_app, request, Response
 from werkzeug.exceptions import BadRequest, NotFound
 
 from fts3rest.model import *
 from fts3rest.controllers.config import audit_configuration
+from fts3rest.lib.api.submit_schema import activityShareSchema
 from fts3rest.lib.helpers.accept import accept
 from fts3rest.lib.helpers.jsonify import jsonify
 from fts3rest.lib.helpers.misc import get_input_as_dict
@@ -101,12 +103,25 @@ def set_activity_shares():
     Set a new/modify an activity share
     """
     input_dict = get_input_as_dict(request)
-    if not input_dict.get("vo", None):
-        raise BadRequest("Missing VO")
-    if not input_dict.get("share", None):
-        raise BadRequest("Missing share")
+
+    # Validate input against schema (only FTS4)
+    if (
+        current_app.config["fts3.DbType"] == "postgresql"
+        and current_app.config["fts3.ExperimentalPostgresSupport"]
+    ):
+        try:
+            jsonschema.validate(instance=input_dict, schema=activityShareSchema)
+        except jsonschema.exceptions.ValidationError as e:
+            raise BadRequest(f"Invalid input format: {str(e)}")
+    else:
+        if not input_dict.get("vo", None):
+            raise BadRequest("Missing VO")
+        if not input_dict.get("share", None):
+            raise BadRequest("Missing share")
+
+    # Set default for "active" if not provided by user
     if "active" not in input_dict:
-        input_dict["active"] = True
+        input_dict["active"] = activityShareSchema["properties"]["active"]["default"]
 
     input_dict["share"] = _normalize_activity_share_format(input_dict["share"])
 
