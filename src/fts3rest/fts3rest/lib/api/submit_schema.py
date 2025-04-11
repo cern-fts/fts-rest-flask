@@ -100,3 +100,13 @@ SubmitSchema = {
         "delete": {"type": "array", "items": deleteSchema},
     },
 }
+
+activityShareSchema = {
+    "type": "object",
+    "required": ["vo", "share"],
+    "properties": {
+        "vo": {"type": "string"},
+        "share": {"type": "object", "additionalProperties": {"type": "number"}},
+        "active": {"type": "boolean", "default": True},
+    },
+}
