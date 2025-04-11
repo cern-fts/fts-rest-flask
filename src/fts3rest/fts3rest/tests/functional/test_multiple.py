@@ -304,22 +304,17 @@ class TestMultiple(TestController):
                     ],
                     "selection_strategy": "orderly",
                     "metadata": "Multi dst metadata",
-                },
-                {
-                    "sources": ["mock://mock_src_se//mock_src_disk_file_0001"],
-                    "destinations": ["mock://mock_dst_se//mock_dst_disk_file_0001"],
-                    "selection_strategy": "orderly",
-                    "metadata": "METADATA EXAMPLE",
-                },
+                }
             ]
         }
 
-        self.app.post(
+        message = self.app.post(
             url="/jobs",
             content_type="application/json",
             params=json.dumps(job),
             status=400,
-        )
+        ).json["message"]
+        self.assertIn("multiple destinations are not allowed", message)
 
     def test_submit_alternatives_with_reuse(self):
         """
