@@ -282,6 +282,45 @@ class TestMultiple(TestController):
             status=400,
         )
 
+    def test_submit_multiple_destinations_fts4(self):
+        """
+        One job with multiple destinations.
+        This request must be denied!
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        # Set the config to use PostgreSQL (FTS4)
+        self.flask_app.config["fts3.DbType"] = "postgresql"
+        self.flask_app.config["fts3.ExperimentalPostgresSupport"] = True
+
+        job = {
+            "files": [
+                {
+                    "sources": ["mock://mock_src_se//mock_src_disk_file_0001"],
+                    "destinations": [
+                        "mock://mock_dst_se//mock_dst_disk_file_0001",
+                        "mock://mock_dst_se//mock_dst_disk_file_0002",
+                    ],
+                    "selection_strategy": "orderly",
+                    "metadata": "Multi dst metadata",
+                },
+                {
+                    "sources": ["mock://mock_src_se//mock_src_disk_file_0001"],
+                    "destinations": ["mock://mock_dst_se//mock_dst_disk_file_0001"],
+                    "selection_strategy": "orderly",
+                    "metadata": "METADATA EXAMPLE",
+                },
+            ]
+        }
+
+        self.app.post(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        )
+
     def test_submit_alternatives_with_reuse(self):
         """
         One job with alternatives, and reuse set.
