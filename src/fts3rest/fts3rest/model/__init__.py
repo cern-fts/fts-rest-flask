@@ -24,5 +24,5 @@ from .oauth2 import *
 from .optimizer import *
 from .server import *
 from .token import *
-from .token_provider import *
+from .tokenProvider import *
 from .version import *

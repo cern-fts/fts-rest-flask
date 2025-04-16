@@ -1,5 +1,5 @@
 #   Copyright  Members of the EMI Collaboration, 2013.
-#   Copyright 2020 CERN
+#   Copyright 2025 CERN
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ from sqlalchemy import Column, String
 from .base import Base
 
 
-class Token_provider(Base):
+class TokenProvider(Base):
     __tablename__ = "t_token_provider"
 
     name = Column(String(255))
