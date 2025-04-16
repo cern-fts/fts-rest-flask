@@ -37,6 +37,7 @@ from fts3rest.controllers.config import (
     authz,
     activities,
     cloud,
+    tokenproviders,
 )
 
 
@@ -351,6 +352,26 @@ def do_connect(app):
         "/config/cloud_storage/<storage_name>/<id>",
         "config.cloud.remove_user_from_cloud_storage",
         config.cloud.remove_user_from_cloud_storage,
+        methods=["DELETE"],
+    )
+
+    # Token Providers
+    app.add_url_rule(
+        "/config/token_providers",
+        "config.tokenproviders.get_token_providers",
+        config.tokenproviders.get_token_providers,
+        methods=["GET"],
+    )
+    app.add_url_rule(
+        "/config/token_providers",
+        "config.tokenproviders.set_token_provider",
+        config.tokenproviders.set_token_provider,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/config/token_providers/<provider_name>",
+        "config.tokenproviders.delete_token_provider",
+        config.tokenproviders.delete_token_provider,
         methods=["DELETE"],
     )
 
