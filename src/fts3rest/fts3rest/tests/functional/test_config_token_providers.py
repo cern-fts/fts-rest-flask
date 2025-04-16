@@ -6,7 +6,7 @@ from fts3rest.model import TokenProvider, ConfigAudit
 class TestConfigTokenProviders(TestController):
     def setUp(self):
         super(TestConfigTokenProviders, self).setUp()
-        self.setup_gridsite_environment()
+        self.setup_gridsite_environment(ftsadmin=True)
         Session.query(TokenProvider).delete()
         Session.commit()
 
@@ -202,3 +202,10 @@ class TestConfigTokenProviders(TestController):
         ).json
 
         self.assertEqual(len(providers), 0)
+
+    def test_retrieve_token_providers_forbidden(self):
+        """
+        Attempt token providers retrieval without sufficient permissions
+        """
+        self.setup_gridsite_environment(reset_vo=True, ftsadmin=False)
+        self.app.get(url="/config/token_providers", status=403)
