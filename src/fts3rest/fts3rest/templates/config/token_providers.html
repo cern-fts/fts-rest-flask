@@ -1,0 +1,107 @@
+<%include file="header.html" args="page='/config/token_providers', subtitle='Token Providers configuration'"/>
+
+<div class="container">
+	<h1>Token Providers configuration</h1>
+    <br/>
+
+    <div id="token-providers-list">
+        <script id="token-provider-template" type="text/x-handlebars-template">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h2 class="panel-title">{{name}}</h2>
+                </div>
+                <form id="token-provider-modify-form" class="panel-body" name="{{name}}">
+                    <input type="hidden" name="name" value="{{name}}">
+                    <div class="form-group">
+                        <label>Issuer</label>
+                        <input id="token_provider_issuer" class="form-control" name="issuer" type="text" value="{{issuer}}" readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label>Client Id</label>
+                        <input id="token_provider_client_id" class="form-control" name="client_id" type="text" value="{{client_id}}"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Client Secret</label>
+                        <input id="token_provider_client_secret" class="form-control" name="client_secret" type="text" value="{{client_secret}}"/>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Required submission scope</th>
+                                <th>VO Mapping</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input id="token_provider_required_submission_scope" class="form-control" name="required_submission_scope" type="text"
+                                           title="FTS Submission token must have these scopes in it"
+                                           value="{{required_submission_scope}}"/></td>
+                                <td><input id="token_provider_vo_mapping" class="form-control" name="vo_mapping" type="text"
+                                           title="Map FTS submissions from this Token Provider to the specified VO"
+                                           value="{{vo_mapping}}"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="panel-footer">
+                        <button class="btn btn-primary btn-save" id="button_save" name="save_{{name}}">Save</button>
+                        <button class="btn btn-danger btn-delete" id="button_delete" name="delete_{{name}}"><i class="glyphicon glyphicon-trash"></i> Delete</button>
+                    </div>
+                </form>
+            </div>
+        </script>
+    </div>
+
+    <form id="token-provider-add-form" class="panel panel-success">
+        <div class="panel-heading">
+            <h3 class="panel-title">Add Token Provider</h3>
+        </div>
+        <div class="panel-body">
+            <div class="form-group">
+                <label>Issuer</label>
+                <input class="form-control token-provider-add-issuer" name="issuer" type="text"
+                       title="Issuer must be a valid URL"
+                       pattern="https?://.+" required/>
+                <small class="form-text text-muted">Note: This is the primary key in the database!</small>
+            </div>
+            <div class="form-group">
+                <label>Name</label>
+                <input class="form-control" name="name" type="text"
+                       title="Human readable name for the token provider configuration"
+                       required/>
+            </div>
+            <div class="form-group">
+                <label>Client ID</label>
+                <input class="form-control" name="client_id" type="text" required/>
+            </div>
+            <div class="form-group">
+                <label>Client Secret</label>
+                <input class="form-control" name="client_secret" type="text" required/>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th title="FTS Submission token must have these scopes in it">
+                            Required submission scope
+                            <i class="glyphicon glyphicon-question-sign"></i>
+                        </th>
+                        <th title="Map FTS submissions from this Token Provider to the specified VO">
+                            VO Mapping
+                            <i class="glyphicon glyphicon-question-sign"></i>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input class="form-control" name="required_submission_scope" type="text"/></td>
+                        <td><input class="form-control" name="vo_mapping" type="text"/></td>
+                    </tr>
+                </tbody>
+            </table>
+            <input type="submit" class="btn btn-info" value="Add">
+        </div>
+    </form>
+</div>
+
+<script src="/js/config/token_providers.js" onload="setupTokenProviders()"></script>
+
+<%include file="footer.html"/>

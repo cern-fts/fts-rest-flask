@@ -20,7 +20,7 @@ from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddlewa
 from fts3rest.lib.middleware.timeout import TimeoutHandler
 from fts3rest.lib.openidconnect import oidc_manager
 from fts3rest.model.meta import init_model, Session
-from fts3rest.model import Token_provider
+from fts3rest.model import TokenProvider
 
 
 def _load_configuration(config_file, test):
@@ -82,7 +82,7 @@ def _load_providers_from_db():
     providers = {}
 
     try:
-        token_providers = Session.query(Token_provider).all()
+        token_providers = Session.query(TokenProvider).all()
         if not token_providers:
             log.info("No token providers found in the database.")
 

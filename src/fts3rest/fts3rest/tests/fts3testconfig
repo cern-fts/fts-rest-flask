@@ -43,7 +43,7 @@ pool_size=10
 
 [roles]
 Public = vo:transfer;all:datamanagement
-lcgadmin = all:config
+lcgadmin = all:config;all:admin
 
 # Logging configuration
 [loggers]
