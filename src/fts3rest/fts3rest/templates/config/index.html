@@ -7,12 +7,12 @@ from datetime import datetime, timedelta
 <div class="container">
     <div class="jumbotron">
         <h1>FTS3 Configuration</h1>
+        <p>Welcome to the Web FTS3 configuration interface!</p><br/>
+        <p>You are logged in as:</p>
         <p>
-            Welcome to the Web FTS3 configuration interface. Here you will be able to modify the
-            internal settings of the FTS3 service.
+            <small><em>${user.user_dn | h}</em></small><br/>
+            <small><em>(configuration role: ${user.config_level})</em></small>
         </p>
-        <p>You are logged in as</p>
-        <p><small><em>${user.user_dn | h}</em></small></p>
     </div>
 
     <h2>Quick service overview</h2>

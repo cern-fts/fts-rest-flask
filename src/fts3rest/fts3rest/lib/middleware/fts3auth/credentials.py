@@ -22,6 +22,7 @@ from fts3rest.model import AuthorizationByDn
 from fts3rest.model.meta import Session
 from fts3rest.model.config import Gridmap
 from fts3rest.lib.middleware.fts3auth.methods import Authenticator
+from fts3rest.lib.middleware.fts3auth.constants import CONFIG, ADMIN
 
 log = logging.getLogger(__name__)
 
@@ -147,6 +148,7 @@ class UserCredentials:
         self.vos_id = []
         self.roles = []
         self.level = []
+        self.config_level = []
         self.delegation_id = None
         self.method = None
         self.is_root = False
@@ -211,9 +213,14 @@ class UserCredentials:
             )
             granted_level[grant.operation] = "all"
 
-        if granted_level.get("admin") == "all":
-            granted_level["config"] = "all"
+        if granted_level.get(ADMIN) == "all":
+            granted_level[CONFIG] = "all"
             log.info('config granted to "%s" because of admin level' % self.user_dn)
+
+        if ADMIN in granted_level:
+            self.config_level = ADMIN
+        elif CONFIG in granted_level:
+            self.config_level = CONFIG
 
         return granted_level
 

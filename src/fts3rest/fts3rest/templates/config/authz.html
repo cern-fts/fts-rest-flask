@@ -36,6 +36,9 @@
                 <td>
                     <select name="operation" class="form-control">
                         <option value="config">Configure</option>
+                        % if user.config_level == "admin":
+                            <option value="admin">Admin</option>
+                        % endif
                     </select>
                 </td>
             </tr>

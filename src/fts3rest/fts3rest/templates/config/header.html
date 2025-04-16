@@ -21,11 +21,13 @@
 
 <body>
 
-<%def name="add_tab(link, text, title)">
-    % if page == link:
-        <li class="active"><a href="${link}" title="${title}">${text}</a></li>
-    % else:
-        <li><a href="${link}" title="${title}">${text}</a></li>
+<%def name="add_tab(link, text, title, required_level='config')">
+    % if required_level in user.level:
+        % if page == link:
+            <li class="active"><a href="${link}" title="${title}">${text}</a></li>
+        % else:
+            <li><a href="${link}" title="${title}">${text}</a></li>
+        % endif
     % endif
 </%def>
 
@@ -47,8 +49,8 @@
             ${add_tab("/config/activity_shares", "Activity shares", "Manage activity shares")}
             ${add_tab("/config/global", "Server", "Manage FTS3-wide settings")}
             ${add_tab("/config/audit", "Audit", "View the configuration auditing")}
-            ${add_tab("/config/cloud_storage", "Cloud storage", "Configure cloud storage credentials (S3, Dropbox)")}
-            ${add_tab("/config/token_providers", "Token Providers", "Manage OAuth2 token providers")}
+            ${add_tab("/config/cloud_storage", "Cloud storage", "Configure cloud storage credentials (S3, Dropbox)", "admin")}
+            ${add_tab("/config/token_providers", "Token Providers", "Manage OAuth2 token providers", "admin")}
             ${add_tab("/config/authorize", "Static authorization", "Give permissions based on DN rather than VO extensions")}
         </ul>
     </div>
