@@ -123,7 +123,7 @@ function addTokenProviderConfig()
         handleTokenProviderSave($("#token-provider-add-form"))
             .done(function(data, textStatus, jqXHR) {
                 $("#token-provider-add-form").trigger("reset");
-                refreshSeConfig();
+                refreshTokenProvidersConfig();
             })
             .fail(function(jqXHR) {
                 errorMessage(jqXHR);

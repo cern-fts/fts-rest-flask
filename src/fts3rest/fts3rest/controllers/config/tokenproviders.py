@@ -16,8 +16,8 @@ import logging
 from urllib.parse import unquote, urlparse
 
 from flask import request, Response
-from fts3rest.fts3rest.controllers.config import audit_configuration
-from fts3rest.fts3rest.model import TokenProvider
+from fts3rest.controllers.config import audit_configuration
+from fts3rest.model import TokenProvider
 from werkzeug.exceptions import BadRequest
 
 from fts3rest.model import *
@@ -72,9 +72,13 @@ def set_token_provider():
     if "client_secret" not in input_dict:
         raise BadRequest("Missing TokenProvider Client Secret!")
 
+    issuer = input_dict.get("issuer")
+    if not issuer.endswith("/"):
+        issuer = issuer + "/"
+
     provider = TokenProvider(
         name=input_dict.get("name"),
-        issuer=input_dict.get("issuer"),
+        issuer=issuer,
         client_id=input_dict.get("client_id"),
         client_secret=input_dict.get("client_secret"),
         required_submission_scope=input_dict.get("required_submission_scope", None),
@@ -98,7 +102,9 @@ def delete_token_provider(provider_name):
     try:
         name = unquote(provider_name)
         Session.query(TokenProvider).filter(TokenProvider.name == name).delete()
-        audit_configuration("token-provider-delete", f"Provider {name} has been deleted")
+        audit_configuration(
+            "token-provider-delete", f"Provider {name} has been deleted"
+        )
         Session.commit()
     except:
         Session.rollback()
