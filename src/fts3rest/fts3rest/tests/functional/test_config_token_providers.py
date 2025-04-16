@@ -1,6 +1,6 @@
 from fts3rest.tests import TestController
 from fts3rest.model.meta import Session
-from fts3rest.model import TokenProvider
+from fts3rest.model import TokenProvider, ConfigAudit
 
 
 class TestConfigTokenProviders(TestController):
@@ -12,6 +12,7 @@ class TestConfigTokenProviders(TestController):
 
     def tearDown(self):
         Session.query(TokenProvider).delete()
+        Session.query(ConfigAudit).delete()
         Session.commit()
         super(TestConfigTokenProviders, self).tearDown()
 
