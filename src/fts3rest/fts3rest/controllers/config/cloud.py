@@ -25,7 +25,7 @@ from fts3rest.lib.middleware.fts3auth.authorization import (
     authorize,
     require_certificate,
 )
-from fts3rest.lib.middleware.fts3auth.constants import CONFIG
+from fts3rest.lib.middleware.fts3auth.constants import ADMIN
 from fts3rest.model.meta import Session
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ Configuration of cloud storages
 
 
 @require_certificate
-@authorize(CONFIG)
+@authorize(ADMIN)
 @accept(html_template="/config/cloud_storage.html")
 def get_cloud_storages():
     """
@@ -53,7 +53,7 @@ def get_cloud_storages():
 
 
 @require_certificate
-@authorize(CONFIG)
+@authorize(ADMIN)
 @jsonify
 def set_cloud_storage():
     """
@@ -79,7 +79,7 @@ def set_cloud_storage():
 
 
 @require_certificate
-@authorize(CONFIG)
+@authorize(ADMIN)
 @jsonify
 def get_cloud_storage(storage_name):
     """
@@ -96,7 +96,7 @@ def get_cloud_storage(storage_name):
 
 
 @require_certificate
-@authorize(CONFIG)
+@authorize(ADMIN)
 def remove_cloud_storage(storage_name):
     """
     Remove a registered cloud storage
@@ -119,7 +119,7 @@ def remove_cloud_storage(storage_name):
 
 
 @require_certificate
-@authorize(CONFIG)
+@authorize(ADMIN)
 @jsonify
 def add_user_to_cloud_storage(storage_name):
     """
@@ -161,7 +161,7 @@ def add_user_to_cloud_storage(storage_name):
 
 
 @require_certificate
-@authorize(CONFIG)
+@authorize(ADMIN)
 def remove_user_from_cloud_storage(storage_name, id):
     """
     Delete credentials for a given user/vo

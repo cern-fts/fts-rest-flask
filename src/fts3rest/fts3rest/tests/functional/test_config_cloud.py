@@ -6,7 +6,7 @@ from fts3rest.model import CloudStorage, CloudStorageUser
 class TestConfigCloud(TestController):
     def setUp(self):
         super(TestConfigCloud, self).setUp()
-        self.setup_gridsite_environment()
+        self.setup_gridsite_environment(ftsadmin=True)
         Session.query(CloudStorageUser).delete()
         Session.query(CloudStorage).delete()
         Session.commit()
@@ -164,3 +164,11 @@ class TestConfigCloud(TestController):
         """
         self.app.get(url="/config/cloud_storage/:host", status=404)
         self.app.get(url="/config/cloud_storage/dfsdf:host", status=404)
+
+    def test_list_cloud_storages_forbidden(self):
+        """
+        Attempt cloud storages retrieval without sufficient permissions
+        """
+        self.test_add_s3()
+        self.setup_gridsite_environment(reset_vo=True, ftsadmin=False)
+        self.app.get_json(url="/config/cloud_storage", status=403)
