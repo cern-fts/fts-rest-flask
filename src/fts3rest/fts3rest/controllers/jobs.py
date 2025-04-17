@@ -874,7 +874,6 @@ def insert_tokens(job_id, tokens):
         lifetime_sec = (
             token_dict["exp"] - curr_time if token_dict["exp"] > curr_time else 0
         )
-        access_token_refresh_after = token_dict["exp"] - lifetime_sec * 0.5
 
         try:
             timestamp_func = (
@@ -886,9 +885,7 @@ def insert_tokens(job_id, tokens):
             INSERT INTO t_token(
               token_id,
               access_token,
-              access_token_not_before,
               access_token_expiry,
-              access_token_refresh_after,
               issuer,
               scope,
               audience,
@@ -896,9 +893,7 @@ def insert_tokens(job_id, tokens):
             ) VALUES (
               :token_id,
               :access_token,
-              {timestamp_func}(:access_token_not_before),
               {timestamp_func}(:access_token_expiry),
-              {timestamp_func}(:access_token_refresh_after),
               :issuer,
               :scope,
               :audience,
@@ -910,9 +905,7 @@ def insert_tokens(job_id, tokens):
                 params={
                     "token_id": token_dict["token_id"],
                     "access_token": token_dict["access_token"],
-                    "access_token_not_before": token_dict["nbf"],
                     "access_token_expiry": token_dict["exp"],
-                    "access_token_refresh_after": access_token_refresh_after,
                     "issuer": token_dict["issuer"],
                     "scope": token_dict["scope"],
                     "audience": token_dict["audience"],
