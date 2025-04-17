@@ -47,7 +47,7 @@ class TestFileForceStart(TestController):
         file_id = files[0].file_id
 
         result = self.app.post(
-            url="/admin/force-start",
+            url="/files/force-start",
             content_type="application/json",
             params=f"[{file_id}]",
             status=200,
@@ -96,7 +96,7 @@ class TestFileForceStart(TestController):
         file_id = files[0].file_id
 
         result = self.app.post(
-            url="/admin/force-start",
+            url="/files/force-start",
             content_type="application/json",
             params=f"[{file_id}]",
             status=200,
@@ -138,7 +138,7 @@ class TestFileForceStart(TestController):
         self.assertEqual(files[0].file_state, "SUBMITTED")
 
         self.app.post(
-            url="/admin/force-start",
+            url="/files/force-start",
             content_type="application/json",
             params=f"[{files[0].file_id}]",
             status=403,

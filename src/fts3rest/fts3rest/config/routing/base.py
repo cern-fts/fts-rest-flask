@@ -25,7 +25,6 @@ from fts3rest.controllers import (
     autocomplete,
     banning,
     serverstatus,
-    admin,
 )
 from fts3rest.controllers.config import (
     drain,
@@ -107,9 +106,9 @@ def do_connect(app):
         methods=["DELETE"],
     )
     app.add_url_rule(
-        "/admin/force-start",
-        "admin.force_start_files",
-        admin.force_start_files,
+        "/files/force-start",
+        "files.force_start_files",
+        files.force_start_files,
         methods=["POST"],
     )
     app.add_url_rule(
