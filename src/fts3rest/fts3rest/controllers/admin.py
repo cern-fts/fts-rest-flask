@@ -65,12 +65,16 @@ def force_start_files():
 
             if file.file_state != "SUBMITTED":
                 messages.append(
-                    {"file_id": file_id, "error": "File is not in SUBMITTED state"}
+                    {"file_id": file_id, "error": "File is not in 'SUBMITTED' state"}
                 )
                 continue
 
             file.file_state = "FORCE_START"
             Session.merge(file)
+
+            messages.append(
+                {"file_id": file_id, "message": "File moved to 'FORCE_START'"}
+            )
         Session.commit()
     except Exception:
         Session.rollback()
