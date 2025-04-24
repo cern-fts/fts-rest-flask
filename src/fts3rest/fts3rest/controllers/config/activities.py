@@ -15,6 +15,7 @@
 import json
 import jsonschema
 import logging
+import re
 
 from flask import current_app, request, Response
 from werkzeug.exceptions import BadRequest, NotFound
@@ -125,9 +126,14 @@ def set_activity_shares():
 
     input_dict["share"] = _normalize_activity_share_format(input_dict["share"])
 
-    # Make sure the share weights are numbers
+    # Input validation:
+    #   - each activity share entry is a dictionary with exactly one key {"share": <number>}
+    #   - share weights must be numbers
+    #   - share name must be [alphanumeric, '-', ' ', '_']. Must start with letter, end alphanumeric
+    pattern = r"[A-Za-z][A-Za-z0-9 _-]*[A-Za-z0-9]|[A-Za-z]"
+
     for entry in input_dict["share"]:
-        # Make sure the share list has right format: [{"A": 1}, {"B": 2}]
+        # Make sure the share list has the right format: [{"A": 1}, {"B": 2}]
         if not isinstance(entry, dict) or len(entry) != 1:
             raise BadRequest(
                 "share is expected to be a single JSON object with activity names and respective weights"
@@ -135,6 +141,11 @@ def set_activity_shares():
         for key, value in entry.items():
             if not type(value) in (float, int):
                 raise BadRequest("Share weight must be a number")
+            if not re.fullmatch(pattern, key):
+                raise BadRequest(
+                    f"Invalid share '{key}' name: Only alphanumeric, '_', '-' and space allowed. "
+                    "Must start wth letter and end with alphanumeric"
+                )
 
     try:
         activity_share = ActivityShare(

@@ -66,7 +66,7 @@ function addShare(form, tbody)
 
     tr.append($("<td></td>").append(deleteBtn))
         .append($("<td></td>")
-            .append($("<input type='text' name='share' class='form-control' pattern='^[^\s]+$' title='Space is not allowed'/>").val(share))
+            .append($("<input type='text' name='share' class='form-control' pattern='[A-Za-z][A-Za-z0-9 _\\-]*[A-Za-z0-9]|[A-Za-z]' title='Only alphanumeric, underscore, hyphen and space allowed. Must start with letter and end with alphanumeric'/>").val(share))
         )
         .append($("<td></td>")
             .append($("<input type='number' step='0.01' name='weight' class='form-control' min='0' max='1'/>").val(weight))
@@ -139,9 +139,9 @@ function refreshActivityShares()
                     tr.remove()
                 });
 
-	      shareval = "<input type='text' name='share' class='form-control' value='"+ share + "' pattern='^[^\s]+$' title='Space is not allowed'/>";
-	      weightval = "<input type='number' step='0.01' name='weight' class='form-control' min ='0' max='1'  value='" + weight + "'/>";
-              tr.append(
+                shareval = "<input type='text' name='share' class='form-control' value='"+ share + "' pattern='[A-Za-z][A-Za-z0-9 _\\-]*[A-Za-z0-9]|[A-Za-z]' title='Only alphanumeric, underscore, hyphen and space allowed. Must start with letter and end with alphanumeric'/>";
+	            weightval = "<input type='number' step='0.01' name='weight' class='form-control' min ='0' max='1'  value='" + weight + "'/>";
+                tr.append(
                     $("<td></td>").append(shareDeleteBtn)
                 ).append(
                     $("<td></td>").append($(shareval).val(share))
@@ -161,7 +161,7 @@ function refreshActivityShares()
                 .append($("<tr></tr>")
                     .append($("<td></td>").append(addOpBtn))
                     .append($("<td></td>")
-                        .append($("<input type='text' name='share' class='form-control' id='share-add-for-saved' pattern='^[^\s]+$' title='Space is not allowed'/></td>"))
+                        .append($("<input type='text' name='share' class='form-control' id='share-add-for-saved' pattern='[A-Za-z][A-Za-z0-9 _\\-]*[A-Za-z0-9]|[A-Za-z]' title='Only alphanumeric, underscore, hyphen and space allowed. Must start with letter and end with alphanumeric'/></td>"))
                     )
                     .append("<td><input type='number' step='0.01' name='weight' class='form-control' id='weight-add-for-saved' min='0' max='1'/></td>")
                 );
