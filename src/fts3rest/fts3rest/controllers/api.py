@@ -13,17 +13,13 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import glob
+import subprocess  # nosec
 
 from flask.views import View
-from fts3rest.model import SchemaVersion
-
-
-from fts3rest.model.meta import Session
-
-
-from fts3rest.lib.api.submit_schema import SubmitSchema
 from werkzeug.exceptions import NotFound
+from fts3rest.model import SchemaVersion
+from fts3rest.model.meta import Session
+from fts3rest.lib.api.submit_schema import SubmitSchema
 from fts3rest.lib.helpers.jsonify import jsonify
 
 API_VERSION = dict(major=3, minor=14, patch=0)
@@ -34,19 +30,15 @@ API_VERSION = dict(major=3, minor=14, patch=0)
 
 
 def _get_fts_core_version():
-    versions = []
-    for match in glob.glob("/usr/share/doc/fts-libs-*"):
-        try:
-            major, minor, patch = match.split("-")[-1].split(".")
-            versions.append(dict(major=major, minor=minor, patch=patch))
-        except Exception:
-            pass
-    if len(versions) == 0:
-        return None
-    elif len(versions) == 1:
-        return versions[0]
-    else:
-        return versions
+    command = "rpm -q fts-server | cut -d- -f3"
+    version = {}
+    try:
+        output = subprocess.check_output(command, shell=True).decode("utf-8")  # nosec
+        major, minor, patch = output.strip().split(".")
+        version = dict(major=int(major), minor=int(minor), patch=int(patch))
+    except Exception:
+        pass
+    return version if len(version) > 0 else None
 
 
 class Api(View):
