@@ -64,15 +64,11 @@ function refreshLinks()
               .append($("<td></td>")
               .append($("<input type='text' name='destination_"+link.symbolicname+"' class='form-control'/>").val(link.destination)))
               .append($("<td></td>")
-              .append($("<input type='number' name='nostreams_"+link.symbolicname+"' min='0' max='16' class='form-control'/>").val(link.nostreams)))
-              .append($("<td></td>")
               .append($("<input type='number' name='min_active_"+link.symbolicname+"' class='form-control'/>").val(link.min_active)))
               .append($("<td></td>")
               .append($("<input type='number' name='max_active_"+link.symbolicname+"' class='form-control'/>").val(link.max_active)))
               .append($("<td></td>")
               .append($("<input type='number' name='optimizer_mode_"+link.symbolicname+"' min='0' max='3' class='form-control'/>").val(link.optimizer_mode)))
-              .append($("<td></td>")
-              .append($("<input type='number' name='tcp_buffer_size_"+link.symbolicname+"' class='form-control'/>").val(link.tcp_buffer_size)))
               .append($("<td></td>")
               .append($("<select name='no_delegation_"+link.symbolicname+"' class='form-control'>" +
                   "<option value='true'>Yes</option>" +
@@ -86,11 +82,9 @@ function refreshLinks()
                         symbolicname: tr.find("input[name='symbolicname_"+link.symbolicname+"']").val(),
                         source: tr.find("input[name='source_"+link.symbolicname+"']").val(),
                         destination: tr.find("input[name='destination_"+link.symbolicname+"']").val(),
-                        nostreams: tr.find("input[name='nostreams_"+link.symbolicname+"']").val(),
                         min_active: tr.find("input[name='min_active_"+link.symbolicname+"']").val(),
                         max_active: tr.find("input[name='max_active_"+link.symbolicname+"']").val(),
                         optimizer_mode: tr.find("input[name='optimizer_mode_"+link.symbolicname+"']").val(),
-                        tcp_buffer_size: tr.find("input[name='tcp_buffer_size_"+link.symbolicname+"']").val(),
                         no_delegation: tr.find("select[name='no_delegation_"+link.symbolicname+"']").val()
                     };
                     console.log(saveload);
@@ -272,11 +266,9 @@ function setupLinks()
             symbolicname: addFrm.find("[name=symbolicname]").val(),
             source: addFrm.find("[name=source]").val(),
             destination: addFrm.find("[name=destination]").val(),
-            nostreams: addFrm.find("[name=nostreams]").val(),
             min_active: addFrm.find("[name=min_active]").val(),
             max_active: addFrm.find("[name=max_active]").val(),
             optimizer_mode: addFrm.find("[name=optimizer_mode]").val(),
-            tcp_buffer_size: addFrm.find("[name=tcp_buffer_size]").val(),
             no_delegation: addFrm.find("[name=no_delegation]").val(),
         };
         console.log(payload);
