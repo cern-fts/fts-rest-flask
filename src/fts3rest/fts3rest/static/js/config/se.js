@@ -72,8 +72,6 @@ function getSubForm(form, klass)
     subset.outbound_max_active = parseInt(subform.find("input[name='outbound_max_active']").val());
     subset.inbound_max_throughput = parseFloat(subform.find("input[name='inbound_max_throughput']").val());
     subset.outbound_max_throughput = parseFloat(subform.find("input[name='outbound_max_throughput']").val());
-    subset.ipv6 = parseInt(subform.find("input[name='ipv6']").val());
-    subset.udt = parseInt(subform.find("input[name='udt']").val());
     subset.debug_level = parseInt(subform.find("input[name='debug_level']").val());
     subset.skip_eviction = parseInt(subform.find("input[name='skip_eviction']").val());
     subset.overwrite_disk_enabled = parseInt(subform.find("input[name='overwrite_disk_enabled']").val());
