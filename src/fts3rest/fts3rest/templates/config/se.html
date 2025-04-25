@@ -115,7 +115,7 @@
 									</td>
 									<td>
 										<input id="vo_hidden" type="text" name="vo" class="form-control ui-autocomplete-input"
-										autocomplete="off" pattern="^[^\s]+$" title="Space is not allowed"">
+										autocomplete="off" pattern="^[^\s]+$" title="Space is not allowed">
 									</td>
 									<td>
 										<select id="operation_hidden" name="operation" class="form-control">
@@ -146,7 +146,8 @@
 		<div class="panel-heading">
 			<h2 class="panel-title">
 				<input type="text" name="se" placeholder="Storage"
-				class="form-control" id="se-add-field-se" pattern="(\*|.*://?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)[^\/])" required title="i.e. http://mysite.ch or *"/>&nbsp;
+				class="form-control" id="se-add-field-se" pattern="(\*|.*://[\-a-zA-Z0-9._+]{1,256}\.[a-z]{2,6})" required title="i.e. https://mysite.ch or *"/>
+			</h2>
 		</div>
 		<div class="panel-body">
 			<div class="row">
