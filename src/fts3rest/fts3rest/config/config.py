@@ -154,9 +154,6 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
         fts3cfg["fts3.JWKCacheSeconds"] = parser.getint(
             "fts3", "JWKCacheSeconds", fallback=86400
         )
-        fts3cfg["fts3.TokenRefreshDaemonIntervalInSeconds"] = parser.getint(
-            "fts3", "TokenRefreshDaemonIntervalInSeconds", fallback=600
-        )
     except NoSectionError:
         pass
     return fts3cfg

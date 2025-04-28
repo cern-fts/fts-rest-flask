@@ -35,7 +35,6 @@ OverwriteHopValidation = True
 #OpenID parameters
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
-TokenRefreshDaemonIntervalInSeconds=600
 
 [sqlalchemy]
 pool_timeout=10

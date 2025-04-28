@@ -74,7 +74,6 @@ Alias =
 # OAuth2 parameters
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
-TokenRefreshDaemonIntervalInSeconds=600
 
 # Tell the FTS system whether or not it should verify the "aud" field of the JWT token
 # If set to True a list of AuthorizedAudiences can also be configured  (default true)
