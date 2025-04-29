@@ -14,6 +14,7 @@
 #   limitations under the License.
 
 import subprocess  # nosec
+import logging
 
 from flask.views import View
 from werkzeug.exceptions import NotFound
@@ -21,6 +22,8 @@ from fts3rest.model import SchemaVersion
 from fts3rest.model.meta import Session
 from fts3rest.lib.api.submit_schema import SubmitSchema
 from fts3rest.lib.helpers.jsonify import jsonify
+
+log = logging.getLogger(__name__)
 
 API_VERSION = dict(major=3, minor=14, patch=0)
 
@@ -30,14 +33,14 @@ API_VERSION = dict(major=3, minor=14, patch=0)
 
 
 def _get_fts_core_version():
-    command = "rpm -q fts-server | cut -d- -f3"
+    command = "/usr/sbin/fts_server --version | head -n1"
     version = {}
     try:
         output = subprocess.check_output(command, shell=True).decode("utf-8")  # nosec
         major, minor, patch = output.strip().split(".")
         version = dict(major=int(major), minor=int(minor), patch=int(patch))
-    except Exception:
-        pass
+    except Exception as ex:
+        log.debug(f"Failed to detect FTS Server version: {ex}")
     return version if len(version) > 0 else None
 
 
