@@ -117,6 +117,9 @@ fi
 %files selinux
 
 %changelog
+* Wed Apr 30 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.0-1
+- FTS v3.14 Token Release
+
 * Tue Sep 03 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.4-1
 - Allow unmanaged tokens if the "offline_access" scope is missing
 - Un-retire existing access tokens when referenced again by submitted transfers
