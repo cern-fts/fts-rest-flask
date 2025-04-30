@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from configparser import ConfigParser
-from optparse import OptionParser, IndentedHelpFormatter, SUPPRESS_HELP
+from optparse import OptionParser, IndentedHelpFormatter
 import logging
 import os
 import socket
@@ -138,15 +138,13 @@ class Base:
         self.opt_parser.add_option(
             "--access-token",
             dest="access_token",
-            help="Single OAuth2 access-token for FTS submission plus source and destination tokens.",
-            # help="deprecated: Single OAuth2 access-token for FTS submission plus source and destination tokens.",
+            help="deprecated: Single OAuth2 access token for FTS submission plus source and destination tokens.",
             default=None,
         )
         self.opt_parser.add_option(
             "--fts-access-token",
             dest="fts_access_token",
-            help=SUPPRESS_HELP,
-            # help="OAuth2 access-token for FTS submission.  Source and destination tokens must be specified separately.",
+            help="OAuth2 access token for FTS submission (source and destination tokens must be specified separately)",
             default=None,
         )
 
