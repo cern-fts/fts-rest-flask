@@ -92,8 +92,6 @@ class TestJobSubmission(TestController):
 
         self._validate_submitted(Session.query(Job).get(job_id))
 
-        return str(job_id)
-
     def test_submit_no_reuse(self):
         """
         Submit a valid job no reuse
@@ -127,8 +125,6 @@ class TestJobSubmission(TestController):
 
         self._validate_submitted(Session.query(Job).get(job_id))
 
-        return str(job_id)
-
     def test_submit_no_reuse_N(self):
         """
         Submit a valid job, using 'N' instead of False
@@ -161,8 +157,6 @@ class TestJobSubmission(TestController):
         self.assertTrue(job_id)
 
         self._validate_submitted(Session.query(Job).get(job_id))
-
-        return str(job_id)
 
     def test_submit_reuse(self):
         """
@@ -198,8 +192,6 @@ class TestJobSubmission(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.job_type, "Y")
 
-        return job_id
-
     def test_submit_Y(self):
         """
         Submit a valid reuse job, using 'Y' instead of True
@@ -234,6 +226,42 @@ class TestJobSubmission(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.job_type, "Y")
 
+    def test_submit_reuse_not_allowed(self):
+        """
+        Submit a valid reuse job, but serve configured to disallow SessionReuse
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        # Disable "AllowSessionReuse" option
+        self.flask_app.config["fts3.AllowSessionReuse"] = False
+
+        dest_surl = "https://dest.ch/file" + str(random.randint(0, 100))
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": [dest_surl],
+                    "checksum": "adler32:1234",
+                    "filesize": 1024,
+                }
+            ],
+            "params": {"overwrite": True, "reuse": True},
+        }
+
+        job_id = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        # Make sure it was committed to the DB
+        self.assertTrue(job_id)
+
+        job = Session.query(Job).get(job_id)
+        self.assertEqual(job.job_type, "N")
+
     def test_submit_post(self):
         """
         Submit a valid job using POST instead of PUT
@@ -266,8 +294,6 @@ class TestJobSubmission(TestController):
         self.assertGreater(len(job_id), 0)
 
         self._validate_submitted(Session.query(Job).get(job_id))
-
-        return job_id
 
     def test_submit_with_port(self):
         """
@@ -308,8 +334,6 @@ class TestJobSubmission(TestController):
 
         self.assertEqual(db_job.files[0].source_se, "srm://source.es")
         self.assertEqual(db_job.files[0].dest_se, "srm://dest.ch")
-
-        return job_id
 
     def test_submit_only_query(self):
         """
@@ -354,8 +378,6 @@ class TestJobSubmission(TestController):
         self.assertEqual(db_job.copy_pin_lifetime, 3600)
         self.assertEqual(db_job.bring_online, 60)
 
-        return job_id
-
     def test_null_checksum(self):
         """
         Valid job, with checksum explicitly set to null
@@ -389,8 +411,6 @@ class TestJobSubmission(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.files[0].checksum, "ADLER32")
-
-        return job_id
 
     def test_checksum_no_verify(self):
         """
@@ -428,8 +448,6 @@ class TestJobSubmission(TestController):
         self.assertEqual(job.files[0].checksum, "1234F")
         self.assertEqual(job.verify_checksum, "t")
 
-        return job_id
-
     def test_verify_checksum_target(self):
         """
         Valid job, verify checksum in destination.
@@ -466,8 +484,6 @@ class TestJobSubmission(TestController):
         self.assertEqual(job.files[0].checksum, "1234F")
         self.assertEqual(job.verify_checksum, "t")
 
-        return job_id
-
     def test_verify_checksum_source(self):
         """
         Valid job, verify checksum in source.
@@ -502,8 +518,6 @@ class TestJobSubmission(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.files[0].checksum, "1234F")
         self.assertEqual(job.verify_checksum, "s")
-
-        return job_id
 
     def test_verify_checksum_both(self):
         """
@@ -540,8 +554,6 @@ class TestJobSubmission(TestController):
         self.assertEqual(job.files[0].checksum, "1234F")
         self.assertEqual(job.verify_checksum, "b")
 
-        return job_id
-
     def test_verify_checksum_none(self):
         """
         Valid job, verify checksum none.
@@ -575,8 +587,6 @@ class TestJobSubmission(TestController):
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.verify_checksum, "n")
 
-        return job_id
-
     def test_null_user_filesize(self):
         """
         Valid job, with filesize explicitly set to null
@@ -609,8 +619,6 @@ class TestJobSubmission(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.files[0].user_filesize, 0)
-
-        return job_id
 
     def test_no_vo(self):
         """

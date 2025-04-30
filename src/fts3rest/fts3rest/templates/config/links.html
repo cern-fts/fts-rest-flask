@@ -16,11 +16,9 @@
                 <th>Symbolic name</th>
                 <th>Source</th>
                 <th>Destination</th>
-                <th>Streams</th>
                 <th>Min Actives</th>
                 <th>Max Actives</th>
                 <th>Optimizer Mode</th>
-                <th>TCP buffer size</th>
                 <th>Disable delegation</th>
             </tr>
         </thead>
@@ -38,15 +36,11 @@
                 </td>
                 <td>
                     <input class="form-control" type="text" placeholder="Source" name="source"
-                        id="link-add-field-source" pattern="(\*|.*://?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)[^\/])" required title="i.e. http://mysite.ch or *" />
+                        id="link-add-field-source" pattern="(\*|.*://[\-a-zA-Z0-9._+]{1,256}\.[a-z]{2,6})" required title="i.e. https://mysite.ch or *"/>
                 </td>
                 <td>
                     <input class="form-control" type="text" placeholder="Destination" name="destination"
-                        id="link-add-field-destination" pattern="(\*|.*://?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)[^\/])" required title="i.e. http://mysite.ch or *" />
-                </td>
-                <td>
-                    <input class="form-control" type="number" placeholder="Streams" name="nostreams"
-                        min="0" max="16" value="1"/>
+                        id="link-add-field-destination" pattern="(\*|.*://[\-a-zA-Z0-9._+]{1,256}\.[a-z]{2,6})" required title="i.e. https://mysite.ch or *"/>
                 </td>
                 <td>
                     <input class="form-control" type="number" placeholder="Min Actives" name="min_active"
@@ -59,10 +53,6 @@
                 <td>
                     <input class="form-control" type="number" placeholder="Optimizer Mode" name="optimizer_mode"
                         min="0" max="3" value="0"/>
-                </td>
-                <td>
-                    <input class="form-control" type="number" placeholder="TCP buffer size" name="tcp_buffer_size"
-                        min="0" max="999999" value="0"/>
                 </td>
                 <td>
                     <select class="form-control" name="no_delegation">

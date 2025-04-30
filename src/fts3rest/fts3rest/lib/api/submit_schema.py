@@ -82,6 +82,10 @@ paramSchema = {
             "type": ["boolean", "null"],
             "title": "Force IPv6 if the underlying protocol supports it",
         },
+        "unmanaged_tokens": {
+            "type": ["boolean", "null"],
+            "title": "Instruct server to not manage the token lifecycle",
+        },
     },
 }
 
@@ -94,5 +98,15 @@ SubmitSchema = {
         "params": paramSchema,
         "files": {"type": "array", "items": fileSchema},
         "delete": {"type": "array", "items": deleteSchema},
+    },
+}
+
+activityShareSchema = {
+    "type": "object",
+    "required": ["vo", "share"],
+    "properties": {
+        "vo": {"type": "string"},
+        "share": {"type": "object", "additionalProperties": {"type": "number"}},
+        "active": {"type": "boolean", "default": True},
     },
 }

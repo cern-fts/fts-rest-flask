@@ -42,7 +42,7 @@ class TestConfigAuthz(TestController):
 
     def test_remove_authz(self):
         """
-        Remove a operation for a dn
+        Remove an operation for a dn
         """
         self.test_add_authz()
         self.app.delete(
@@ -70,13 +70,12 @@ class TestConfigAuthz(TestController):
         """
         Miss dn or op
         """
-        config = {"dn": "/DN=a.test.user", "operation": "config"}
+        config_tmpl = {"dn": "/DN=a.test.user", "operation": "config"}
 
-        for i in config:
-            k = config
-            k[i] = ""
-            self.app.post(url="/config/authorize", params=k, status=400)
-            return config
+        for key in config_tmpl:
+            config = config_tmpl
+            config[key] = ""
+            self.app.post(url="/config/authorize", params=config, status=400)
 
     def test_add_authz_admin_level(self):
         """
@@ -94,6 +93,24 @@ class TestConfigAuthz(TestController):
 
         authz = Session.query(AuthorizationByDn).get(("/DN=a.test.user", "admin"))
         self.assertIsNone(authz)
+
+    def test_add_authz_admin_level_administrator(self):
+        """
+        Add DN with admin level (as an administrator).
+        Should succeed
+        """
+        self.setup_gridsite_environment(reset_vo=True, ftsadmin=True)
+        self.app.post_json(
+            url="/config/authorize",
+            params={"dn": "/DN=a.test.user", "operation": "admin"},
+            status=200,
+        )
+
+        audits = Session.query(ConfigAudit).all()
+        self.assertEqual(1, len(audits))
+
+        authz = Session.query(AuthorizationByDn).get(("/DN=a.test.user", "admin"))
+        self.assertIsNotNone(authz)
 
     def test_list_authz_missing_dn_or_op(self):
         """
@@ -120,6 +137,17 @@ class TestConfigAuthz(TestController):
             "/config/authorize?dn=/DN=a.test.user&operation=admin", status=400
         )
 
+    def test_remove_authz_admin_level_administrator(self):
+        """
+        Attempt to remove DN with admin operation (as an administrator).
+        Should succeed
+        """
+        self._add_admin_level_authz("/DN=a.test.user")
+        self.setup_gridsite_environment(reset_vo=True, ftsadmin=True)
+        self.app.delete(
+            "/config/authorize?dn=/DN=a.test.user&operation=admin", status=204
+        )
+
     def test_remove_authz_admin_level_excluded(self):
         """
         When removing all authorizations for a given DN,
@@ -137,3 +165,19 @@ class TestConfigAuthz(TestController):
         self.assertEqual(1, len(authz))
         self.assertEqual(authz[0]["dn"], "/DN=a.test.user")
         self.assertEqual(authz[0]["operation"], "admin")
+
+    def test_remove_authz_administrator(self):
+        """
+        Removing all authorizations for a given DN (as an administrator).
+        All authorizations should be removed
+        """
+        self.test_add_authz()
+        self._add_admin_level_authz("/DN=a.test.user")
+
+        authz = self.app.get_json("/config/authorize", status=200).json
+        self.assertEqual(2, len(authz))
+
+        self.setup_gridsite_environment(reset_vo=True, ftsadmin=True)
+        self.app.delete("/config/authorize?dn=/DN=a.test.user", status=204)
+        authz = self.app.get_json("/config/authorize", status=200).json
+        self.assertEqual(0, len(authz))

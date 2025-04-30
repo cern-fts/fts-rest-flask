@@ -128,6 +128,8 @@ class TestConfigActivityShare(TestController):
         self.app.post_json("/config/activity_shares", params=msg, status=400)
         msg = {"vo": "dteam", "active": False, "share": [{"A": 1}, {"B": "abc"}]}
         self.app.post_json("/config/activity_shares", params=msg, status=400)
+        msg = {"vo": "dteam", "active": False, "share": [{"A": 1, "B": 2}, {"C": 3}]}
+        self.app.post_json("/config/activity_shares", params=msg, status=400)
 
     def test_activity_shares_unauthorized(self):
         """
@@ -145,7 +147,7 @@ class TestConfigActivityShare(TestController):
         self.app.delete(url="/config/activity_shares/dteam", status=403)
         self.app.get_json(url="/config/activity_shares", status=403)
 
-    def test_activiy_shares_too_long(self):
+    def test_activity_shares_too_long(self):
         """
         Activity share too long
         """
@@ -155,3 +157,37 @@ class TestConfigActivityShare(TestController):
             shares["activity%d" % i] = i
         msg = {"vo": "dteam", "active": True, "share": shares}
         self.app.post_json(url="/config/activity_shares", params=msg, status=400)
+
+    def test_activity_shares_old_schema_fts4(self):
+        """
+        Activity share with legacy json schema not supported on FTS4
+        """
+        self.setup_gridsite_environment()
+
+        # Set the config to use PostgreSQL (FTS4)
+        self.flask_app.config["fts3.DbType"] = "postgresql"
+        self.flask_app.config["fts3.ExperimentalPostgresSupport"] = True
+
+        msg = {
+            "vo": "dteam",
+            "active": True,
+            "share": [{"High": 80}, {"Medium": 15}, {"Low": 5}],
+        }
+        self.app.post_json(url="/config/activity_shares", params=msg, status=400)
+
+    def test_activity_shares_correct_fts4(self):
+        """
+        Activity share correctly supported on FTS4
+        """
+        self.setup_gridsite_environment()
+
+        # Set the config to use PostgreSQL (FTS4)
+        self.flask_app.config["fts3.DbType"] = "postgresql"
+        self.flask_app.config["fts3.ExperimentalPostgresSupport"] = True
+
+        msg = {
+            "vo": "dteam",
+            "active": True,
+            "share": {"High": 80, "Medium": 15, "Low": 5},
+        }
+        self.app.post_json(url="/config/activity_shares", params=msg, status=200)

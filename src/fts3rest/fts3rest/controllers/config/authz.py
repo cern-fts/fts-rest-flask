@@ -47,10 +47,13 @@ def add_authz():
     input_dict = get_input_as_dict(request)
     dn = input_dict.get("dn")
     op = input_dict.get("operation")
+    user = request.environ["fts3.User.Credentials"]
     if not dn or not op:
         raise BadRequest("Missing dn and/or operation")
-    if op == ADMIN:
-        raise BadRequest("'%s' level can only be changed via database access" % ADMIN)
+    if op == ADMIN and user.config_level != ADMIN:
+        raise BadRequest(
+            f"'{ADMIN}' level can only be granted by another admin or via database access"
+        )
 
     try:
         authz = Session.query(AuthorizationByDn).get((dn, op))
@@ -93,18 +96,20 @@ def remove_authz():
     input_dict = get_input_as_dict(request, from_query=True)
     dn = input_dict.get("dn")
     op = input_dict.get("operation")
+    user = request.environ["fts3.User.Credentials"]
     if not dn:
         raise BadRequest("Missing DN parameter")
-    if op == ADMIN:
-        raise BadRequest("'%s' level can only be changed via database access" % ADMIN)
+    if op == ADMIN and user.config_level != ADMIN:
+        raise BadRequest(
+            f"'{ADMIN}' level can only be changed by another admin or via database access"
+        )
 
-    to_be_removed = (
-        Session.query(AuthorizationByDn)
-        .filter(AuthorizationByDn.operation != ADMIN)
-        .filter(AuthorizationByDn.dn == dn)
-    )
+    to_be_removed = Session.query(AuthorizationByDn).filter(AuthorizationByDn.dn == dn)
+
     if op:
         to_be_removed = to_be_removed.filter(AuthorizationByDn.operation == op)
+    elif user.config_level != ADMIN:
+        to_be_removed = to_be_removed.filter(AuthorizationByDn.operation != ADMIN)
 
     try:
         to_be_removed.delete()

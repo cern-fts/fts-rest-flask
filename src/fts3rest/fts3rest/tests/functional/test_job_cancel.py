@@ -258,7 +258,7 @@ class TestJobCancel(TestController):
             else:
                 self.assertEqual(job["http_status"], "404 Not Found")
 
-    def _test_cancel_file_asserts(self, job_id, expect_job, expect_files):
+    def _test_cancel_file_asserts(self, job_id, file_id, expect_job, expect_files):
         """
         Helper for test_cancel_remaining_file
         """
@@ -268,10 +268,12 @@ class TestJobCancel(TestController):
             self.assertIsNone(job.job_finished)
         else:
             self.assertIsNotNone(job.job_finished)
-        self.assertEqual("CANCELED", job.files[0].file_state)
-        self.assertIsNotNone(job.files[0].finish_time)
         for f in job.files[1:]:
-            self.assertEqual(expect_files, f.file_state)
+            if f.file_id == file_id:
+                self.assertEqual("CANCELED", f.file_state)
+                self.assertIsNotNone(f.finish_time)
+            else:
+                self.assertEqual(expect_files, f.file_state)
 
     def test_cancel_file(self):
         """
@@ -282,7 +284,9 @@ class TestJobCancel(TestController):
         files = self.app.get(url="/jobs/%s/files" % job_id, status=200).json
 
         self.app.delete(url="/jobs/%s/files/%s" % (job_id, files[0]["file_id"]))
-        self._test_cancel_file_asserts(job_id, "SUBMITTED", "SUBMITTED")
+        self._test_cancel_file_asserts(
+            job_id, files[0]["file_id"], "SUBMITTED", "SUBMITTED"
+        )
 
     def test_cancel_only_file(self):
         """
@@ -328,21 +332,27 @@ class TestJobCancel(TestController):
         job_id, files = self._submit_and_mark_all_but_one(5, "FAILED")
 
         self.app.delete(url="/jobs/%s/files/%s" % (job_id, files[0]["file_id"]))
-        self._test_cancel_file_asserts(job_id, "CANCELED", "FAILED")
+        self._test_cancel_file_asserts(
+            job_id, files[0]["file_id"], "CANCELED", "FAILED"
+        )
 
         # All remaining FINISHED
         # Final state must be FINISHED
         job_id, files = self._submit_and_mark_all_but_one(5, "FINISHED")
 
         self.app.delete(url="/jobs/%s/files/%s" % (job_id, files[0]["file_id"]))
-        self._test_cancel_file_asserts(job_id, "CANCELED", "FINISHED")
+        self._test_cancel_file_asserts(
+            job_id, files[0]["file_id"], "CANCELED", "FINISHED"
+        )
 
         # All remaining CANCELED
         # Final state must be CANCELED
         job_id, files = self._submit_and_mark_all_but_one(5, "CANCELED")
 
         self.app.delete(url="/jobs/%s/files/%s" % (job_id, files[0]["file_id"]))
-        self._test_cancel_file_asserts(job_id, "CANCELED", "CANCELED")
+        self._test_cancel_file_asserts(
+            job_id, files[0]["file_id"], "CANCELED", "CANCELED"
+        )
 
     def test_cancel_multiple_files(self):
         """
@@ -351,9 +361,10 @@ class TestJobCancel(TestController):
         job_id = self._submit(10)
         files = self.app.get(url="/jobs/%s/files" % job_id, status=200).json
 
-        file_ids = ",".join(map(lambda f: str(f["file_id"]), files[0:2]))
+        file_ids = [f["file_id"] for f in files[0:2]]
+        file_ids_string = ",".join(map(str, file_ids))
         answer = self.app.delete(
-            url="/jobs/%s/files/%s" % (job_id, file_ids), status=200
+            url="/jobs/%s/files/%s" % (job_id, file_ids_string), status=200
         )
         changed_states = answer.json
 
@@ -361,8 +372,11 @@ class TestJobCancel(TestController):
 
         job = Session.query(Job).get(job_id)
         self.assertEqual(job.job_state, "SUBMITTED")
-        for file in job.files[2:]:
-            self.assertEqual(file.file_state, "SUBMITTED")
+        for file in job.files:
+            if file.file_id in file_ids:
+                self.assertEqual(file.file_state, "CANCELED")
+            else:
+                self.assertEqual(file.file_state, "SUBMITTED")
 
     def test_cancel_reuse(self):
         """

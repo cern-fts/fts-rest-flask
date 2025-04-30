@@ -14,7 +14,6 @@
 #   limitations under the License.
 
 from datetime import timedelta
-from optparse import SUPPRESS_HELP
 import json
 import sys
 import time
@@ -45,11 +44,11 @@ DEFAULT_PARAMS = {
     "timeout": None,
     "fail_nearline": False,
     "retry": 0,
+    "priority": None,
     "multihop": False,
     "credential": None,
     "nostreams": None,
     "s3alternate": False,
-    "target_qos": None,
     "ipv4": False,
     "ipv6": False,
     "buffer_size": None,
@@ -57,6 +56,7 @@ DEFAULT_PARAMS = {
     "disable_cleanup": False,
     "activity": None,
     "scitag": None,
+    "unmanaged_tokens": False,
 }
 
 
@@ -286,6 +286,13 @@ class JobSubmitter(Base):
             "If negative, there will be no retries.",
         )
         self.opt_parser.add_option(
+            "-p",
+            "--priority",
+            dest="priority",
+            type="int",
+            help="job priority from 1 to 5 (default 3 server-side)",
+        )
+        self.opt_parser.add_option(
             "-m",
             "--multi-hop",
             dest="multihop",
@@ -311,12 +318,6 @@ class JobSubmitter(Base):
             dest="s3alternate",
             action="store_true",
             help="use S3 alternate URL",
-        )
-        self.opt_parser.add_option(
-            "--target-qos",
-            dest="target_qos",
-            type="string",
-            help="define the target QoS for this transfer for CDMI endpoints",
         )
         self.opt_parser.add_option(
             "--buffer-size",
@@ -352,14 +353,18 @@ class JobSubmitter(Base):
         self.opt_parser.add_option(
             "--src-access-token",
             dest="src_access_token",
-            help=SUPPRESS_HELP,
-            # help="The source access token in token-based transfers",
+            help="The source access token in token-based transfers",
         )
         self.opt_parser.add_option(
             "--dst-access-token",
             dest="dst_access_token",
-            help=SUPPRESS_HELP,
-            # help="The destination access token in token-based transfers",
+            help="The destination access token in token-based transfers",
+        )
+        self.opt_parser.add_option(
+            "--unmanaged-tokens",
+            dest="unmanaged_tokens",
+            action="store_true",
+            help="instruct server to not manage the token lifecycle",
         )
 
     def validate(self):
@@ -376,6 +381,57 @@ class JobSubmitter(Base):
                 self.logger.critical("Too many parameters")
                 sys.exit(1)
 
+        self._validate_token_submission_constraints()
+        self._prepare_options()
+
+        # Validation for token submission
+        if self.options.fts_access_token:
+            # Bulk submission
+            if self.options.bulk_file:
+                for transfer in self.transfers:
+                    sources = transfer.get("sources", [])
+                    destinations = transfer.get("destinations", [])
+                    source_tokens = transfer.get("source_tokens", [])
+                    destination_tokens = transfer.get("destination_tokens", [])
+                    if len(sources) != len(source_tokens):
+                        self.opt_parser.error(
+                            "Please specify access token for each source in file submission"
+                        )
+                    if len(destinations) != len(destination_tokens):
+                        self.opt_parser.error(
+                            "Please specify access token for each destination in file submission"
+                        )
+            # Non-bulk submission
+            else:
+                if self.options.src_access_token is None:
+                    self.opt_parser.error(
+                        "Source token doesn't exist. Please specify a source access token"
+                    )
+                if self.options.dst_access_token is None:
+                    self.opt_parser.error(
+                        "Destination token doesn't exist. Please specify a destination access token"
+                    )
+
+        self._validate_overwrite_constraints()
+
+        if self.params["ipv4"] and self.params["ipv6"]:
+            self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
+
+        if self.params.get("priority") is not None and not (
+            1 <= self.params["priority"] <= 5
+        ):
+            self.opt_parser.error("Priority must be between 1 and 5")
+
+        if self.params.get("scitag") is not None and not (
+            65 <= self.params["scitag"] <= 65535
+        ):
+            self.opt_parser.error(
+                "Invalid SciTag value: {} (not in [65, 65535] range)".format(
+                    self.params["scitag"]
+                )
+            )
+
+    def _validate_token_submission_constraints(self):
         # Both the access and the FTS token is present
         if self.options.access_token and any(
             [
@@ -415,39 +471,7 @@ class JobSubmitter(Base):
                 "Source or destination token set, but FTS access token is missing. Please set FTS access token!"
             )
 
-        self._prepare_options()
-
-        # Validation for token submission
-        if self.options.fts_access_token:
-            # Bulk submission
-            if self.options.bulk_file:
-                for transfer in self.transfers:
-                    sources = transfer.get("sources", [])
-                    destinations = transfer.get("destinations", [])
-                    source_tokens = transfer.get("source_tokens", [])
-                    destination_tokens = transfer.get("destination_tokens", [])
-                    if len(sources) != len(source_tokens):
-                        self.opt_parser.error(
-                            "Please specify access token for each source in file submission"
-                        )
-                    if len(destinations) != len(destination_tokens):
-                        self.opt_parser.error(
-                            "Please specify access token for each destination in file submission"
-                        )
-            # Non-bulk submission
-            else:
-                if self.options.src_access_token is None:
-                    self.opt_parser.error(
-                        "Source token doesn't exist. Please specify a source access token"
-                    )
-                if self.options.dst_access_token is None:
-                    self.opt_parser.error(
-                        "Destination token doesn't exist. Please specify a destination access token"
-                    )
-
-        if self.params["ipv4"] and self.params["ipv6"]:
-            self.opt_parser.error("ipv4 and ipv6 can not be used at the same time")
-
+    def _validate_overwrite_constraints(self):
         overwrite_flags_count = sum(
             [
                 self.params["overwrite"],
@@ -470,15 +494,6 @@ class JobSubmitter(Base):
         ):
             self.opt_parser.error(
                 "Using 'overwrite-when-only-on-disk' requires 'archive-timeout' to be set"
-            )
-
-        if self.params.get("scitag") is not None and not (
-            65 <= self.params["scitag"] <= 65535
-        ):
-            self.opt_parser.error(
-                "Invalid SciTag value: {} (not in [65, 65535] range)".format(
-                    self.params["scitag"]
-                )
             )
 
     def _build_transfers(self):
@@ -560,18 +575,19 @@ class JobSubmitter(Base):
             copy_pin_lifetime=self.options.pin_lifetime,
             reuse=self.options.reuse,
             retry=self.options.retry,
+            priority=self.options.priority,
             multihop=self.options.multihop,
             credential=self.options.cloud_cred,
             nostreams=self.options.nostreams,
             ipv4=self.options.ipv4,
             ipv6=self.options.ipv6,
             s3alternate=self.options.s3alternate,
-            target_qos=self.options.target_qos,
             buffer_size=self.options.buffer_size,
             strict_copy=self.options.strict_copy,
             disable_cleanup=self.options.disable_cleanup,
             activity=self.options.activity,
             scitag=self.options.scitag,
+            unmanaged_tokens=self.options.unmanaged_tokens,
         )
 
     def _do_submit(self, context):
@@ -624,8 +640,6 @@ class JobSubmitter(Base):
                 "STAGING",
                 "ACTIVE",
                 "ARCHIVING",
-                "QOS_TRANSITION",
-                "QOS_REQUEST_SUBMITTED",
             ]:
                 self.logger.info("Job in state %s" % job["job_state"])
                 time.sleep(self.options.poll_interval)

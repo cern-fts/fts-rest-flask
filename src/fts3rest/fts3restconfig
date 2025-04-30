@@ -14,9 +14,6 @@ DbConnectString =
 # Leave * to authorize any VO
 AuthorizedVO = *
 
-#List of authorized audiences for JWT authorization (separated by ;)
-AuthorizedAudiences=https://wlcg.cern.ch/jwt/v1/any
-
 #For each metadata size limit, if size_limit = 0, no limit checks are performed upon job submission
 #Limit Job Metadata with specified Size Limit (default: 2048 bytes)
 JobMetadataSizeLimit = 2048
@@ -59,6 +56,8 @@ Alias =
 # otherwise the job submission will be refused
 #OverwriteHopValidation = True
 
+# Allow or disallow session reuse transfers (default true)
+#AllowSessionReuse = True
 # Enable or disable AutoSessionReuse (default false)
 #AutoSessionReuse = False
 # Min number of files per session reuse
@@ -75,21 +74,20 @@ Alias =
 # OAuth2 parameters
 ValidateAccessTokenOffline=True
 JWKCacheSeconds=86400
-TokenRefreshDaemonIntervalInSeconds=600
+
+# Tell the FTS system whether or not it should verify the "aud" field of the JWT token
+# If set to True a list of AuthorizedAudiences can also be configured  (default true)
+#VerifyAudience = True
 
 # List of authorized audiences (semicolon separated values)
 # If not set, implicit "https://wlcg.cern.ch/jwt/v1/any" authorized audience is used
 # If the token has an "aud" field, it must contain at least one of the configured values
-#AuthorizedAudiences=https://wlcg.cern.ch/jwt/v1/any;https://fts3-devel.cern.ch:8446
+# The verification of the "aud" filed only happens if VerifyAudience is configured to "True"
+#AuthorizedAudiences= https://wlcg.cern.ch/jwt/v1/any;https://fts3-devel.cern.ch:8446
 
-# Tell the FTS system to not manage access tokens that don't meet certain criteria
-# (e.g.: missing "offline_access" scope) (default false)
-#NonManagedTokens = False
-
-#[providers]
-#provider1 = https://wlcg.cloud.cnaf.infn.it
-#provider_ClientId = <client-id>
-#provider_ClientSecret = <client-secret>
+# Allow or disallow submission of transfers with non-managed tokens (default false)
+# (FTS does not manage the token lifecycle for non-managed submission)
+#AllowNonManagedTokens = False
 
 # Authorization roles
 # Detailed roles syntax is explained in the FTS3 documentation (Installation Guide/FTS3)

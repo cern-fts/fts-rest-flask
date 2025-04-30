@@ -62,7 +62,7 @@ class Request:
                     message = response["message"]
                 else:
                     message = response_body
-            except Exception:
+            except:
                 message = response_body
 
         if code == 207:
@@ -86,6 +86,11 @@ class Request:
             raise NeedDelegation("Need delegation")
         elif code == 424:
             raise FailedDependency("Failed dependency")
+        elif code == 405:
+            if message:
+                raise MethodNotAllowed(message)
+            else:
+                raise MethodNotAllowed()
         elif 404 < code < 500:
             raise ClientError(str(code))
         elif code == 503:

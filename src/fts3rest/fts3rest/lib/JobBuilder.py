@@ -122,8 +122,19 @@ class JobBuilder:
         """
         From the dictionary file_dict, generate a list of transfers for a job
         """
+
+        # FTS4: Fail all transfers if there are multiple destinations
+        if (
+            app.config["fts3.DbType"] == "postgresql"
+            and app.config["fts3.ExperimentalPostgresSupport"]
+        ):
+            if len(file_dict["destinations"]) > 1:
+                raise BadRequest(
+                    "File transfers with multiple destinations are not allowed."
+                )
+
         # Extract transfer tuples where each tuple has a source, destination
-        # source token and destionation token.  Source and destination
+        # source token and destination token.  Source and destination
         # tokens will be None if the client is using X509 proxy certificates
         tuples = []
 
@@ -158,8 +169,6 @@ class JobBuilder:
         # Create one File entry per matching pair
         if self.is_bringonline:
             initial_file_state = "STAGING"
-        elif self.is_qos_cdmi_transfer:
-            initial_file_state = "QOS_TRANSITION"
         else:
             initial_file_state = "SUBMITTED"
 
@@ -276,6 +285,9 @@ class JobBuilder:
         self.job["checksum_method"] = self.job["checksum_method"][0]
 
     def _apply_auto_session_reuse(self):
+        # Return early if SessionReuse not allowed
+        if not app.config.get("fts3.AllowSessionReuse", True):
+            return False
         # Return early if job type is already "Session Reuse"
         if self.job["job_type"] == "Y":
             return False
@@ -345,6 +357,15 @@ class JobBuilder:
                     file["hashed_id"] = shared_hashed_id
                 return True
         return False
+
+    def _apply_job_type(self):
+        if self.params["multihop"]:
+            return "H"
+        if safe_flag(self.params["reuse"]) and app.config.get(
+            "fts3.AllowSessionReuse", True
+        ):
+            return "Y"
+        return "N"
 
     def _validate_job_type_preconditions(self, unique_files):
         if self.is_multiple_replica:
@@ -419,7 +440,7 @@ class JobBuilder:
         """
 
         def _is_http_endpoint(endpoint):
-            if not endpoint.startswith(tuple(["https://", "davs://"])):
+            if not endpoint.startswith(tuple(["https://", "davs://", "mock://"])):
                 raise BadRequest(
                     "'overwrite-when-only-on-disk' requires destination "
                     "to be HTTPs endpoint (Tape REST API required)"
@@ -540,6 +561,10 @@ class JobBuilder:
         Generates the list of tokens ready for the database
         """
 
+        self.unmanaged_tokens = safe_flag(self.params["unmanaged_tokens"])
+        if self.unmanaged_tokens and not app.config.get("fts3.AllowNonManagedTokens"):
+            raise BadRequest("Unmanaged tokens are not allowed!")
+
         # Create a self.tokens attribute no matter what
         self.tokens = []
 
@@ -570,6 +595,7 @@ class JobBuilder:
                 "token_id": token_id,
                 "access_token": token,
                 "refresh_token": None,
+                "unmanaged": self.unmanaged_tokens,
             }
 
             if "iss" in jwt_payload:
@@ -579,7 +605,8 @@ class JobBuilder:
             if "nbf" in jwt_payload:
                 token_dict["nbf"] = jwt_payload["nbf"]
             else:
-                raise BadRequest("Token does not contain a nbf claim")
+                # If token does not have a nbf claim just consider the current unix timestamp
+                token_dict["nbf"] = int(time.time())
             if "exp" in jwt_payload:
                 token_dict["exp"] = jwt_payload["exp"]
             else:
@@ -600,33 +627,25 @@ class JobBuilder:
                         f"Token audience must be a null, string or list of strings: actual_type={type(jwt_payload['aud'])}"
                     )
             else:
-                raise BadRequest("Token does not contain an aud claim")
+                if app.config.get("fts3.VerifyAudience"):
+                    raise BadRequest("Token does not contain an aud claim")
+                else:
+                    token_dict["audience"] = None
             self.tokens.append(token_dict)
 
     def _populate_transfers(self, files_list):
         """
         Initializes the list of transfers
         """
-
-        job_type = "N"
-        if self.params["multihop"]:
-            job_type = "H"
-        elif safe_flag(self.params["reuse"]):
-            job_type = "Y"
+        job_type = self._apply_job_type()
 
         self.is_bringonline = (
             safe_int(self.params["copy_pin_lifetime"]) > 0
             or safe_int(self.params["bring_online"]) > 0
         )
 
-        self.is_qos_cdmi_transfer = (
-            self.params["target_qos"] if "target_qos" in self.params.keys() else None
-        ) is not None
-
         if self.is_bringonline:
             job_initial_state = "STAGING"
-        elif self.is_qos_cdmi_transfer:
-            job_initial_state = "QOS_TRANSITION"
         else:
             job_initial_state = "SUBMITTED"
 
@@ -659,11 +678,27 @@ class JobBuilder:
                     )
 
         overwrite_flag = self._validate_overwrite_flag()
+
+        if (
+            overwrite_flag in ["M", "Q"]
+            and job_type != "H"
+            and not app.config.get("fts3.OverwriteHopValidation", True)
+        ):
+            log.warning(
+                "Bad request: 'overwrite-hop' requires multihop job submission: "
+                f"remote_addr={self.request.environ['REMOTE_ADDR']}"
+            )
+
         if (
             overwrite_flag in ["M", "Q"]
             and job_type != "H"
             and app.config.get("fts3.OverwriteHopValidation", True)
         ):
+            log.error(
+                "Failing bad request: "
+                "'overwrite-hop' requires multihop job submission: "
+                f"remote_addr={self.request.environ['REMOTE_ADDR']}"
+            )
             raise BadRequest("'overwrite-hop' requires multihop job submission")
         if overwrite_flag in ["D", "Q"]:
             self._validate_overwrite_disk_destination(job_type, files_list)
@@ -693,11 +728,6 @@ class JobBuilder:
             job_metadata=self.params["job_metadata"],
             internal_job_params=self._build_internal_job_params(),
             max_time_in_queue=expiration_time,
-            target_qos=(
-                self.params["target_qos"]
-                if "target_qos" in self.params.keys()
-                else None
-            ),
         )
 
         if "credential" in self.params:

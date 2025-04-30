@@ -37,6 +37,17 @@ class Unauthorized(FTS3ClientException):
             return "Unauthorized"
 
 
+class MethodNotAllowed(FTS3ClientException):
+    def __init__(self, reason=None):
+        self.reason = reason
+
+    def __str__(self):
+        if self.reason:
+            return "Method Not Allowed: %s" % self.reason
+        else:
+            return "Method Not Allowed"
+
+
 class ClientError(FTS3ClientException):
     def __init__(self, reason):
         self.reason = reason

@@ -27,8 +27,6 @@ FileActiveStates = [
     "READY",
     "ACTIVE",
     "ARCHIVING",
-    "QOS_TRANSITION",
-    "QOS_REQUEST_SUBMITTED",
     "FORCE_START",
 ]
 FileTokenStates = [
@@ -54,7 +52,7 @@ class File(Base):
     vo_name = Column(String(50))
     source_se = Column(String(255))
     dest_se = Column(String(255))
-    priority = Column(Integer)
+    priority = Column(Integer, default=3)
     file_state = Column(
         Enum(
             *(
@@ -123,6 +121,7 @@ class ArchivedFile(Base):
     job_id = Column(String(36), ForeignKey("t_job_backup.job_id"))
     source_se = Column(String(255))
     dest_se = Column(String(255))
+    priority = Column(Integer, default=3)
     file_state = Column(String(32))
     transfer_host = Column(String(255))
     source_surl = Column(String(1100))

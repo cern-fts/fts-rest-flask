@@ -192,30 +192,6 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
     def get_authorization_header(self):
         return self.environ.get("HTTP_AUTHORIZATION", None)
 
-    def obtain_refresh_token_from_auth(self, authorization):
-        """
-        Obtain a refresh token from a filled-in token authorization object
-
-        :param authorization: the token authorization object as filled-in
-                              by the validate_access_token() method
-        :return: an access/refresh token pair
-        """
-        if authorization.issuer is None or authorization.token is None:
-            raise ValueError("Invalid token authorization object!")
-
-        audience = None
-        # Hardcoded audience for WLCG tokens
-        if authorization.wlcg_profile:
-            audience = "https://wlcg.cern.ch/jwt/v1/any"
-
-        (access_token, refresh_token) = oidc_manager.generate_refresh_token(
-            issuer=authorization.issuer,
-            token=authorization.token,
-            audience=audience,
-            scope=authorization.scope,
-        )
-        return access_token, refresh_token
-
     def validate_access_token(self, access_token, authorization):
         """
         Validate access token offline or online
@@ -235,7 +211,11 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
         authorization.is_valid = False
         validation_method = "offline" if self._should_validate_offline() else "online"
-        audience = self.config["fts3.AuthorizedAudiences"]
+        verify_audience = self.config["fts3.VerifyAudience"]
+        audience = None
+        if verify_audience:
+            # Should only verify audience if configured
+            audience = self.config["fts3.AuthorizedAudiences"]
 
         try:
             if not oidc_manager.token_issuer_supported(access_token):

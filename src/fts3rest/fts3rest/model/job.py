@@ -25,8 +25,6 @@ JobActiveStates = [
     "ACTIVE",
     "DELETE",
     "ARCHIVING",
-    "QOS_TRANSITION",
-    "QOS_REQUEST_SUBMITTED",
 ]
 JobTerminalStates = ["FINISHED", "FAILED", "FINISHEDDIRTY", "CANCELED"]
 
@@ -46,7 +44,7 @@ class Job(Base):
     vo_name = Column(String(50))
     reason = Column(String(2048))
     submit_time = Column(DateTime)
-    priority = Column(Integer)
+    priority = Column(Integer, default=3)
     max_time_in_queue = Column(Integer)
     destination_spacetoken = Column(String(255), name="space_token")
     internal_job_params = Column(String(255))
@@ -58,7 +56,6 @@ class Job(Base):
     verify_checksum = Column(String(1), name="checksum_method")
     bring_online = Column(Integer)
     archive_timeout = Column(Integer)
-    target_qos = Column(String(255))
     job_metadata = Column(Json(255))
     retry = Column(Integer)
     retry_delay = Column(Integer, default=0)
@@ -92,7 +89,7 @@ class ArchivedJob(Base):
     vo_name = Column(String(50))
     reason = Column(String(2048))
     submit_time = Column(DateTime)
-    priority = Column(Integer)
+    priority = Column(Integer, default=3)
     max_time_in_queue = Column(Integer)
     destination_spacetoken = Column(String(255), name="space_token")
     internal_job_params = Column(String(255))
@@ -104,7 +101,6 @@ class ArchivedJob(Base):
     verify_checksum = Column(String(1), name="checksum_method")
     bring_online = Column(Integer)
     archive_timeout = Column(Integer)
-    target_qos = Column(String(255))
     job_metadata = Column(Json(255))
     retry = Column(Integer)
 

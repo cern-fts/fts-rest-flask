@@ -69,18 +69,17 @@ class TestConfigShares(TestController):
         """
         Test missing one of params
         """
-        config = {
+        config_tmpl = {
             "source": "gsiftp://source",
             "destination": "gsiftp://nowhere",
             "vo": "dteam",
             "share": 80,
         }
 
-        for i in config:
-            k = config
-            k[i] = ""
-            self.app.post_json(url="/config/shares", params=k, status=400)
-            return config
+        for key in config_tmpl:
+            config = config_tmpl
+            config[key] = ""
+            self.app.post_json(url="/config/shares", params=config, status=400)
 
     def test_wrong_config_shares2(self):
         """

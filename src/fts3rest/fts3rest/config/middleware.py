@@ -11,7 +11,6 @@ from werkzeug.exceptions import HTTPException
 
 from fts3rest.config.config import fts3_config_load
 from fts3rest.config.routing import base, cstorage
-from fts3rest.lib.IAMTokenRefresher import IAMTokenRefresher
 from fts3rest.lib.helpers.connection_validator import (
     connection_validator,
     connection_set_sqlmode,
@@ -21,6 +20,7 @@ from fts3rest.lib.middleware.fts3auth.fts3authmiddleware import FTS3AuthMiddlewa
 from fts3rest.lib.middleware.timeout import TimeoutHandler
 from fts3rest.lib.openidconnect import oidc_manager
 from fts3rest.model.meta import init_model, Session
+from fts3rest.model import TokenProvider
 
 
 def _load_configuration(config_file, test):
@@ -74,6 +74,37 @@ def _load_db(app):
         Session.remove()
 
 
+def _load_providers_from_db():
+    """
+    Load provider configuration from the database
+    """
+    log = logging.getLogger(__name__)
+    providers = {}
+
+    try:
+        token_providers = Session.query(TokenProvider).all()
+        if not token_providers:
+            log.info("No token providers found in the database.")
+
+        for provider in token_providers:
+            # Sanitize URL: ensure issuer ends with a slash for consistency
+            provider_url = provider.issuer
+            if provider_url and not provider_url.endswith("/"):
+                provider_url = provider_url + "/"
+
+            providers[provider_url] = {
+                "client_id": provider.client_id,
+                "client_secret": provider.client_secret,
+                "oauth_scope_fts": provider.required_submission_scope,
+                "vo": provider.vo_mapping,
+            }
+            log.info(f"Loaded token provider from database: {provider_url}")
+    except Exception as e:
+        log.error(f"Failed to load providers from database: {str(e)}")
+
+    return providers
+
+
 def create_app(default_config_file=None, test=False):
     """
     Create a new fts-rest Flask app
@@ -117,11 +148,14 @@ def create_app(default_config_file=None, test=False):
     # Add DB
     _load_db(app)
 
+    # Load token providers from database
+    app.config["fts3.Providers"] = _load_providers_from_db()
+
     # FTS3 authentication/authorization middleware
-    app.wsgi_app = FTS3AuthMiddleware(app.wsgi_app, fts3cfg)
+    app.wsgi_app = FTS3AuthMiddleware(app.wsgi_app, app.config)
 
     # Catch DB Timeout
-    app.wsgi_app = TimeoutHandler(app.wsgi_app, fts3cfg)
+    app.wsgi_app = TimeoutHandler(app.wsgi_app, app.config)
 
     # Convert errors to JSON
     @app.errorhandler(HTTPException)
@@ -153,11 +187,9 @@ def create_app(default_config_file=None, test=False):
         Heartbeat("fts_rest", int(app.config.get("fts3.HeartBeatInterval", 60))).start()
 
     # Start OIDC clients
-    if "fts3.Providers" in app.config and app.config["fts3.Providers"]:
+    if app.config["fts3.Providers"]:
         oidc_manager.setup(app.config)
-        if not test:
-            IAMTokenRefresher("fts_token_refresh_daemon", app.config).start()
     else:
-        log.info("OpenID Connect support disabled. Providers not found in config")
+        log.info("OpenID Connect support disabled. No providers found in database")
 
     return app

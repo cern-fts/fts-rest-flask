@@ -1,4 +1,4 @@
-#   Copyright 2015-2020 CERN
+#   Copyright 2015-2025 CERN
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -11,17 +11,21 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from werkzeug.exceptions import Forbidden
 
-from datetime import datetime, timedelta
 from flask import request
+from datetime import datetime, timedelta
+from werkzeug.exceptions import Forbidden, BadRequest
 from urllib.parse import urlparse
 import logging
+import json
 
 from fts3rest.model import File
 from fts3rest.model.meta import Session
 from fts3rest.lib.JobBuilder_utils import get_storage_element
-from fts3rest.lib.middleware.fts3auth.authorization import authorize
+from fts3rest.lib.middleware.fts3auth.authorization import (
+    authorize,
+    require_certificate,
+)
 from fts3rest.lib.middleware.fts3auth.constants import *
 from fts3rest.lib.helpers.jsonify import jsonify
 
@@ -87,3 +91,52 @@ def index():
         files = files.filter(File.finish_time == None)
 
     return files[:filter_limit]
+
+
+@require_certificate
+@authorize(ADMIN)
+@jsonify
+def force_start_files():
+    """
+    Force start individual files - accepts a (json) list of file_ids
+    """
+
+    if request.content_type == "application/json":
+        try:
+            file_ids = json.loads(request.data)
+        except Exception:
+            raise BadRequest("Malformed input")
+    else:
+        raise BadRequest("Only accepts 'Content-Type: application/json'")
+
+    if (not isinstance(file_ids, list)) or (
+        not all(isinstance(file_id, int) for file_id in file_ids)
+    ):
+        raise BadRequest("Only accepts a list of integer fileIDs")
+
+    messages = []
+    try:
+        for file_id in file_ids:
+            file = Session.query(File).get(file_id)
+            if not file:
+                messages.append({"file_id": file_id, "error": "File does not exist"})
+                continue
+
+            if file.file_state != "SUBMITTED":
+                messages.append(
+                    {"file_id": file_id, "error": "File is not in 'SUBMITTED' state"}
+                )
+                continue
+
+            file.file_state = "FORCE_START"
+            Session.merge(file)
+
+            messages.append(
+                {"file_id": file_id, "message": "File moved to 'FORCE_START'"}
+            )
+        Session.commit()
+    except Exception:
+        Session.rollback()
+        raise
+
+    return messages

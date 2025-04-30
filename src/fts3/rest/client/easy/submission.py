@@ -162,8 +162,8 @@ def new_job(
     copy_pin_lifetime=None,
     retry=-1,
     retry_delay=0,
-    metadata=None,
     priority=None,
+    metadata=None,
     strict_copy=False,
     disable_cleanup=False,
     max_time_in_queue=None,
@@ -173,6 +173,7 @@ def new_job(
     s3alternate=False,
     nostreams=1,
     buffer_size=None,
+    unmanaged_tokens=False,
     **kwargs,
 ):
     """
@@ -195,14 +196,19 @@ def new_job(
         archive_timeout:             Archive timeout
         copy_pin_lifetime:           Pin lifetime
         retry:                       Number of retries: <0 is no retries, 0 is server default, >0 is whatever value is passed
-        metadata:                    Metadata to bind to the job
+        retry_delay:                 Minutes to wait before next retry
         priority:                    Job priority
+        metadata:                    Metadata to bind to the job
+        strict_copy:                 Execute only the TPC part of a transfer (no other preparation)
+        disable_cleanup:             Do not perform the destination file clean-up on transfer failure
         max_time_in_queue:           Maximum number
+        timeout:                     Transfer timeout
         id_generator:                Job id generator algorithm
         sid:                         Specific id given by the client
         s3alternate:                 Use S3 alternate URL schema
         nostreams:                   Number of streams
         buffer_size:                 TCP buffer size (in bytes) that will be used for the given transfer-job
+        unmanaged_tokens:            Instruct server to not manage the token lifecycle
 
     Returns:
         An initialized dictionary representing a job
@@ -271,6 +277,7 @@ def new_job(
         s3alternate=s3alternate,
         nostreams=nostreams,
         buffer_size=buffer_size,
+        unmanaged_tokens=unmanaged_tokens,
     )
     job = dict(files=transfers, delete=deletion, params=params)
     return job
@@ -305,9 +312,11 @@ def new_staging_job(
     Returns:
         An initialized dictionary representing a staging job
     """
-    if bring_online <= 0 and copy_pin_lifetime <= 0:
+    if (bring_online is None or bring_online <= 0) and (
+        copy_pin_lifetime is None or copy_pin_lifetime <= 0
+    ):
         raise ClientError(
-            "Bad request: bring_online and copy_pin_lifetime are not positive numbers"
+            "Bad request: both 'bring_online' and 'copy_pin_lifetime' are not positive numbers"
         )
 
     transfers = []

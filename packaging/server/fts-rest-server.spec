@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.13.4
+Version:        3.14.0
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -28,6 +28,7 @@ Requires:       python%{python3_pkgversion}-mysqlclient
 Requires:       python%{python3_pkgversion}-jwcrypto
 Requires:       python%{python3_pkgversion}-dirq
 Requires:       python%{python3_pkgversion}-mako
+Requires:       python%{python3_pkgversion}-jsonschema
 ### The following three packages are still not found in community repositories on RHEL9 and were build by us
 ### They follow the naming convention for python packages on RHEL9
 Requires:       python%{python3_pkgversion}-pyjwkest = 1.4.2-1.el9.cern
@@ -116,8 +117,11 @@ fi
 %files selinux
 
 %changelog
+* Wed Apr 30 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.0-1
+- FTS v3.14 Token Release
+
 * Tue Sep 03 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.4-1
-- Allow unamanged tokens if the "offline_access" scope is missing
+- Allow unmanaged tokens if the "offline_access" scope is missing
 - Un-retire existing access tokens when referenced again by submitted transfers
 
 * Tue Aug 20 2024 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.13.3-1

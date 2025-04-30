@@ -49,31 +49,42 @@ class TestController(TestCase):
         self.flask_app.response_class = TestResponse
         self.app = self.flask_app.test_client()
 
-    def setup_gridsite_environment(self, no_vo=False, dn=None):
+    def setup_gridsite_environment(
+        self, no_vo=False, dn=None, ftsadmin=False, reset_vo=False
+    ):
         """
         Add to the test environment mock values of the variables
         set by mod_gridsite.
 
         Args:
-            noVo: If True, no VO attributes will be set
+            no_vo: If True, no VO attributes will be set
             dn: Override default user DN
+            ftsadmin: When true, grant the "admin" config role
+            reset_vo: Clear the VO attributes before any further setup
         """
         if dn is None:
             dn = TestController.TEST_USER_DN
         self.app.environ_base["GRST_CRED_AURI_0"] = "dn:" + dn
 
-        if not no_vo:
-            self.app.environ_base.update(
-                {
-                    "GRST_CRED_AURI_1": "fqan:/testvo/Role=NULL/Capability=NULL",
-                    "GRST_CRED_AURI_2": "fqan:/testvo/Role=myrole/Capability=NULL",
-                    "GRST_CRED_AURI_3": "fqan:/testvo/Role=lcgadmin/Capability=NULL",
-                }
-            )
-        else:
-            for grst in ["GRST_CRED_AURI_1", "GRST_CRED_AURI_2", "GRST_CRED_AURI_3"]:
+        if no_vo or reset_vo:
+            for grst in [
+                "GRST_CRED_AURI_1",
+                "GRST_CRED_AURI_2",
+                "GRST_CRED_AURI_3",
+                "GRST_CRED_AURI_4",
+            ]:
                 if grst in self.app.environ_base:
                     del self.app.environ_base[grst]
+
+        if not no_vo:
+            fqans = {
+                "GRST_CRED_AURI_1": "fqan:/testvo/Role=NULL/Capability=NULL",
+                "GRST_CRED_AURI_2": "fqan:/testvo/Role=myrole/Capability=NULL",
+                "GRST_CRED_AURI_3": "fqan:/testvo/Role=lcgadmin/Capability=NULL",
+            }
+            if ftsadmin:
+                fqans["GRST_CRED_AURI_4"] = "fqan:/testvo/Role=ftsadmin/Capability=NULL"
+            self.app.environ_base.update(fqans)
 
     def get_user_credentials(self):
         """

@@ -74,7 +74,7 @@ def profile_request(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         user = request.environ["fts3.User.Credentials"]
-        vo = user.vos[0]
+        vo = user.vos[0] if len(user.vos) else None
         request_type = request.method
         request_path = request.path
         response = func(*args, **kwargs)
@@ -785,15 +785,14 @@ def get_refreshless_token_ids(token_ids):
     return refreshless_token_ids
 
 
-def set_file_states_to_token_prep_as_necessary(job_id, file_rows, token_rows):
+def set_file_states_to_token_prep_as_necessary(job_id, file_rows):
     """
     Sets the file_state column of the specified t_file table rows to TOKEN_PREP
     if either the associated source or destination access token does not yet
     have a refresh token.
 
-    A second restraint was added:
-    Manage the token lifecycle only if the involved token
-    contains the "offline_access" scope
+    This function is called only when FTS is supposed to manage the tokens lifecycle
+    (i.e.: the submission does not set the "unmanaged_tokens" flag)
 
     The initial file state is stored under t_file.file_state_initial
     """
@@ -808,36 +807,10 @@ def set_file_states_to_token_prep_as_necessary(job_id, file_rows, token_rows):
         f" nb_refreshless_tokens={len(refreshless_token_ids)}"
     )
 
-    eligible_token_ids = refreshless_token_ids
-
-    if current_app.config.get("fts3.NonManagedTokens", False):
-        # Create a list of tokens that have "offline_access" scope
-        valid_scope_token_ids = set(
-            [
-                token["token_id"]
-                for token in token_rows
-                if "offline_access" in token["scope"]
-            ]
-        )
-
-        # Keep only the intersection between the tokens that have "offline_access"
-        # and the tokens that don't have an associated refresh token
-        eligible_token_ids = set.intersection(
-            refreshless_token_ids, valid_scope_token_ids
-        )
-
-        log.info(
-            f"Got tokens with 'offline_access' scope:"
-            f" job_id={job_id}"
-            f" nb_tokens_checked={len(token_rows)}"
-            f" nb_valid_scope_tokens={len(valid_scope_token_ids)}"
-            f" nb_eligible_tokens={len(eligible_token_ids)}"
-        )
-
     for file_row in file_rows:
         if (
-            file_row["src_token_id"] in eligible_token_ids
-            or file_row["dst_token_id"] in eligible_token_ids
+            file_row["src_token_id"] in refreshless_token_ids
+            or file_row["dst_token_id"] in refreshless_token_ids
         ):
             file_row["file_state_initial"] = file_row["file_state"]
             file_row["file_state"] = "TOKEN_PREP"
@@ -848,9 +821,14 @@ def issuer_is_known(issuer):
     Returns true if the specified token issuer is in the t_token_provider
     table.
     """
+    # Handle both '/' terminated and not '/' terminated issuer
+    issuer_slash = issuer if issuer.endswith("/") else issuer + "/"
+    issuer_no_slash = issuer if not issuer.endswith("/") else issuer[:-1]
+
     result = Session.execute(
-        "SELECT issuer FROM t_token_provider WHERE issuer = :issuer",
-        params={"issuer": issuer},
+        "SELECT issuer FROM t_token_provider "
+        "  WHERE (issuer = :issuer_slash OR issuer = :issuer_no_slash)",
+        params={"issuer_slash": issuer_slash, "issuer_no_slash": issuer_no_slash},
     )
     for _ in result:
         return True
@@ -883,15 +861,19 @@ def insert_tokens(job_id, tokens):
 
     nb_inserted = 0
     nb_duplicate = 0
+    unmanaged = False
+    if len(tokens) > 0:
+        # Cache value for log print at end of the function
+        unmanaged = tokens[0]["unmanaged"]
+
     started = time.perf_counter()
     for token_dict in tokens:
-        # Refresh a token half way through its lifetime
+        # Refresh the token halfway between now and its expiration time
+        # If it is already expired set the lifetime to zero
+        curr_time = int(time.time())
         lifetime_sec = (
-            token_dict["exp"] - token_dict["nbf"]
-            if token_dict["exp"] > token_dict["nbf"]
-            else 0
+            token_dict["exp"] - curr_time if token_dict["exp"] > curr_time else 0
         )
-        access_token_refresh_after = token_dict["nbf"] + lifetime_sec * 0.5
 
         try:
             timestamp_func = (
@@ -903,21 +885,19 @@ def insert_tokens(job_id, tokens):
             INSERT INTO t_token(
               token_id,
               access_token,
-              access_token_not_before,
               access_token_expiry,
-              access_token_refresh_after,
               issuer,
               scope,
-              audience
+              audience,
+              unmanaged
             ) VALUES (
               :token_id,
               :access_token,
-              {timestamp_func}(:access_token_not_before),
               {timestamp_func}(:access_token_expiry),
-              {timestamp_func}(:access_token_refresh_after),
               :issuer,
               :scope,
-              :audience
+              :audience,
+              :unmanaged
             )
             """  # nosec
             Session.execute(
@@ -925,12 +905,11 @@ def insert_tokens(job_id, tokens):
                 params={
                     "token_id": token_dict["token_id"],
                     "access_token": token_dict["access_token"],
-                    "access_token_not_before": token_dict["nbf"],
                     "access_token_expiry": token_dict["exp"],
-                    "access_token_refresh_after": access_token_refresh_after,
                     "issuer": token_dict["issuer"],
                     "scope": token_dict["scope"],
                     "audience": token_dict["audience"],
+                    "unmanaged": token_dict["unmanaged"],
                 },
             )
             Session.commit()
@@ -953,7 +932,7 @@ def insert_tokens(job_id, tokens):
 
     db_secs = time.perf_counter() - started
     log.info(
-        f"Inserted tokens into database: job_id={job_id} db_secs={db_secs} nb_inserted={nb_inserted} nb_duplicate={nb_duplicate}"
+        f"Inserted tokens into database: job_id={job_id} db_secs={db_secs} nb_inserted={nb_inserted} nb_duplicate={nb_duplicate} unmanaged={unmanaged}"
     )
 
 
@@ -980,135 +959,6 @@ def decode_token(raw):
     token["signature"] = split_raw[2]
 
     return token
-
-
-def _get_queue_counts(files):
-    result = {}
-    for file in files:
-        key = (
-            file["vo_name"],
-            file["source_se"],
-            file["dest_se"],
-            file["activity"],
-            file["file_state"].upper(),  # DB file_state values are uppercase
-        )
-        result[key] = 1 if key not in result else result[key] + 1
-    return result
-
-
-def _inc_t_queue_counter(
-    dbconn, vo_name, source_se, dest_se, activity, file_state, delta
-):
-    # Assume for now the t_queue row exists
-    update_sql = """
-        UPDATE
-            t_queue
-        SET
-            nb_files = nb_files + %(delta)s
-        WHERE
-            vo_name = %(vo_name)s
-        AND
-            source_se = %(source_se)s
-        AND
-            dest_se = %(dest_se)s
-        AND
-            activity = %(activity)s
-        AND
-            file_state = %(file_state)s
-        RETURNING
-            queue_id
-    """
-    update_params = {
-        "delta": delta,
-        "vo_name": vo_name,
-        "source_se": source_se,
-        "dest_se": dest_se,
-        "activity": activity,
-        "file_state": file_state,
-    }
-    rows = dbconn.execute(update_sql, update_params).fetchall()
-    if len(rows) > 0:
-        queue_id = rows[0][0]
-        return queue_id
-
-    # The t_queue row did not exist so create one
-    insert_sql = """
-        INSERT INTO t_queue (
-            vo_name,
-            source_se,
-            dest_se,
-            activity,
-            file_state,
-            nb_files
-        ) VALUES (
-            %(vo_name)s,
-            %(source_se)s,
-            %(dest_se)s,
-            %(activity)s,
-            %(file_state)s,
-            %(delta)s
-        )
-        ON CONFLICT (vo_name, source_se, dest_se, activity, file_state) DO
-            UPDATE SET nb_files =
-                t_queue.nb_files + EXCLUDED.nb_files
-        RETURNING
-            queue_id
-    """
-    insert_params = {
-        "vo_name": vo_name,
-        "source_se": source_se,
-        "dest_se": dest_se,
-        "activity": activity,
-        "file_state": file_state,
-        "delta": delta,
-    }
-    rows = dbconn.execute(insert_sql, insert_params).fetchall()
-    if len(rows) != 1:
-        raise Exception(
-            f"Failed to increment t_queue counter: vo_name={vo_name} source_se={source_se} dest_se={dest_se} file_state={file_state} delta={delta}"
-        )
-    queue_id = rows[0][0]
-    return queue_id
-
-
-def _inc_t_queue_counters(dbconn, auth_method, queue_counts):
-    result = {}
-    counter_col = "nb_token_prep" if auth_method == "oauth2" else "nb_submitted"
-
-    for (
-        vo_name,
-        source_se,
-        dest_se,
-        activity,
-        file_state,
-    ), count in queue_counts.items():
-        queue_id = _inc_t_queue_counter(
-            dbconn=dbconn,
-            vo_name=vo_name,
-            source_se=source_se,
-            dest_se=dest_se,
-            activity=activity,
-            file_state=file_state,
-            delta=count,
-        )
-        composite_queue_id = (vo_name, source_se, dest_se, activity)
-        result[composite_queue_id] = queue_id
-    return result
-
-
-def _create_postgres_files(mysql_files, composite_queue_id_to_id):
-    postgres_files = []
-    for mysql_file in mysql_files:
-        postgres_file = mysql_file.copy()
-        composite_queue_id = (
-            mysql_file["vo_name"],
-            mysql_file["source_se"],
-            mysql_file["dest_se"],
-            mysql_file["activity"],
-        )
-        postgres_file["queue_id"] = composite_queue_id_to_id[composite_queue_id]
-        postgres_files.append(postgres_file)
-    return postgres_files
 
 
 @authorize(TRANSFER)
@@ -1179,9 +1029,10 @@ def submit():
             raise BadRequest("Token does not contain an iss claim")
         fts_submit_token_issuer = safe_issuer(fts_submit_token["payload"]["iss"])
 
-        if "aud" not in fts_submit_token["payload"]:
-            raise BadRequest("Token does not contain an aud claim")
-        fts_submit_token_aud = fts_submit_token["payload"]["aud"]
+        if current_app.config.get("fts3.VerifyAudience", True):
+            if "aud" not in fts_submit_token["payload"]:
+                raise BadRequest("Token does not contain an aud claim")
+            fts_submit_token_aud = fts_submit_token["payload"]["aud"]
 
         if not issuer_is_known(fts_submit_token_issuer):
             raise BadRequest(
@@ -1204,9 +1055,9 @@ def submit():
         # What was supposed to be the initial file state is stored in "t_file.file_state_initial".
         # The FTS server will reset the file state to its initial value after obtaining the refresh token
 
-        if user.method == "oauth2":
+        if user.method == "oauth2" and not populated.unmanaged_tokens:
             set_file_states_to_token_prep_as_necessary(
-                populated.job_id, populated.files, populated.tokens
+                populated.job_id, populated.files
             )
 
         try:
@@ -1224,14 +1075,7 @@ def submit():
         if current_app.config["fts3.DbType"] == "mysql":
             Session.execute(File.__table__.insert(), populated.files)
         else:
-            queue_counts = _get_queue_counts(populated.files)
-            composite_queue_id_to_id = _inc_t_queue_counters(
-                Session.connection(), user.method, queue_counts
-            )
-            postgres_files = _create_postgres_files(
-                populated.files, composite_queue_id_to_id
-            )
-            Session.execute(PostgresFile.__table__.insert(), postgres_files)
+            Session.execute(PostgresFile.__table__.insert(), populated.files)
         log.info(
             "Inserted files into database: job_id={} db_secs={}".format(
                 populated.job_id, str(time.perf_counter() - start_insert_files)

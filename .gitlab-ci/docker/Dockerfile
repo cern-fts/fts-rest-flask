@@ -24,9 +24,9 @@ WORKDIR /home/ci
 USER ci
 
 # Python versions selected for the CI environment
-ENV PY39 3.9.18
-ENV PY310 3.10.12
-ENV PY311 3.11.8
+ENV PY39=3.9.18
+ENV PY310=3.10.12
+ENV PY311=3.11.8
 
 # Install "pyenv" following instructions from https://github.com/pyenv/pyenv
 RUN git clone --depth 1 --branch v2.4.0 https://github.com/pyenv/pyenv.git ~/.pyenv && \
@@ -39,8 +39,8 @@ pyenv install $PY310 && \
 pyenv install $PY311
 
 # Needed for pip-tools
-ENV LC_ALL en_US.utf-8
-ENV LANG en_US.utf-8
+ENV LC_ALL=en_US.utf-8
+ENV LANG=en_US.utf-8
 
 # Copy the requirements files
 USER root
@@ -49,9 +49,9 @@ RUN cd /home/ci && chown ci:ci pipcompile.sh requirements.in dev-requirements.in
 USER ci
 
 # Prepare virtual environments
-ENV VENV_39 /home/ci/venv_39
-ENV VENV_310 /home/ci/venv_310
-ENV VENV_311 /home/ci/venv_311
+ENV VENV_39=/home/ci/venv_39
+ENV VENV_310=/home/ci/venv_310
+ENV VENV_311=/home/ci/venv_311
 
 RUN . ~/.bashrc && pyenv global $PY39 && python3 -m venv $VENV_39 && \
     . $VENV_39/bin/activate && pip install --upgrade pip && pip install pip-tools && \

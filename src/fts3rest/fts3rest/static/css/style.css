@@ -21,3 +21,7 @@
 .panel-collapse>.panel-body {
     display: none;
 }
+
+.token-provider-add-issuer {
+	background-color: #fffae9;
+}
