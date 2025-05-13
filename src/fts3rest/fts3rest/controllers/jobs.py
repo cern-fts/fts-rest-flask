@@ -1012,11 +1012,11 @@ def submit():
         validate_tokens_offline(populated.tokens)
 
         # Block archive and retrieve requests
-        if get_tape_timeout(submitted_dict["params"], "archive_timeout") > 0:
+        if get_tape_timeout(populated.params, "archive_timeout") > 0:
             raise BadRequest(
                 "Requests to archive to tape using token authentication are not supported"
             )
-        if get_tape_timeout(submitted_dict["params"], "bring_online") > 0:
+        if get_tape_timeout(populated.params, "bring_online") > 0:
             raise BadRequest(
                 "Requests to retrieve from tape using token authentication are not supported"
             )
