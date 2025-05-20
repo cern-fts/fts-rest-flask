@@ -14,6 +14,7 @@
 #   limitations under the License.
 
 import logging
+import json
 
 from fts3rest.model.meta import Session
 from fts3rest.model import BannedDN
@@ -28,8 +29,7 @@ log = logging.getLogger(__name__)
 
 class FTS3AuthMiddleware:
     """
-    Pylons middleware to wrap the authentication as part of the request
-    process.
+    Flask middleware to wrap the authentication as part of the request process.
     """
 
     def __init__(self, wrap_app, config):
@@ -77,20 +77,29 @@ class FTS3AuthMiddleware:
             self._validate_origin(environ)
             credentials = self._get_credentials(environ)
             environ["fts3.User.Credentials"] = credentials
-            log.info("%s logged in via %s" % (credentials.user_dn, credentials.method))
+            log.info(f"{credentials.user_dn} logged in via {credentials.method}")
         except HTTPException as e:
-            log.exception(e)
-            return e(environ, start_response)
+            log.info(f"Authentication exception: {e}")
+            log.debug(e, exc_info=e)
+            # Create JSON error response
+            response_body = json.dumps(
+                {
+                    "status": f"{e.code} {e.name}",
+                    "message": e.description,
+                }
+            ).encode("utf-8")
+            headers = [
+                ("Content-Type", "application/json"),
+                ("Content-Length", str(len(response_body))),
+            ]
+            start_response(f"{e.code} {e.name}", headers)
+            return [response_body]
         except DatabaseError as e:
-            log.warning(
-                "Database error when trying to get user's credentials: %s" % str(e)
-            )
+            log.warning(f"Database error when trying to get user's credentials: {e}")
             Session.remove()
             raise
         except Exception as e:
-            log.warning(
-                "Unexpected error when trying to get user's credentials: %s" % str(e)
-            )
+            log.warning(f"Unexpected error when trying to get user's credentials: {e}")
             raise
         else:
             return self.app(environ, start_response)
