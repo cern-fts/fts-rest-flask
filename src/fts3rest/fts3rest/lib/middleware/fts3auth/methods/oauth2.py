@@ -19,7 +19,6 @@ import jwt
 import types
 
 from urllib.parse import urlparse
-from datetime import datetime
 from fts3rest.lib.middleware.fts3auth.credentials import (
     generate_token_delegation_id,
     gridmap_vo,
@@ -156,18 +155,14 @@ def do_authentication(credentials, env, config):
 
     res_provider = FTS3OAuth2ResourceProvider(env, config)
     authn = res_provider.get_authorization()
-    if authn is None:
-        return False
-    if authn.issuer is None or authn.subject is None:
+    # Not dealing with OAuth2 credentials
+    if authn is None or not authn.is_oauth:
         return False
     if not authn.is_valid:
-        if authn.error is not None:
-            log.info("Raising invalid OAuth2 credentials")
-            message = authn.error
-            if authn.error == "access_denied":
-                message = "Invalid OAuth2 credentials"
-            raise InvalidCredentials(message)
-        return False
+        if authn.error is None:
+            authn.error = "Invalid OAuth2 credentials"
+        log.info("Raising invalid OAuth2 credentials")
+        raise InvalidCredentials(authn.error)
 
     credentials.method = "oauth2"
     credentials.user_dn = authn.subject

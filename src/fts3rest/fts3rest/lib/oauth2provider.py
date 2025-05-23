@@ -238,9 +238,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             if not valid:
                 return
         except Exception as ex:
-            log.warning(
-                "Exception during {} validation: {}".format(validation_method, ex)
-            )
+            log.warning(f"Exception during {validation_method} validation: {ex}")
             authorization.error = str(ex)
             return
 
@@ -276,6 +274,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         if not providers_config:
             log.info("Invalid token: No token providers have been configured")
             authorization.is_valid = False
+            authorization.error = "No token providers have been configured"
         else:
             # Ensure token issuer ends with a '/'
             if authorization.issuer and authorization.issuer[-1] != "/":
@@ -291,22 +290,25 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                     f"Invalid token: Issuer not found in configured providers: issuer={token_issuer}"
                 )
                 authorization.is_valid = False
+                authorization.error = (
+                    f"Issuer not found in configured providers: issuer={token_issuer}"
+                )
             else:
                 submit_token_provider_config = providers_config[token_issuer]
                 expected_fts_scope = submit_token_provider_config.get(
                     "oauth_scope_fts", None
                 )
-                if expected_fts_scope:
-                    if not authorization.scope:
-                        log.info(
-                            f"Invalid token: Invalid scope: expected={expected_fts_scope} actual=None"
-                        )
-                        authorization.is_valid = False
-                    elif expected_fts_scope not in authorization.scope:
-                        log.info(
-                            f"Invalid token: Invalid scope: expected={expected_fts_scope} actual={authorization.scope}"
-                        )
-                        authorization.is_valid = False
+                if expected_fts_scope and (
+                    authorization.scope is None
+                    or expected_fts_scope not in authorization.scope
+                ):
+                    log.info(
+                        f"Invalid token: Invalid scope: expected={expected_fts_scope} actual={authorization.scope}"
+                    )
+                    authorization.is_valid = False
+                    authorization.error = (
+                        f"Invalid scope: '{expected_fts_scope}' scope required"
+                    )
 
     def _validate_token_offline(self, access_token, audience=None):
         return oauth2.validate_token_offline(access_token, audience)
