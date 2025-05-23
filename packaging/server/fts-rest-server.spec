@@ -117,6 +117,9 @@ fi
 %files selinux
 
 %changelog
+* Fri May 23 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.1-1
+- Format authentication middleware exceptions as JSON response
+
 * Wed Apr 30 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.0-1
 - FTS v3.14 Token Release
 
