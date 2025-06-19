@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import sys
+
 from fts3.rest.client import Inquirer
 from .base import Base
 from .utils import *
@@ -59,6 +61,18 @@ class JobLister(Base):
             help="query only for the given destination storage element",
         )
 
+        self.opt_parser.add_option(
+            "--status",
+            dest="job_status",
+            help="query only for the given list of status",
+        )
+
+        self.opt_parser.add_option(
+            "--timewindow",
+            dest="time_window",
+            help="query for a given time window (H:M). Mandatory if --status",
+        )
+
     def run(self):
         context = self._create_context()
         inquirer = Inquirer(context)
@@ -67,8 +81,20 @@ class JobLister(Base):
             self.options.vo_name,
             self.options.source_se,
             self.options.dest_se,
+            state_in=self.options.job_status,
+            time_window=self.options.time_window,
         )
         if not self.options.json:
             self.logger.info(job_list_human_readable(job_list))
         else:
             self.logger.info(job_list_as_json(job_list))
+
+    def validate(self):
+        if self.options.job_status:
+            try:
+                _h,_m = map(int, self.options.time_window.split(':'))
+                self.options.job_status = self.options.job_status.split(',')
+            except (ValueError,AttributeError):
+                self.logger.critical("When --status is specified, --timewindow is mandatory in the format HH:MM")
+                sys.exit(1)
+        return super().validate()
