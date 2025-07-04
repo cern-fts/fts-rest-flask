@@ -25,7 +25,7 @@ from fts3rest.lib.helpers.jsonify import jsonify
 
 log = logging.getLogger(__name__)
 
-API_VERSION = dict(major=3, minor=14, patch=1)
+API_VERSION = dict(major=3, minor=14, patch=2)
 
 
 # TODO migrate correctly if necessary.

@@ -1020,6 +1020,14 @@ def submit():
             raise BadRequest(
                 "Requests to retrieve from tape using token authentication are not supported"
             )
+        # Block transfers which require file locality
+        if (
+            populated.params["overwrite_when_only_on_disk"]
+            or populated.params["dst_file_report"]
+        ):
+            raise BadRequest(
+                "Transfers with file locality feature together with token authentication are not supported"
+            )
 
         # Block unknown issuer
         raw_fts_submit_token = request.environ["HTTP_AUTHORIZATION"].split()[1]

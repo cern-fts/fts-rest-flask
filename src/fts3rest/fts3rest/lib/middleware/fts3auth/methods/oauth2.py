@@ -167,16 +167,7 @@ def do_authentication(credentials, env, config):
     credentials.method = "oauth2"
     credentials.user_dn = authn.subject
     credentials.dn.append(authn.subject)
-
-    vo = gridmap_vo(credentials.user_dn)
-    if vo:
-        credentials.vos.append(vo)
-    else:
-        vo = _get_vo_from_config(config, authn.issuer)
-        if vo:
-            credentials.vos.append(vo)
-        else:
-            _build_vo_from_token_auth(credentials, authn)
+    _build_vo_from_token_auth(credentials, authn, config)
 
     credentials.delegation_id = generate_token_delegation_id(
         authn.issuer, authn.subject
@@ -200,17 +191,21 @@ def do_authentication(credentials, env, config):
     return True
 
 
-def _build_vo_from_token_auth(credentials, token_auth):
+def _build_vo_from_token_auth(credentials, token_auth, config):
+    vo = gridmap_vo(credentials.user_dn)
+    if not vo:
+        vo = _get_vo_from_config(config, token_auth.issuer)
+    if not vo:
+        vo = _build_vo_from_issuer(token_auth.issuer)
+    credentials.vos.append(vo)
+
     if token_auth.groups is not None:
         for group in token_auth.groups:
+            credentials.voms_cred.append(group)
             if group.startswith("/"):
                 group = group[1:]
-            if group not in credentials.vos:
-                credentials.vos.append(group)
-    else:
-        credentials.vos.append(_build_vo_from_issuer(token_auth.issuer))
-    if token_auth.scope is not None:
-        credentials.voms_cred.extend(token_auth.scope)
+                if group not in credentials.vos:
+                    credentials.vos.append(group)
 
 
 def _build_vo_from_issuer(issuer):
