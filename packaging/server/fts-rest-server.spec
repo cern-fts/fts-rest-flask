@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.14.1
+Version:        3.14.2
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -117,6 +117,9 @@ fi
 %files selinux
 
 %changelog
+* Fri Jul 04 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.2-1
+- jQuery and jQuery-UI version updated
+
 * Fri May 23 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.1-1
 - Format authentication middleware exceptions as JSON response
 
