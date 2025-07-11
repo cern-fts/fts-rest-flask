@@ -51,6 +51,12 @@ DEFAULT_PARAMS = {
     "unmanaged_tokens": False,
 }
 
+PROTOCOL_MATRIX = {
+    "http": ["http", "dav", "s3", "gcloud", "cs3"],
+    "root": ["root", "xroot"],
+    "gsiftp": ["gsiftp", "ftp"],
+}
+
 
 def get_base_id():
     return BASE_ID
@@ -350,3 +356,15 @@ def seconds_from_value(value):
             return None
     except Exception:
         return None
+
+
+def canonical_protocol(url):
+    """
+    Given a URLParse object, returns the canonical protocol
+    Example: davs://example.cern.ch --> http
+    """
+    prot = url.scheme[:-1] if url.scheme.endswith("s") else url.scheme
+    for canonic_prot, supported in PROTOCOL_MATRIX.items():
+        if prot in supported:
+            return canonic_prot
+    return prot

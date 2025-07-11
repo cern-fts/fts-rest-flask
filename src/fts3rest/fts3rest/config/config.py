@@ -74,6 +74,7 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
         "OAuth2": False,
         "OverwriteHopValidation": True,
         "AllowNonManagedTokens": False,
+        "AllowProtocolTranslation": True,
         "ExperimentalPostgresSupport": False,
         "VerifyAudience": True,
     }
