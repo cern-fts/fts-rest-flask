@@ -14,6 +14,7 @@ from werkzeug.exceptions import (
     Forbidden,
     InternalServerError,
     MethodNotAllowed,
+    RequestEntityTooLarge,
 )
 
 from fts3rest.model import BannedSE
@@ -356,6 +357,23 @@ def seconds_from_value(value):
             return None
     except Exception:
         return None
+
+
+def validate_submitted_file_limits(num_new_files):
+    """
+    ensure that the number of transfers in a single job doesn't exceeds the limit
+    """
+    try:
+        # Get current submitted file count from database
+        if num_new_files > app.config.get("fts3.MaxFilesPerJob", 1000):
+            message = f"Job rejected: Too many files submitted in one job. Max supported: {app.config.get('fts3.MaxFilesPerJob', 1000)}"
+            log.warning(f"Max number of files per job reached: {message}")
+            raise BadRequest(message)
+    except BadRequest:
+        raise
+    except Exception as e:
+        log.exception(f"Files limit validation error: {e}")
+        raise InternalServerError("Failed to validate files submission limits.")
 
 
 def canonical_protocol(url):

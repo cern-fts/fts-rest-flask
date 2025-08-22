@@ -859,6 +859,8 @@ class JobBuilder:
             if files_list is not None:
                 self._populate_transfers(files_list)
 
+            validate_submitted_file_limits(len(files_list))
+
             self._set_user()
 
             # Reject for SE banning

@@ -1688,3 +1688,44 @@ class TestJobSubmission(TestController):
 
         # Make sure it was committed to the DB
         self.assertGreater(len(job_id), 0)
+
+    def test_validate_submitted_file_limits_per_job(self):
+        """
+        Test that validate_submitted_file_limits() is called with proper parameters
+        when submitting a job hitting MaxFilesPerJob limit
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        # Create a job with 3 files
+        job = {
+            "files": [
+                {
+                    "sources": ["srm://source.it:8446/file1"],
+                    "destinations": ["srm://dest.ch:8447/file1"],
+                },
+                {
+                    "sources": ["srm://source.it:8446/file2"],
+                    "destinations": ["srm://dest.ch:8447/file2"],
+                },
+                {
+                    "sources": ["srm://source.it:8446/file3"],
+                    "destinations": ["srm://dest.ch:8447/file3"],
+                },
+            ]
+        }
+
+        # Set the MaxFilesPerJob limit to 2
+        self.flask_app.config["fts3.MaxFilesPerJob"] = 2
+
+        # This should return 413 Request Entity Too Large
+        response = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        )
+
+        # Verify the error message contains information about the limit
+        self.assertIn("Max", response.json["message"])
+        self.assertIn("files", response.json["message"])
