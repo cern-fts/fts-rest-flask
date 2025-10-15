@@ -220,6 +220,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
         try:
             if not oidc_manager.token_issuer_supported(access_token):
                 authorization.error = "TokenProvider not supported"
+                log.warning(f"Token issuer not supported")
                 return
         except Exception as ex:
             log.warning("Exception during TokenProvider check: {}".format(ex))
@@ -244,19 +245,19 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
         # Try to obtain scopes via best-effort introspection
         scope = self._scope_from_credential(credential)
+        issuer = oidc_manager.get_token_issuer(access_token)
         if scope is None:
             try:
-                log.debug(
-                    "Retrieving scopes via introspection: {}".format(credential["iss"])
-                )
-                response = oidc_manager.introspect(credential["iss"], access_token)
+                log.debug("Retrieving scopes via introspection: {}".format(issuer))
+                response = oidc_manager.introspect(issuer, access_token)
                 scope = self._scope_from_credential(response)
+                log.debug("Retrieved scopes: {}".format(scope))
             except Exception as ex:
                 log.info("Exception retrieving scopes via introspection: {}".format(ex))
                 pass
 
         authorization.is_oauth = True
-        authorization.issuer = credential["iss"]
+        authorization.issuer = issuer
         authorization.subject = credential["sub"]
         authorization.client_id = credential.get("client_id")
         authorization.expiry = credential["exp"]
