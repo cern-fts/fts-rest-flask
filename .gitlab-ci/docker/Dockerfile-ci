@@ -25,6 +25,9 @@ RUN createrepo /repo/fts
 RUN echo -e "[fts-ci]\nname=FTS CI\nbaseurl=file:///repo/fts\ngpgcheck=0\nenabled=1\npriority=2" > /etc/yum.repos.d/fts.repo
 RUN dnf clean metadata
 
+# Install procps-ng tools (ps command)
+RUN dnf install -y procps-ng
+
 # Install FTS-REST-Server packages
 RUN dnf install -y fts-rest-server fts-rest-server-selinux --enablerepo=crb
 
