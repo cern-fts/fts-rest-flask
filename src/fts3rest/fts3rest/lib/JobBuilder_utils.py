@@ -48,7 +48,7 @@ DEFAULT_PARAMS = {
     "priority": 3,
     "max_time_in_queue": 0,
     "s3alternate": False,
-    "unmanaged_tokens": False,
+    "unmanaged_tokens": True,
 }
 
 
