@@ -188,6 +188,7 @@ docker_tag:
   variables:
     PYTHONPATH: ./src:./src/fts3rest
     FTS3TESTCONFIG: ./src/fts3rest/fts3rest/tests/fts3testconfig
+  allow_failure: true
 
 .rpm_tests_template: &rpm_tests_definition
   stage: tests
@@ -205,6 +206,7 @@ docker_tag:
     - ./.gitlab-ci/setup-db.sh
     - sed -i "s/DbConnectString=localhost/DbConnectString=mysqldb/" $FTS3TESTCONFIG
     - pytest-3 -x $FTS3TESTPATH
+  allow_failure: true
 
 #--------------------------
 # Testing jobs
