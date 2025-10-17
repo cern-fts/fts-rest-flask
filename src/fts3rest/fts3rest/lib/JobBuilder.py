@@ -148,7 +148,7 @@ class JobBuilder:
             file_dict["sources"], src_tokens
         ):
             source_url = urlparse(source.strip())
-            validate_url(source_url)
+            source_url = validate_url(source_url)
             if src_token is not None and not isinstance(src_token, str):
                 raise BadRequest(
                     f"Source token is not a string: type(src_token)={type(src_token)}"
@@ -158,7 +158,7 @@ class JobBuilder:
                 file_dict["destinations"], dst_tokens
             ):
                 dest_url = urlparse(destination.strip())
-                validate_url(dest_url)
+                dest_surl = validate_url(dest_url)
                 if dst_token is not None and not isinstance(dst_token, str):
                     raise BadRequest(
                         f"Destination token is not a string: type(dst_token)={type(dst_token)}"
@@ -200,6 +200,15 @@ class JobBuilder:
                             destination, file_dict
                         )
                     source = self._set_activity_query_string(source, file_dict)
+
+            # Normalize scheme for source and dest
+            if source.scheme == "s3":
+                fixed_url = source.geturl().replace("s3://", "s3s://", 1)
+                source = urlparse(fixed_url)
+
+            if destination.scheme == "s3":
+                fixed_url = destination.geturl().replace("s3://", "s3s://", 1)
+                destination = urlparse(fixed_url)
 
             f = dict(
                 job_id=self.job_id,

@@ -8,6 +8,7 @@ import logging
 import random
 import uuid
 import json
+from urllib.parse import urlparse
 from flask import current_app as app
 from werkzeug.exceptions import (
     BadRequest,
@@ -99,6 +100,13 @@ def validate_url(url):
         raise ValueError("Missing path (%s)" % url.geturl())
     if not url.hostname:
         raise ValueError("Missing host (%s)" % url.geturl())
+
+    # Normalize scheme
+    if url.scheme == "s3":
+        fixed_url = url.geturl().replace("s3://", "s3s://", 1)
+        return urlparse(fixed_url)
+
+    return url
 
 
 def metadata(data, require_dict=False, name_hint=None, size_limit=None):
