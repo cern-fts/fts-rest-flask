@@ -245,11 +245,13 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
 
         # Try to obtain scopes via best-effort introspection
         scope = self._scope_from_credential(credential)
-        issuer = oidc_manager.get_token_issuer(access_token)
+        token_issuer = oidc_manager.get_token_issuer(access_token)
         if scope is None:
             try:
-                log.debug("Retrieving scopes via introspection: {}".format(issuer))
-                response = oidc_manager.introspect(issuer, access_token)
+                log.debug(
+                    "Retrieving scopes via introspection: {}".format(token_issuer)
+                )
+                response = oidc_manager.introspect(token_issuer, access_token)
                 scope = self._scope_from_credential(response)
                 log.debug("Retrieved scopes: {}".format(scope))
             except Exception as ex:
@@ -257,7 +259,7 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
                 pass
 
         authorization.is_oauth = True
-        authorization.issuer = issuer
+        authorization.issuer = token_issuer
         authorization.subject = credential["sub"]
         authorization.client_id = credential.get("client_id")
         authorization.expiry = credential["exp"]
@@ -277,14 +279,6 @@ class FTS3OAuth2ResourceProvider(ResourceProvider):
             authorization.is_valid = False
             authorization.error = "No token providers have been configured"
         else:
-            # Ensure token issuer ends with a '/'
-            if authorization.issuer and authorization.issuer[-1] != "/":
-                token_issuer = authorization.issuer + "/"
-            elif authorization.issuer:
-                token_issuer = authorization.issuer
-            else:
-                token_issuer = ""  # nosec
-
             providers_config_keys = providers_config.keys()
             if token_issuer not in providers_config_keys:
                 log.info(
