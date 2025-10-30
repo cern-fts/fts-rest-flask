@@ -52,7 +52,6 @@ def get_cloud_storages():
     return storages
 
 
-@require_certificate
 @authorize(ADMIN)
 @jsonify
 def set_cloud_storage():
@@ -118,7 +117,6 @@ def remove_cloud_storage(storage_name):
     return Response([""], status=204)
 
 
-@require_certificate
 @authorize(ADMIN)
 @jsonify
 def add_user_to_cloud_storage(storage_name):

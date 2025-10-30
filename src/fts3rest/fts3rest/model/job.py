@@ -60,6 +60,7 @@ class Job(Base):
     retry = Column(Integer)
     retry_delay = Column(Integer, default=0)
     os_project_id = Column(String(512))
+    s3_credentials_id = Column(String(16))
 
     files = relation("File", uselist=True, lazy=True, backref=backref("job", lazy=True))
 

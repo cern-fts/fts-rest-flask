@@ -854,6 +854,42 @@ def get_tape_timeout(submit_params, timeout_name):
     return int(timeout_value)
 
 
+def insert_s3_credential(job_id, s3_credentials):
+    """
+    Inserts the specified list of tokens into the database
+    """
+    try:
+        sql = f"""
+            INSERT INTO t_s3_credential(
+              s3_credentials_id,
+              access_token,
+              access_token_secret
+            ) VALUES (
+              :s3_credentials_id,
+              :access_token,
+              :access_token_secret
+            )
+            """  # nosec
+        Session.execute(
+            sql,
+            params={
+                "s3_credentials_id": s3_credentials["s3_credentials_id"],
+                "access_token": s3_credentials["access_token"],
+                "access_token_secret": s3_credentials["access_token_secret"],
+            },
+        )
+        Session.commit()
+    except IntegrityError as e:
+        Session.rollback()
+        # If credential already exists just continue
+        log.debug(f"S3 credential already exists in the DB")
+    except Exception as e:
+        # Treat S3 credentials as best effort
+        # If failed to insert in DB just continue
+        Session.rollback()
+        raise e
+
+
 def insert_tokens(job_id, tokens):
     """
     Inserts the specified list of tokens into the database
@@ -1048,6 +1084,9 @@ def submit():
 
     if populated.tokens:
         insert_tokens(populated.job_id, populated.tokens)
+
+    if populated.s3_credentials:
+        insert_s3_credential(populated.job_id, populated.s3_credentials)
 
     # Insert the job
     try:

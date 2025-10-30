@@ -55,6 +55,59 @@ class JobBuilder:
 
         return params
 
+    def _populate_s3_credentials(self):
+        """
+        Populates the S3 credentials if they exist
+        """
+        # Initialize as None
+        self.s3_credentials = None
+
+        if self.params.get("s3_credentials") is not None:
+            try:
+                # Parse in format Base-64 encoded 'user:password' or 'access-key:secret-key'
+                decoded = base64.b64decode(self.params["s3_credentials"]).decode(
+                    "utf-8"
+                )
+                parts = decoded.split(":")
+
+                if len(parts) != 2:
+                    log.warning(
+                        f"S3 credential must be in format 'access_key:secret_key' (found {len(parts)} parts after base64 decode)"
+                    )
+                    return
+
+                access_token = parts[0]
+                access_token_secret = parts[1]
+
+                if not access_token or not access_token_secret:
+                    log.warning(
+                        "S3 credential access_key and secret_key cannot be empty"
+                    )
+                    return
+
+                # Reuse token_id function to generate the S3 credential ID
+                s3_credentials_id = credentials.generate_token_id(
+                    self.params["s3_credentials"]
+                )
+
+                # Generate the S3 credential dict
+                s3_credentials = {
+                    "s3_credentials_id": s3_credentials_id,
+                    "access_token": access_token,
+                    "access_token_secret": access_token_secret,
+                }
+
+                # Set s3_credentials and s3_credentials_id in job dict
+                self.job["s3_credentials_id"] = s3_credentials_id
+                self.s3_credentials = s3_credentials
+
+            # Treat S3 credentials as best effort
+            # If failed to parse do not throw error on submission
+            except UnicodeDecodeError:
+                log.warning("S3 credential must be valid Base64-encoded UTF-8 string")
+            except (ValueError, IndexError) as ex:
+                log.warning(f"Failed to parse S3 credential: {str(ex)}")
+
     def _build_internal_job_params(self):
         """
         Generates the value for job.internal_job_params depending on the
@@ -737,7 +790,10 @@ class JobBuilder:
             job_metadata=self.params["job_metadata"],
             internal_job_params=self._build_internal_job_params(),
             max_time_in_queue=expiration_time,
+            s3_credentials_id=None,
         )
+
+        self._populate_s3_credentials()
 
         if "credential" in self.params:
             self.job["user_cred"] = self.params["credential"]
