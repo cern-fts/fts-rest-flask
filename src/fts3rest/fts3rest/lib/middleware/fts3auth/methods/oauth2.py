@@ -61,13 +61,13 @@ def validate_token_offline(access_token, audience=None):
         # Verify that audience matches the expected
         options["verify_aud"] = True
 
+    issuer = oidc_manager.get_token_issuer(access_token)
     unverified_payload = jwt.decode(
         access_token,
         options=jwt_options_unverified(options),
         audience=audience,
     )
     unverified_header = jwt.get_unverified_header(access_token)
-    issuer = unverified_payload["iss"]
     key_id = unverified_header.get("kid")
     algorithm = unverified_header.get("alg")
     log.debug("issuer={}, key_id={}, alg={}".format(issuer, key_id, algorithm))
@@ -100,10 +100,10 @@ def validate_token_online(access_token, audience=None):
     if audience:
         options["verify_aud"] = True
 
+    issuer = oidc_manager.get_token_issuer(access_token)
     unverified_payload = jwt.decode(
         access_token, options=jwt_options_unverified(options), audience=audience
     )
-    issuer = unverified_payload["iss"]
     log.debug("issuer={}".format(issuer))
     credential = oidc_manager.introspect(issuer, access_token)
     log.debug("online_response::: {}".format(credential))

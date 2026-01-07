@@ -62,6 +62,13 @@ class OIDCmanager:
             for keybundle in keybundles:
                 keybundle.cache_time = cache_time
 
+    def get_token_issuer(self, access_token):
+        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
+        issuer = unverified_payload["iss"]
+        if not issuer.endswith("/"):
+            issuer = issuer + "/"
+        return issuer
+
     def token_issuer_supported(self, access_token):
         """
         Given an access token, checks whether a client is registered
@@ -70,9 +77,9 @@ class OIDCmanager:
         :return: true if token issuer is supported, false otherwise
         :raise KeyError: issuer claim missing
         """
-        unverified_payload = jwt.decode(access_token, options=jwt_options_unverified())
-        issuer = unverified_payload["iss"]
+        issuer = self.get_token_issuer(access_token)
         log.debug("Checking client registration for issuer={}".format(issuer))
+        log.debug("Supported issuers={}".format(list(self.clients.keys())))
         return issuer in self.clients
 
     def filter_provider_keys(self, issuer, kid=None, alg=None):
