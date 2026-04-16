@@ -871,7 +871,7 @@ def insert_s3_credential(job_id, s3_credentials):
     """
     try:
         sql = f"""
-            INSERT INTO t_s3_credential(
+            INSERT INTO t_s3_credentials(
               s3_credentials_id,
               access_token,
               access_token_secret
