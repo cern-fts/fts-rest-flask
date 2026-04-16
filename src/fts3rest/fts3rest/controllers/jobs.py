@@ -191,6 +191,16 @@ def _get_job(job_id, env=None):
     return job
 
 
+def _get_success_count(job_id):
+    # Count successful (FINISHED) file transfers
+    success_count = (
+        Session.query(File)
+        .filter(File.job_id == job_id, File.file_state == "FINISHED")
+        .count()
+    )
+    return success_count
+
+
 @profile_request
 @jsonify
 def get(job_list):
@@ -211,6 +221,7 @@ def get(job_list):
     for job_id in filter(len, job_ids):
         try:
             job = _get_job(job_id, env=environ)
+            setattr(job, "filecountsuccess", _get_success_count(job_id))
             if len(file_fields):
 
                 class FileIterator(object):
