@@ -89,8 +89,8 @@ class Inquirer:
         if state_in:
             args["state_in"] = ",".join(state_in)
             assert time_window
-            args["time_window"] =time_window
-        
+            args["time_window"] = time_window
+
         query = "&".join("%s=%s" % (k, quote(v, "")) for k, v in args.items())
         url += query
 

@@ -92,9 +92,11 @@ class JobLister(Base):
     def validate(self):
         if self.options.job_status:
             try:
-                _h,_m = map(int, self.options.time_window.split(':'))
-                self.options.job_status = self.options.job_status.split(',')
-            except (ValueError,AttributeError):
-                self.logger.critical("When --status is specified, --timewindow is mandatory in the format HH:MM")
+                _h, _m = map(int, self.options.time_window.split(":"))
+                self.options.job_status = self.options.job_status.split(",")
+            except (ValueError, AttributeError):
+                self.logger.critical(
+                    "When --status is specified, --timewindow is mandatory in the format HH:MM"
+                )
                 sys.exit(1)
         return super().validate()
