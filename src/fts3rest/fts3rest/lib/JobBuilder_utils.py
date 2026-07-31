@@ -368,8 +368,8 @@ def validate_submitted_file_limits(num_new_files):
         if num_new_files > app.config.get("fts3.MaxFilesPerJob", 1000):
             message = f"Job rejected: Too many files submitted in one job. Max supported: {app.config.get('fts3.MaxFilesPerJob', 1000)}"
             log.warning(f"Max number of files per job reached: {message}")
-            raise BadRequest(message)
-    except BadRequest:
+            raise RequestEntityTooLarge(message)
+    except RequestEntityTooLarge:
         raise
     except Exception as e:
         log.exception(f"Files limit validation error: {e}")

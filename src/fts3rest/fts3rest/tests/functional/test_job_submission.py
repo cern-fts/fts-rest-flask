@@ -1723,7 +1723,7 @@ class TestJobSubmission(TestController):
             url="/jobs",
             content_type="application/json",
             params=json.dumps(job),
-            status=400,
+            status=413,
         )
 
         # Verify the error message contains information about the limit
