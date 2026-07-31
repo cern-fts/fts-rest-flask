@@ -1,5 +1,4 @@
-#   Copyright  Members of the EMI Collaboration, 2013.
-#   Copyright 2020 CERN
+#   Copyright 2026 CERN
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -13,10 +12,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from .ban import Ban
-from .context import Context
-from .delegator import Delegator
-from .inquirer import Inquirer
-from .submitter import Submitter
-from .exceptions import *
-from .jobstates import *
+JobActiveStates = [
+    "STAGING",
+    "SUBMITTED",
+    "READY",
+    "ACTIVE",
+    "DELETE",
+    "ARCHIVING",
+]
+
+JobTerminalStates = ["FINISHED", "FAILED", "FINISHEDDIRTY", "CANCELED"]
+
+JobStates = JobActiveStates + JobTerminalStates
