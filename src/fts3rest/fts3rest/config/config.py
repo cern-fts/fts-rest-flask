@@ -65,6 +65,10 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
     fts3cfg["fts3.ArchiveMetadataSizeLimit"] = parser.getint(
         "fts3", "ArchiveMetadataSizeLimit", fallback=1024
     )
+    # MaxFilesPerJob is an integer
+    fts3cfg["fts3.MaxFilesPerJob"] = parser.getint(
+        "fts3", "MaxFilesPerJob", fallback=1000
+    )
 
     # Convert options to boolean
     options = {
@@ -74,6 +78,7 @@ def fts3_config_load(path="/etc/fts3/fts3restconfig", test=False):
         "OAuth2": False,
         "OverwriteHopValidation": True,
         "AllowNonManagedTokens": False,
+        "AllowProtocolTranslation": True,
         "ExperimentalPostgresSupport": False,
         "VerifyAudience": True,
     }

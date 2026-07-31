@@ -14,6 +14,7 @@ from werkzeug.exceptions import (
     Forbidden,
     InternalServerError,
     MethodNotAllowed,
+    RequestEntityTooLarge,
 )
 
 from fts3rest.model import BannedSE
@@ -49,6 +50,12 @@ DEFAULT_PARAMS = {
     "max_time_in_queue": 0,
     "s3alternate": False,
     "unmanaged_tokens": False,
+}
+
+PROTOCOL_MATRIX = {
+    "http": ["http", "dav", "s3", "gcloud", "cs3"],
+    "root": ["root", "xroot"],
+    "gsiftp": ["gsiftp", "ftp"],
 }
 
 
@@ -350,3 +357,32 @@ def seconds_from_value(value):
             return None
     except Exception:
         return None
+
+
+def validate_submitted_file_limits(num_new_files):
+    """
+    ensure that the number of transfers in a single job doesn't exceeds the limit
+    """
+    try:
+        # Get current submitted file count from database
+        if num_new_files > app.config.get("fts3.MaxFilesPerJob", 1000):
+            message = f"Job rejected: Too many files submitted in one job. Max supported: {app.config.get('fts3.MaxFilesPerJob', 1000)}"
+            log.warning(f"Max number of files per job reached: {message}")
+            raise RequestEntityTooLarge(message)
+    except RequestEntityTooLarge:
+        raise
+    except Exception as e:
+        log.exception(f"Files limit validation error: {e}")
+        raise InternalServerError("Failed to validate files submission limits.")
+
+
+def canonical_protocol(url):
+    """
+    Given a URLParse object, returns the canonical protocol
+    Example: davs://example.cern.ch --> http
+    """
+    prot = url.scheme[:-1] if url.scheme.endswith("s") else url.scheme
+    for canonic_prot, supported in PROTOCOL_MATRIX.items():
+        if prot in supported:
+            return canonic_prot
+    return prot

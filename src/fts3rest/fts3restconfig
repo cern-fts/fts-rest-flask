@@ -56,6 +56,13 @@ Alias =
 # otherwise the job submission will be refused
 #OverwriteHopValidation = True
 
+# Allow or disallow protocol translation transfers (default true)
+# When protocol translation is disabled, submissions containing transfers
+# with mismatching protocols (e.g.: "root:// --> davs://") will be refused.
+# Note: SRM is excluded from the verification as the data movement protocol
+#       is not known before execution time
+#AllowProtocolTranslation = True
+
 # Allow or disallow session reuse transfers (default true)
 #AllowSessionReuse = True
 # Enable or disable AutoSessionReuse (default false)

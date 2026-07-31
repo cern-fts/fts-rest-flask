@@ -200,6 +200,8 @@ class JobBuilder:
                             destination, file_dict
                         )
                     source = self._set_activity_query_string(source, file_dict)
+            # Allow/disallow protocol translation
+            self._validate_protocol_translation(source, destination)
 
             f = dict(
                 job_id=self.job_id,
@@ -452,6 +454,21 @@ class JobBuilder:
             destinations = [file_dict["destinations"] for file_dict in files_list]
             destinations = list(chain.from_iterable(destinations))
         any(map(_is_http_endpoint, destinations))
+
+    def _validate_protocol_translation(self, source, destination):
+        if app.config.get("fts3.AllowProtocolTranslation", True):
+            return
+        source_prot = canonical_protocol(source)
+        destination_prot = canonical_protocol(destination)
+
+        if (
+            source_prot in PROTOCOL_MATRIX.keys()
+            and destination_prot in PROTOCOL_MATRIX.keys()
+        ):
+            if source_prot != destination_prot:
+                raise BadRequest(
+                    f"Protocol translation transfer between {source.geturl()} and {destination.geturl()} is not allowed ({source_prot} != {destination_prot})",
+                )
 
     def _file_list_contains_a_token_list(self, files_list):
         """
@@ -841,6 +858,8 @@ class JobBuilder:
 
             if files_list is not None:
                 self._populate_transfers(files_list)
+
+            validate_submitted_file_limits(len(files_list))
 
             self._set_user()
 

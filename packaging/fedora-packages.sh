@@ -6,4 +6,4 @@ if ! rpm -q --quiet epel-release ; then
   dnf install -y epel-release
 fi
 
-dnf install -y dnf-plugins-core git rpm-build dnf-utils tree which
+dnf install -y dnf-plugins-core git rpm-build rpm-sign dnf-utils tree which

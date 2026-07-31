@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.14.2
+Version:        3.14.3
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -117,6 +117,11 @@ fi
 %files selinux
 
 %changelog
+* Fri Jul 31 2026 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.3-1
+- Configurable option to allow/disallow "protocol translation" transfer submissions
+- Configurable limit for the number of transfers in a single job submission
+- Token issuer identification improvements
+
 * Fri Jul 04 2025 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.2-1
 - jQuery and jQuery-UI version updated
 

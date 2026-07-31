@@ -1593,3 +1593,139 @@ class TestJobSubmission(TestController):
         self.assertGreater(len(job_id), 0)
         _job = Session.query(Job).get(job_id)
         self.assertEqual(_job.overwrite_flag, "M")
+
+    def test_protocol_translation_allowed(self):
+        """
+        Submit a protocol translation transfer (should succeed)
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        job = {
+            "files": [
+                {
+                    "sources": ["root://source.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                },
+            ]
+        }
+
+        job_id = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        # Make sure it was committed to the DB
+        self.assertGreater(len(job_id), 0)
+
+    def test_protocol_translation_not_allowed(self):
+        """
+        Submit a protocol translation transfer when server configured
+        to disallow protocol translation (should fail)
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        # Disable protocol translation
+        self.flask_app.config["fts3.AllowProtocolTranslation"] = False
+
+        job = {
+            "files": [
+                {
+                    "sources": ["davs://source.ch/file"],
+                    "destinations": ["davs://dest.ch/file"],
+                },
+                {
+                    "sources": ["root://source2.ch/file"],
+                    "destinations": ["davs://dest2.ch/file"],
+                },
+            ]
+        }
+
+        message = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=400,
+        ).json["message"]
+
+        self.assertIn("Protocol translation", message)
+        self.assertIn(job["files"][1]["sources"][0], message)
+        self.assertIn(job["files"][1]["destinations"][0], message)
+
+    def test_protocol_translation_not_allowed_srm(self):
+        """
+        Submit an SRM transfer when server configured
+        to disallow protocol translation (should succeed)
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        # Disable protocol translation
+        self.flask_app.config["fts3.AllowProtocolTranslation"] = False
+
+        job = {
+            "files": [
+                {
+                    "sources": ["https://source.ch/file"],
+                    "destinations": ["https://dest.ch/file"],
+                },
+                {
+                    "sources": ["srm://source2.ch/file"],
+                    "destinations": ["davs://dest2.ch/file"],
+                },
+            ]
+        }
+
+        job_id = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=200,
+        ).json["job_id"]
+
+        # Make sure it was committed to the DB
+        self.assertGreater(len(job_id), 0)
+
+    def test_validate_submitted_file_limits_per_job(self):
+        """
+        Test that validate_submitted_file_limits() is called with proper parameters
+        when submitting a job hitting MaxFilesPerJob limit
+        """
+        self.setup_gridsite_environment()
+        self.push_delegation()
+
+        # Create a job with 3 files
+        job = {
+            "files": [
+                {
+                    "sources": ["srm://source.it:8446/file1"],
+                    "destinations": ["srm://dest.ch:8447/file1"],
+                },
+                {
+                    "sources": ["srm://source.it:8446/file2"],
+                    "destinations": ["srm://dest.ch:8447/file2"],
+                },
+                {
+                    "sources": ["srm://source.it:8446/file3"],
+                    "destinations": ["srm://dest.ch:8447/file3"],
+                },
+            ]
+        }
+
+        # Set the MaxFilesPerJob limit to 2
+        self.flask_app.config["fts3.MaxFilesPerJob"] = 2
+
+        # This should return 413 Request Entity Too Large
+        response = self.app.put(
+            url="/jobs",
+            content_type="application/json",
+            params=json.dumps(job),
+            status=413,
+        )
+
+        # Verify the error message contains information about the limit
+        self.assertIn("Max", response.json["message"])
+        self.assertIn("files", response.json["message"])

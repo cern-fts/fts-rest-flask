@@ -72,6 +72,7 @@ class Inquirer:
         dest_se=None,
         delegation_id=None,
         state_in=None,
+        time_window=None,
     ):
         url = "/jobs?"
         args = {}
@@ -87,6 +88,8 @@ class Inquirer:
             args["dlg_id"] = delegation_id
         if state_in:
             args["state_in"] = ",".join(state_in)
+            if time_window:
+                args["time_window"] = time_window
 
         query = "&".join("%s=%s" % (k, quote(v, "")) for k, v in args.items())
         url += query

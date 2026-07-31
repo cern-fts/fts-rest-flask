@@ -91,6 +91,11 @@ class Request:
                 raise MethodNotAllowed(message)
             else:
                 raise MethodNotAllowed()
+        elif code == 413:
+            if message:
+                raise RequestEntityTooLarge(message)
+            else:
+                raise RequestEntityTooLarge()
         elif 404 < code < 500:
             raise ClientError(str(code))
         elif code == 503:
