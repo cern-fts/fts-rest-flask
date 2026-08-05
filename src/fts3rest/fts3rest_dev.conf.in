@@ -1,5 +1,5 @@
 ###
-# HTTPd configuration file for DEVELOPMENT
+# HTTPd FTS-REST configuration file for DEVELOPMENT
 ###
 
 Listen 8446
@@ -8,34 +8,35 @@ Listen 8446
     ServerName localhost
 
     # SSL configuration
-    SSLProtocol all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+    SSLEngine on
+    SSLProtocol -all +TLSv1.2 +TLSv1.3
     SSLCipherSuite ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
     SSLHonorCipherOrder on
+
+    # Certificates
     SSLCertificateFile /etc/grid-security/hostcert.pem
     SSLCertificateKeyFile /etc/grid-security/hostkey.pem
     SSLCACertificatePath /etc/grid-security/certificates
     SSLCARevocationPath /etc/grid-security/certificates
     SSLCARevocationCheck chain
+
+    # Client certificates
     SSLVerifyClient optional
-    SSLVerifyDepth  10
-    # Export environment variables with SSL information
-    SSLOptions +StdEnvVars +ExportCertData +StdEnvVars +LegacyDNStringFormat
-    SSLOptions +StdEnvVars +ExportCertData +StdEnvVars
-    # Enable SSL in this port
-    SSLEngine on
+    SSLVerifyDepth 10
+    SSLOptions +StdEnvVars +ExportCertData +LegacyDNStringFormat
 
     # Logs
-    ErrorLog logs/fts3rest_error_log
-
     LogFormat "%a %l %u %t \"%r\" %>s %b %D"
+    ErrorLog logs/fts3rest_error_log
     TransferLog logs/fts3rest_access_log
 
-    WSGIScriptAlias / %%PROJECT_DIR%%/src/fts3rest/fts3rest.wsgi
     # Note that it is highly recommended that the WSGI application script file in
     # this case NOT be placed within the existing DocumentRoot for your main Apache
     # installation, or the particular site you are setting it up for. This is
     # because if that directory is otherwise being used as a source of static files,
     # the source code for your application might be able to be downloaded.
+    WSGIScriptAlias / %%PROJECT_DIR%%/src/fts3rest/fts3rest.wsgi
+    AllowEncodedSlashes NoDecode
 
     <Directory %%PROJECT_DIR%%/src/fts3rest>
         Require all granted
@@ -52,5 +53,4 @@ Listen 8446
     # Disable the session files of libgridsite
     GridSiteGridHTTP off
     GridSiteAutoPasscode off
-
 </VirtualHost>
