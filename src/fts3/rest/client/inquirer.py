@@ -35,8 +35,13 @@ class Inquirer:
                 job_info["files"] = json.loads(
                     self.context.get("/jobs/%s/files" % job_id)
                 )
-                job_info["dm"] = json.loads(self.context.get("/jobs/%s/dm" % job_id))
-
+                # Don't fail request if the "/dm" endpoint is  missing (e.g.: FTS4)
+                try:
+                    job_info["dm"] = json.loads(
+                        self.context.get("/jobs/%s/dm" % job_id)
+                    )
+                except NotFound:
+                    job_info["dm"] = []
             return job_info
 
         except NotFound:
