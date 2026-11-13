@@ -1,5 +1,5 @@
 Name:           fts-rest-client
-Version:        3.14.4
+Version:        3.14.5
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 Client and CLI
 
@@ -42,6 +42,9 @@ File Transfer Service (FTS) -- Python3 Client and CLI
 %{_bindir}/fts-rest-*
 
 %changelog
+* Fri Nov 13 2026 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.5-rc1
+- Conserve the "limited" or "full impersonation" attribute during certificate delegation
+
 * Fri Nov 13 2026 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.4-1
 - Allow missing "/dm" endpoint during transfer status check (e.g.: FTS4 compatibility)
 

@@ -88,10 +88,29 @@ def _workaround_new_extension(name, value, critical=False, issuer=None, _pyfree=
     return x509_ext
 
 
-def _add_rfc3820_extensions(proxy):
+# Globus "Policy Language" for limited proxy
+LIMITED_PROXY_OID = "1.3.6.1.4.1.3536.1.1.1.9"
+
+
+def _is_limited_proxy(cert):
+    """
+    True if certificate is a limited proxy (RFC3820 or legacy style),
+    false otherwise.
+    """
+    try:
+        if LIMITED_PROXY_OID in cert.get_ext("proxyCertInfo").get_value():
+            return True
+    except Exception:
+        pass
+    cns = cert.get_subject().get_entries_by_nid(m2.NID_commonName)
+    return bool(cns) and cns[-1].get_data().as_text() == "limited proxy"
+
+
+def _add_rfc3820_extensions(proxy, limited=False):
+    language = LIMITED_PROXY_OID if limited else "Inherit all"
     proxy.add_ext(
         X509.new_extension(
-            "proxyCertInfo", "critical,language:Inherit all", critical=True
+            "proxyCertInfo", f"critical,language:{language}", critical=True
         )
     )
 
@@ -203,12 +222,13 @@ class Delegator(object):
         proxy.set_not_after(not_after)
         proxy.set_not_before(not_before)
 
+        limited = _is_limited_proxy(self.context.x509)
         proxy_common_name = str(int(time.time()))
 
         if not any_rfc_proxies and legacy_mode:
-            proxy_common_name = "proxy"
+            proxy_common_name = "limited proxy" if limited else "proxy"
         else:
-            _add_rfc3820_extensions(proxy)
+            _add_rfc3820_extensions(proxy, limited)
 
         m2.x509_name_set_by_nid(
             proxy_subject._ptr(),
