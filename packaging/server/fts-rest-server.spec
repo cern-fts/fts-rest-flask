@@ -1,5 +1,5 @@
 Name:           fts-rest-server
-Version:        3.14.3
+Version:        3.14.4
 Release:        1%{?dist}
 Summary:        File Transfer Service (FTS) -- Python3 HTTP API Server
 
@@ -117,6 +117,10 @@ fi
 %files selinux
 
 %changelog
+* Fri Nov 13 2026 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.4-1
+- Security vulnerability in request authorization
+- Tightened Apache configuration file
+
 * Fri Jul 31 2026 Mihai Patrascoiu <mihai.patrascoiu@cern.ch> - 3.14.3-1
 - Configurable option to allow/disallow "protocol translation" transfer submissions
 - Configurable limit for the number of transfers in a single job submission
