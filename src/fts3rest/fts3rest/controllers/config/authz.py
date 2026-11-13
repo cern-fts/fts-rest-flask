@@ -26,7 +26,7 @@ from fts3rest.lib.middleware.fts3auth.authorization import (
     authorize,
     require_certificate,
 )
-from fts3rest.lib.middleware.fts3auth.constants import ADMIN, CONFIG
+from fts3rest.lib.middleware.fts3auth.constants import ADMIN, CONFIG, VALID_OPERATIONS
 from fts3rest.model.meta import Session
 
 log = logging.getLogger(__name__)
@@ -50,6 +50,10 @@ def add_authz():
     user = request.environ["fts3.User.Credentials"]
     if not dn or not op:
         raise BadRequest("Missing dn and/or operation")
+    if op not in VALID_OPERATIONS:
+        raise BadRequest(
+            f"Operation '{op}' not part of valid operations: [{', '.join(VALID_OPERATIONS)}]"
+        )
     if op == ADMIN and user.config_level != ADMIN:
         raise BadRequest(
             f"'{ADMIN}' level can only be granted by another admin or via database access"

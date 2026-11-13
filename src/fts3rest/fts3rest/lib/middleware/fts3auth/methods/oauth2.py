@@ -16,7 +16,6 @@
 import logging
 import json
 import jwt
-import types
 
 from urllib.parse import urlparse
 from fts3rest.lib.middleware.fts3auth.credentials import (
@@ -118,11 +117,6 @@ def validate_token_online(access_token, audience=None):
     return True, credential
 
 
-def _oauth2_get_granted_level_for(self, operation):
-    # All users authenticated through IAM will be considered root users
-    return "all"
-
-
 def _get_vo_from_config(config, issuer):
     """
     Searches the specified FTS configuration for the VO for the specified
@@ -177,17 +171,6 @@ def do_authentication(credentials, env, config):
     setattr(credentials, "oauth2_scope", " ".join(authn.scope) if authn.scope else None)
     setattr(credentials, "wlcg_profile", authn.wlcg_profile)
 
-    # Override get_granted_level_for to allow filtering by scope claim
-    setattr(
-        credentials,
-        "get_granted_level_for_overridden",
-        credentials.get_granted_level_for,
-    )
-    setattr(
-        credentials,
-        "get_granted_level_for",
-        types.MethodType(_oauth2_get_granted_level_for, credentials),
-    )
     return True
 
 

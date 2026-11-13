@@ -77,6 +77,18 @@ class TestConfigAuthz(TestController):
             config[key] = ""
             self.app.post(url="/config/authorize", params=config, status=400)
 
+    def test_add_authz_invalid_op(self):
+        """
+        Add DN with invalid operation
+        """
+        operations = ["invalid", "*"]
+        for op in operations:
+            self.app.post_json(
+                url="/config/authorize",
+                params={"dn": "/DN=a.test.user", "operation": f"{op}"},
+                status=400,
+            )
+
     def test_add_authz_admin_level(self):
         """
         Add DN with admin level.
